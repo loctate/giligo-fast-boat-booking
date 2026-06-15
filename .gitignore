@@ -21,3 +21,12 @@ yarn-error.log*
 # operating system
 .DS_Store
 Thumbs.db
+
+# private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# TypeScript cache
+*.tsbuildinfo
