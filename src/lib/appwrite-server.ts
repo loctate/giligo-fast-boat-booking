@@ -27,4 +27,8 @@ export const appwriteConfig = {
   operatorsTableId: getRequiredEnv(
     "APPWRITE_OPERATORS_TABLE_ID"
   ),
+
+  vesselsTableId: getRequiredEnv(
+  "APPWRITE_VESSELS_TABLE_ID"
+),
 }

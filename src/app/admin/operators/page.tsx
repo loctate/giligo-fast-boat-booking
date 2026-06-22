@@ -133,20 +133,28 @@ export default async function OperatorsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-slate-400 xl:block">
-              {admin.email}
-            </span>
+<div className="flex items-center gap-3">
+  <span className="hidden text-sm text-slate-400 xl:block">
+    {admin.email}
+  </span>
 
-            <Link
-              href="/admin"
-              className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
-            >
-              Dashboard
-            </Link>
+  <Link
+    href="/admin/vessels"
+    className="hidden rounded-full border border-blue-400 px-5 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-400 hover:text-slate-950 sm:inline-flex"
+  >
+    Vessels
+  </Link>
 
-            <LogoutButton />
-          </div>
+  <Link
+    href="/admin"
+    className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
+  >
+    Dashboard
+  </Link>
+
+  <LogoutButton />
+</div>
+
         </div>
       </header>
 
