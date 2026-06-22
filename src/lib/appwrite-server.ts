@@ -19,7 +19,12 @@ export const tablesDB = new TablesDB(client)
 
 export const appwriteConfig = {
   databaseId: getRequiredEnv("APPWRITE_DATABASE_ID"),
+
   bookingsTableId: getRequiredEnv(
     "APPWRITE_BOOKINGS_TABLE_ID"
+  ),
+
+  operatorsTableId: getRequiredEnv(
+    "APPWRITE_OPERATORS_TABLE_ID"
   ),
 }
