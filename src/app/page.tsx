@@ -445,7 +445,7 @@ export default function Home() {
 
             <div className="mt-4 space-y-3 text-sm text-slate-400">
               <p>WhatsApp: +62 xxx xxxx xxxx</p>
-              <p>Email: booking@giligo.demo</p>
+              <p>Email: nusagiliboat@gmail.com</p>
               <p>Bali, Indonesia</p>
             </div>
           </div>

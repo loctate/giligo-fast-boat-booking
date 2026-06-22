@@ -11,9 +11,9 @@ The application demonstrates a complete booking workflow, including trip search,
 
 ## Live Demo
 
-**Website:** https://giligo-fast-boat-booking.vercel.app
+**Website:** https://nusagiliboat.com
 
-**Admin page:** https://giligo-fast-boat-booking.vercel.app/admin
+**Admin page:** https://nusagiliboat.com/admin
 
 > Admin credentials are private and are not included in this repository.
 
@@ -195,7 +195,7 @@ The project requires:
 The production hostname used by this project is:
 
 ```text
-giligo-fast-boat-booking.vercel.app
+nusagiliboat.com
 ```
 
 ## Environment Variables
