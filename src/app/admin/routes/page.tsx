@@ -8,13 +8,15 @@ import {
 } from "@/lib/appwrite-server"
 
 import LogoutButton from "../LogoutButton"
-import OperatorsManager, {
-  type OperatorRow,
-} from "./OperatorsManager"
+import RoutesManager, {
+  type RouteRow,
+} from "./RoutesManager"
 
 export const dynamic = "force-dynamic"
 
-function optionalString(value: unknown): string | null {
+function optionalString(
+  value: unknown
+): string | null {
   if (value === null || value === undefined) {
     return null
   }
@@ -24,9 +26,9 @@ function optionalString(value: unknown): string | null {
   return normalizedValue || null
 }
 
-function toPlainOperator(
+function toPlainRoute(
   row: Record<string, unknown>
-): OperatorRow {
+): RouteRow {
   return {
     $id: String(row.$id ?? ""),
     $createdAt: String(row.$createdAt ?? ""),
@@ -35,23 +37,21 @@ function toPlainOperator(
       ? String(row.$updatedAt)
       : undefined,
 
-    operatorCode: String(
-      row.operatorCode ?? ""
+    routeCode: String(row.routeCode ?? ""),
+    fromPort: String(row.fromPort ?? ""),
+    toPort: String(row.toPort ?? ""),
+
+    fromIsland: optionalString(
+      row.fromIsland
     ),
 
-    operatorName: String(
-      row.operatorName ?? ""
+    toIsland: optionalString(
+      row.toIsland
     ),
 
-    contactPerson: optionalString(
-      row.contactPerson
+    estimatedDurationMinutes: Number(
+      row.estimatedDurationMinutes ?? 0
     ),
-
-    phone: optionalString(row.phone),
-    whatsapp: optionalString(row.whatsapp),
-    email: optionalString(row.email),
-    address: optionalString(row.address),
-    logoUrl: optionalString(row.logoUrl),
 
     isActive:
       typeof row.isActive === "boolean"
@@ -64,45 +64,69 @@ function toPlainOperator(
   }
 }
 
-async function getOperators(): Promise<OperatorRow[]> {
-  const response = await tablesDB.listRows({
-    databaseId: appwriteConfig.databaseId,
-    tableId: appwriteConfig.operatorsTableId,
-    queries: [Query.limit(200)],
-  })
+function sortRoutes(
+  routes: RouteRow[]
+): RouteRow[] {
+  return [...routes].sort(
+    (firstRoute, secondRoute) => {
+      const originComparison =
+        firstRoute.fromPort.localeCompare(
+          secondRoute.fromPort,
+          "en",
+          {
+            sensitivity: "base",
+          }
+        )
 
-  return response.rows
-    .map((row) =>
-      toPlainOperator(
-        row as unknown as Record<string, unknown>
-      )
-    )
-    .sort((firstOperator, secondOperator) =>
-      firstOperator.operatorName.localeCompare(
-        secondOperator.operatorName,
+      if (originComparison !== 0) {
+        return originComparison
+      }
+
+      return firstRoute.toPort.localeCompare(
+        secondRoute.toPort,
         "en",
         {
           sensitivity: "base",
         }
       )
-    )
+    }
+  )
 }
 
-export default async function OperatorsPage() {
+async function getRoutes(): Promise<RouteRow[]> {
+  const response = await tablesDB.listRows({
+    databaseId: appwriteConfig.databaseId,
+    tableId: appwriteConfig.routesTableId,
+    queries: [Query.limit(200)],
+  })
+
+  const routes = response.rows.map((row) =>
+    toPlainRoute(
+      row as unknown as Record<
+        string,
+        unknown
+      >
+    )
+  )
+
+  return sortRoutes(routes)
+}
+
+export default async function RoutesPage() {
   const admin = await requireAdmin()
 
-  let operators: OperatorRow[] = []
+  let routes: RouteRow[] = []
   let loadError = ""
 
   try {
-    operators = await getOperators()
+    routes = await getRoutes()
   } catch (error) {
-    console.error("Operator page error:", error)
+    console.error("Route page error:", error)
 
     loadError =
       error instanceof Error
         ? error.message
-        : "Operator data could not be loaded."
+        : "Route data could not be loaded."
   }
 
   return (
@@ -128,40 +152,39 @@ export default async function OperatorsPage() {
               </p>
 
               <p className="text-sm text-slate-400">
-                Operator Management
+                Route Management
               </p>
             </div>
           </div>
 
-<div className="flex items-center gap-3">
-  <span className="hidden text-sm text-slate-400 xl:block">
-    {admin.email}
-  </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-slate-400 xl:block">
+              {admin.email}
+            </span>
 
-<Link
-  href="/admin/routes"
-  className="hidden rounded-full border border-violet-400 px-5 py-2 text-sm font-bold text-violet-200 transition hover:bg-violet-400 hover:text-slate-950 lg:inline-flex"
->
-  Routes
-</Link>
+            <Link
+              href="/admin/operators"
+              className="hidden rounded-full border border-cyan-400 px-5 py-2 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400 hover:text-slate-950 lg:inline-flex"
+            >
+              Operators
+            </Link>
 
-  <Link
-    href="/admin/vessels"
-    className="hidden rounded-full border border-blue-400 px-5 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-400 hover:text-slate-950 sm:inline-flex"
-  >
-    Vessels
-  </Link>
+            <Link
+              href="/admin/vessels"
+              className="hidden rounded-full border border-blue-400 px-5 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-400 hover:text-slate-950 lg:inline-flex"
+            >
+              Vessels
+            </Link>
 
-  <Link
-    href="/admin"
-    className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
-  >
-    Dashboard
-  </Link>
+            <Link
+              href="/admin"
+              className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
+            >
+              Dashboard
+            </Link>
 
-  <LogoutButton />
-</div>
-
+            <LogoutButton />
+          </div>
         </div>
       </header>
 
@@ -172,13 +195,14 @@ export default async function OperatorsPage() {
           </p>
 
           <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-            Fast Boat Operators
+            Fast Boat Routes
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75">
-            Manage fast boat providers, business
-            contacts, operational status and
-            supporting information.
+            Manage departure ports,
+            destination ports, islands,
+            estimated journey duration and
+            operational status.
           </p>
         </div>
       </section>
@@ -187,7 +211,7 @@ export default async function OperatorsPage() {
         {loadError && (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
             <p className="font-black">
-              Operator data could not be loaded
+              Route data could not be loaded
             </p>
 
             <p className="mt-1 text-sm">
@@ -196,8 +220,8 @@ export default async function OperatorsPage() {
           </div>
         )}
 
-        <OperatorsManager
-          initialOperators={operators}
+        <RoutesManager
+          initialRoutes={routes}
         />
       </section>
     </main>

@@ -252,6 +252,13 @@ export default async function VesselsPage() {
               {admin.email}
             </span>
 
+<Link
+  href="/admin/routes"
+  className="hidden rounded-full border border-violet-400 px-5 py-2 text-sm font-bold text-violet-200 transition hover:bg-violet-400 hover:text-slate-950 lg:inline-flex"
+>
+  Routes
+</Link>
+
             <Link
               href="/admin/operators"
               className="hidden rounded-full border border-cyan-400 px-5 py-2 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400 hover:text-slate-950 sm:inline-flex"
