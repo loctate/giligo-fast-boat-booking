@@ -145,6 +145,13 @@ export default async function OperatorsPage() {
   Routes
 </Link>
 
+<Link
+  href="/admin/trip-schedules"
+  className="hidden rounded-full border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200 transition hover:bg-amber-400 hover:text-slate-950 xl:inline-flex"
+>
+  Trip Schedules
+</Link>
+
   <Link
     href="/admin/vessels"
     className="hidden rounded-full border border-blue-400 px-5 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-400 hover:text-slate-950 sm:inline-flex"

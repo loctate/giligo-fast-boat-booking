@@ -176,6 +176,13 @@ export default async function RoutesPage() {
               Vessels
             </Link>
 
+<Link
+  href="/admin/trip-schedules"
+  className="hidden rounded-full border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200 transition hover:bg-amber-400 hover:text-slate-950 xl:inline-flex"
+>
+  Trip Schedules
+</Link>
+
             <Link
               href="/admin"
               className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
