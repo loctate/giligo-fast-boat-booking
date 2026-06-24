@@ -49,5 +49,10 @@ export const appwriteConfig = {
   tripSchedulesTableId: getRequiredEnv(
     "APPWRITE_TRIP_SCHEDULES_TABLE_ID"
   ),
+
+  tripInventoryTableId: getRequiredEnv(
+    "APPWRITE_TRIP_INVENTORY_TABLE_ID"
+  ),
+
 }
 

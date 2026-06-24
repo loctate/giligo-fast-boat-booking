@@ -433,6 +433,13 @@ export default async function TripSchedulesPage() {
               Vessels
             </Link>
 
+<Link
+  href="/admin/trip-inventory"
+  className="hidden rounded-full border border-emerald-400 px-4 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-400 hover:text-slate-950 xl:inline-flex"
+>
+  Trip Inventory
+</Link>
+
             <Link
               href="/admin/routes"
               className="hidden rounded-full border border-violet-400 px-4 py-2 text-sm font-bold text-violet-200 transition hover:bg-violet-400 hover:text-slate-950 xl:inline-flex"

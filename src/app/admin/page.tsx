@@ -223,6 +223,13 @@ Go </span> </Link>
 </Link>
 
 <Link
+  href="/admin/trip-inventory"
+  className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400"
+>
+  Trip Inventory
+</Link>
+
+<Link
   href="/admin/trip-schedules"
   className="rounded-full bg-amber-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-400"
 >
