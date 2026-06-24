@@ -25,11 +25,50 @@ tripType: string
 passengerCount: number
 }
 
+type BookingConfirmationData = {
+  bookingCode: string
+  createdAt: string
+  bookingStatus: string
+  paymentStatus: string
+  tripType: string
+  departureDate: string
+  returnDate: string
+  passengerCount: number
+  totalPrice: number
+
+  customer: {
+    fullName: string
+    email: string
+    whatsapp: string
+    country: string
+  }
+
+  passengers: {
+    number: number
+    name: string
+  }[]
+
+  notes: string
+
+  trip: {
+    id: string
+    operator: string
+    from: string
+    to: string
+    departureTime: string
+    arrivalTime: string
+    duration: string
+    price: number
+    checkInLocation: string
+  }
+}
+
 type BookingApiResponse = {
-success?: boolean
-rowId?: string
-bookingCode?: string
-error?: string
+  success?: boolean
+  rowId?: string
+  bookingCode?: string
+  booking?: BookingConfirmationData
+  error?: string
 }
 
 function formatCurrency(value: number) {
@@ -74,172 +113,206 @@ const [errorMessage, setErrorMessage] = useState("")
 const totalPrice = trip.price * passengerCount
 
 async function handleSubmit(
-event: FormEvent<HTMLFormElement>
+  event: FormEvent<HTMLFormElement>
 ) {
-event.preventDefault();
+  event.preventDefault()
 
-if (isSubmitting) {
-return;
-}
-
-setIsSubmitting(true);
-setErrorMessage("");
-
-const form = event.currentTarget;
-const formData = new FormData(form);
-
-const passengers = Array.from(
-{ length: passengerCount },
-(_, index) => {
-const passengerNumber = index + 1;
-const fieldName =
-"passengerName" + passengerNumber;
-
-  return {
-    number: passengerNumber,
-    name: String(
-      formData.get(fieldName) ?? ""
-    ).trim(),
-  };
-}
-
-);
-
-
-const hasEmptyPassengerName = passengers.some(
-  (passenger) => passenger.name.length === 0
-)
-
-if (hasEmptyPassengerName) {
-  setErrorMessage(
-    "Please enter the full name of every passenger."
-  )
-  setIsSubmitting(false)
-  return
-}
-
-const fullName = String(
-  formData.get("fullName") ?? ""
-).trim()
-
-const email = String(
-  formData.get("email") ?? ""
-).trim()
-
-const whatsapp = String(
-  formData.get("whatsapp") ?? ""
-).trim()
-
-const country = String(
-  formData.get("country") ?? ""
-).trim()
-
-const notes = String(
-  formData.get("notes") ?? ""
-).trim()
-
-if (!fullName || !email || !whatsapp || !country) {
-  setErrorMessage(
-    "Please complete all required contact details."
-  )
-  setIsSubmitting(false)
-  return
-}
-
-const datePart = new Date()
-  .toISOString()
-  .slice(2, 10)
-  .replaceAll("-", "")
-
-const randomPart = Math.random()
-  .toString(36)
-  .slice(2, 6)
-  .toUpperCase()
-
-const bookingCode =
-  "GG-" + datePart + "-" + randomPart
-
-const bookingData = {
-  bookingCode,
-  createdAt: new Date().toISOString(),
-  bookingStatus: "Confirmed",
-  paymentStatus: "Demo",
-  tripType,
-  departureDate,
-  returnDate,
-  passengerCount,
-  totalPrice,
-
-  customer: {
-    fullName,
-    email,
-    whatsapp,
-    country,
-  },
-
-  passengers,
-
-  notes,
-
-  trip: {
-    id: trip.id,
-    operator: trip.operator,
-    from: trip.from,
-    to: trip.to,
-    departureTime: trip.departureTime,
-    arrivalTime: trip.arrivalTime,
-    duration: trip.duration,
-    price: trip.price,
-    checkInLocation: trip.checkInLocation,
-  },
-}
-
-try {
-  const response = await fetch("/api/bookings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(bookingData),
-  })
-
-  const result =
-    (await response.json()) as BookingApiResponse
-
-  if (!response.ok || !result.success) {
-    throw new Error(
-      result.error ||
-        "The booking could not be saved to Appwrite."
-    )
+  if (isSubmitting) {
+    return
   }
 
-  const storageKey =
-    "giligo_booking_" + bookingCode
+  setIsSubmitting(true)
+  setErrorMessage("")
 
-  sessionStorage.setItem(
-    storageKey,
-    JSON.stringify({
-      ...bookingData,
-      appwriteRowId: result.rowId,
-    })
+  const form = event.currentTarget
+  const formData = new FormData(form)
+
+  const passengers = Array.from(
+    { length: passengerCount },
+    (_, index) => {
+      const passengerNumber = index + 1
+
+      return {
+        number: passengerNumber,
+
+        name: String(
+          formData.get(
+            `passengerName${passengerNumber}`
+          ) ?? ""
+        ).trim(),
+      }
+    }
   )
 
-  router.push("/booking/" + bookingCode)
-} catch (error) {
-  console.error(
-    "Booking submission error:",
-    error
-  )
+  const hasEmptyPassengerName =
+    passengers.some(
+      (passenger) =>
+        passenger.name.length === 0
+    )
 
-  setErrorMessage(
-    error instanceof Error
-      ? error.message
-      : "The booking could not be saved. Please try again."
-  )
+  if (hasEmptyPassengerName) {
+    setErrorMessage(
+      "Please enter the full name of every passenger."
+    )
 
-  setIsSubmitting(false)
-}
+    setIsSubmitting(false)
+    return
+  }
 
+  const fullName = String(
+    formData.get("fullName") ?? ""
+  ).trim()
+
+  const email = String(
+    formData.get("email") ?? ""
+  ).trim()
+
+  const whatsapp = String(
+    formData.get("whatsapp") ?? ""
+  ).trim()
+
+  const country = String(
+    formData.get("country") ?? ""
+  ).trim()
+
+  const notes = String(
+    formData.get("notes") ?? ""
+  ).trim()
+
+  if (
+    !fullName ||
+    !email ||
+    !whatsapp ||
+    !country
+  ) {
+    setErrorMessage(
+      "Please complete all required contact details."
+    )
+
+    setIsSubmitting(false)
+    return
+  }
+
+  const bookingRequest = {
+    tripInventoryId: trip.id,
+    tripType,
+    returnDate,
+    passengerCount,
+
+    customer: {
+      fullName,
+      email,
+      whatsapp,
+      country,
+    },
+
+    passengers,
+    notes,
+  }
+
+  try {
+    const response = await fetch(
+      "/api/bookings",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          Accept:
+            "application/json",
+        },
+
+        body: JSON.stringify(
+          bookingRequest
+        ),
+      }
+    )
+
+    const responseText =
+      await response.text()
+
+    let result: BookingApiResponse
+
+    try {
+      result = JSON.parse(
+        responseText
+      ) as BookingApiResponse
+    } catch {
+      console.error(
+        "Booking API returned non-JSON:",
+        {
+          status: response.status,
+
+          contentType:
+            response.headers.get(
+              "content-type"
+            ),
+
+          responsePreview:
+            responseText.slice(0, 300),
+        }
+      )
+
+      throw new Error(
+        "The booking service returned an invalid response."
+      )
+    }
+
+    if (
+      !response.ok ||
+      !result.success
+    ) {
+      throw new Error(
+        result.error ||
+          "The booking could not be created."
+      )
+    }
+
+    if (
+      !result.booking ||
+      !result.bookingCode
+    ) {
+      throw new Error(
+        "The booking service returned incomplete confirmation data."
+      )
+    }
+
+    const confirmationData = {
+      ...result.booking,
+
+      appwriteRowId:
+        result.rowId ?? "",
+    }
+
+    sessionStorage.setItem(
+      `giligo_booking_${result.bookingCode}`,
+
+      JSON.stringify(
+        confirmationData
+      )
+    )
+
+    router.push(
+      `/booking/${encodeURIComponent(
+        result.bookingCode
+      )}`
+    )
+  } catch (error) {
+    console.error(
+      "Booking submission error:",
+      error
+    )
+
+    setErrorMessage(
+      error instanceof Error
+        ? error.message
+        : "The booking could not be saved. Please try again."
+    )
+
+    setIsSubmitting(false)
+  }
 }
 
 return ( <form
@@ -554,7 +627,7 @@ Contact details </p>
 
           <span className="text-xs leading-5 text-slate-600">
             I confirm that the passenger information is
-            correct and agree to the demo booking terms.
+            correct and agree to the booking terms.
           </span>
         </label>
 
@@ -574,12 +647,12 @@ Contact details </p>
         >
           {isSubmitting
             ? "Saving Booking..."
-            : "Complete Demo Booking"}
+            : "Complete Booking"}
         </button>
 
         <p className="text-center text-xs leading-5 text-slate-400">
-          This is a demonstration. No real payment will
-          be processed.
+           Payment is not processed at this stage. Your booking
+           will remain pending until payment is confirmed.
         </p>
       </div>
     </div>
