@@ -201,6 +201,42 @@ Go </span> </Link>
           {admin.email}
         </span>
 
+<Link
+  href="/admin/operators"
+  className="rounded-full bg-cyan-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
+>
+  Operators
+</Link>
+
+<Link
+  href="/admin/vessels"
+  className="rounded-full bg-blue-500 px-5 py-2 text-sm font-black text-white transition hover:bg-blue-400"
+>
+  Vessels
+</Link>
+
+<Link
+  href="/admin/routes"
+  className="rounded-full bg-violet-500 px-5 py-2 text-sm font-black text-white transition hover:bg-violet-400"
+>
+  Routes
+</Link>
+
+<Link
+  href="/admin/trip-inventory"
+  className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400"
+>
+  Trip Inventory
+</Link>
+
+<Link
+  href="/admin/trip-schedules"
+  className="rounded-full bg-amber-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-400"
+>
+  Trip Schedules
+</Link>
+
+
         <Link
           href="/"
           className="hidden rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950 sm:inline-flex"
