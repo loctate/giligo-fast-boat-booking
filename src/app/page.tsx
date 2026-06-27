@@ -1,4 +1,5 @@
 import SearchForm from "@/components/SearchForm"
+import Image from "next/image"
 
 const popularRoutes = [
   {
@@ -66,26 +67,36 @@ export default function Home() {
       id="top"
       className="min-h-screen bg-slate-50 text-slate-900"
     >
-      {/* Header */}
-      <header className="absolute left-0 top-0 z-30 w-full border-b border-white/20 bg-slate-950/20 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="#top" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-400 font-black text-slate-950">
-              G
-            </div>
 
-            <div>
-              <div className="text-2xl font-black tracking-tight text-white">
-                Gili<span className="text-cyan-300">Go</span>
+      {/* Header */}
+      <header className="absolute left-0 top-0 z-30 w-full border-b border-white/15 bg-slate-950/55 backdrop-blur-md">
+        <div className="mx-auto flex h-[88px] max-w-7xl items-center justify-between px-5 lg:px-8">
+          <a
+            href="#top"
+            aria-label="Nusa Gili Boat homepage"
+            className="flex items-center gap-3"
+          >
+            <Image
+              src="/icon.png"
+              alt="Nusa Gili Boat"
+              width={64}
+              height={64}
+              priority
+              className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/20"
+            />
+
+            <div className="leading-none">
+              <div className="text-[23px] font-black tracking-tight text-white">
+                Nusa Gili
               </div>
 
-              <div className="text-[10px] uppercase tracking-[0.2em] text-white/70">
+              <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.19em] text-cyan-300">
                 Fast Boat Booking
               </div>
             </div>
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-white md:flex">
+          <nav className="hidden items-center gap-8 text-sm font-bold text-white md:flex">
             <a
               href="#routes"
               className="transition hover:text-cyan-300"
@@ -115,18 +126,20 @@ export default function Home() {
             </a>
           </nav>
 
-          <button
-            type="button"
-            className="rounded-full border border-white/40 px-5 py-2 text-sm font-bold text-white transition hover:bg-white hover:text-slate-900"
+          <a
+            href="#top"
+            className="rounded-full border border-white/40 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white hover:text-slate-900"
           >
             My Booking
-          </button>
+          </a>
         </div>
       </header>
 
+
+
       {/* Hero */}
       <section
-        className="relative flex min-h-[760px] items-center bg-cover bg-center pt-28"
+        className="relative flex min-h-[720px] items-center bg-cover bg-center pt-[88px]"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85')",
@@ -135,14 +148,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/65 to-cyan-900/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent" />
 
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pb-20 pt-16 lg:grid-cols-[1fr_1.08fr] lg:px-8">
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-14 px-5 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           {/* Hero Text */}
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100 backdrop-blur">
               Bali · Lombok · Gili Islands · Nusa Penida
             </div>
 
-            <h1 className="text-5xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-xl text-5xl font-black leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[64px]">
               Your island journey starts here.
             </h1>
 
@@ -395,64 +408,151 @@ export default function Home() {
       {/* Footer */}
       <footer
         id="contact"
-        className="bg-slate-950 py-12 text-slate-300"
+        className="bg-slate-950 text-slate-300"
       >
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 md:grid-cols-4 lg:px-8">
-          <div className="md:col-span-2">
-            <div className="text-3xl font-black text-white">
-              Gili<span className="text-cyan-300">Go</span>
-            </div>
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-[1.6fr_0.7fr_0.9fr] lg:px-8">
+          {/* Brand */}
+          <div>
+            <a
+              href="#top"
+              aria-label="Nusa Gili Boat homepage"
+              className="inline-flex items-center gap-5"
+            >
+              <Image
+                src="/icon.png"
+                alt="Nusa Gili Boat"
+                width={96}
+                height={96}
+                className="h-24 w-24 flex-none rounded-3xl object-cover shadow-xl ring-1 ring-white/15"
+              />
 
-            <p className="mt-4 max-w-md leading-7 text-slate-400">
-              A fast boat booking platform for travel between Bali, Lombok,
-              the Gili Islands and Nusa Penida.
+              <div>
+                <div className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  Nusa Gili
+                </div>
+
+                <div className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-cyan-300">
+                  Fast Boat Booking
+                </div>
+              </div>
+            </a>
+
+            <p className="mt-7 max-w-xl text-base leading-8 text-slate-400">
+              Book fast boat journeys between Bali, Lombok,
+              the Gili Islands and Nusa Penida with live
+              schedules, seat availability and secure booking
+              confirmation.
             </p>
+
+            <div className="mt-6 flex flex-wrap gap-3 text-xs font-bold">
+              <span className="rounded-full border border-slate-700 px-4 py-2 text-slate-300">
+                Bali
+              </span>
+
+              <span className="rounded-full border border-slate-700 px-4 py-2 text-slate-300">
+                Lombok
+              </span>
+
+              <span className="rounded-full border border-slate-700 px-4 py-2 text-slate-300">
+                Gili Islands
+              </span>
+
+              <span className="rounded-full border border-slate-700 px-4 py-2 text-slate-300">
+                Nusa Penida
+              </span>
+            </div>
           </div>
 
+          {/* Quick links */}
           <div>
-            <h3 className="font-black text-white">
-              Quick links
+            <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">
+              Quick Links
             </h3>
 
-            <div className="mt-4 flex flex-col gap-3 text-sm">
+            <div className="mt-6 flex flex-col gap-4 text-sm">
               <a
                 href="#routes"
-                className="hover:text-cyan-300"
+                className="transition hover:text-cyan-300"
               >
-                Popular routes
+                Popular Routes
               </a>
 
               <a
                 href="#destinations"
-                className="hover:text-cyan-300"
+                className="transition hover:text-cyan-300"
               >
                 Destinations
               </a>
 
               <a
                 href="#how-it-works"
-                className="hover:text-cyan-300"
+                className="transition hover:text-cyan-300"
               >
-                How to book
+                How to Book
+              </a>
+
+              <a
+                href="#top"
+                className="transition hover:text-cyan-300"
+              >
+                Search Tickets
               </a>
             </div>
           </div>
 
+          {/* Contact */}
           <div>
-            <h3 className="font-black text-white">
+            <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">
               Contact
             </h3>
 
-            <div className="mt-4 space-y-3 text-sm text-slate-400">
-              <p>WhatsApp: +62 xxx xxxx xxxx</p>
-              <p>Email: nusagiliboat@gmail.com</p>
-              <p>Bali, Indonesia</p>
+            <div className="mt-6 space-y-5 text-sm text-slate-400">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Email
+                </p>
+
+                <a
+                  href="mailto:nusagiliboat@gmail.com"
+                  className="mt-1 block break-all font-semibold text-slate-200 transition hover:text-cyan-300"
+                >
+                  nusagiliboat@gmail.com
+                </a>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Location
+                </p>
+
+                <p className="mt-1 font-semibold text-slate-200">
+                  Bali, Indonesia
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Support
+                </p>
+
+                <p className="mt-1 leading-6">
+                  Booking assistance and trip information.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto mt-10 max-w-7xl border-t border-slate-800 px-5 pt-7 text-sm text-slate-500 lg:px-8">
-          © 2026 GiliGo. Demo website for presentation purposes.
+        <div className="border-t border-slate-800">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+            <p>
+              © 2026 Nusa Gili Boat. All rights reserved.
+            </p>
+
+            <p>
+              Fast boat booking for Bali and the Gili Islands.
+            </p>
+          </div>
         </div>
       </footer>
     </main>

@@ -1,5 +1,4 @@
 import { randomBytes } from "node:crypto"
-
 import { ID } from "node-appwrite"
 
 import {
@@ -17,6 +16,9 @@ export const dynamic = "force-dynamic"
 
 type BookingRequest = {
   tripInventoryId?: unknown
+  outboundTripInventoryId?: unknown
+  returnTripInventoryId?: unknown
+
   tripType?: unknown
   returnDate?: unknown
   passengerCount?: unknown
@@ -38,6 +40,48 @@ type BookingRequest = {
 
 type AppwriteRow = Record<string, unknown> & {
   $id?: string
+}
+
+type LoadedTrip = {
+  inventoryId: string
+  inventoryCode: string
+
+  scheduleId: string
+  scheduleCode: string
+
+  operatorId: string
+  operatorCode: string
+  operatorName: string
+
+  vesselId: string
+  vesselCode: string
+  vesselName: string
+
+  routeId: string
+  routeCode: string
+
+  fromPort: string
+  toPort: string
+
+  travelDate: string
+
+  departureTime: string
+  arrivalTime: string
+  arrivalDayOffset: number
+  duration: string
+
+  seatCapacity: number
+  bookedSeats: number
+  heldSeats: number
+  availableSeats: number
+
+  adultPrice: number
+  childPrice: number
+  infantPrice: number
+  currency: string
+
+  salesStatus: string
+  checkInLocation: string
 }
 
 class BookingError extends Error {
@@ -70,6 +114,15 @@ function noStoreJson(
 
 function cleanText(value: unknown): string {
   return String(value ?? "").trim()
+}
+
+function normalizeRouteValue(
+  value: string
+): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
 }
 
 function toInteger(
@@ -190,7 +243,8 @@ function formatDuration(
 }
 
 function createBookingCode(): string {
-  const baliDate = getCurrentBaliDate()
+  const baliDate =
+    getCurrentBaliDate()
 
   const compactDate = baliDate
     .slice(2)
@@ -222,7 +276,8 @@ async function rollbackTransaction(
 async function getTransactionRow(
   tableId: string,
   rowId: string,
-  transactionId: string
+  transactionId: string,
+  notFoundMessage: string
 ): Promise<AppwriteRow> {
   try {
     const row = await tablesDB.getRow({
@@ -239,7 +294,7 @@ async function getTransactionRow(
     if (getErrorCode(error) === 404) {
       throw new BookingError(
         404,
-        "The selected trip could not be found."
+        notFoundMessage
       )
     }
 
@@ -247,37 +302,486 @@ async function getTransactionRow(
   }
 }
 
+async function loadTripForBooking({
+  inventoryId,
+  passengerCount,
+  transactionId,
+  journeyLabel,
+}: {
+  inventoryId: string
+  passengerCount: number
+  transactionId: string
+  journeyLabel: "outbound" | "return"
+}): Promise<LoadedTrip> {
+  const inventory =
+    await getTransactionRow(
+      appwriteConfig.tripInventoryTableId,
+      inventoryId,
+      transactionId,
+      `The selected ${journeyLabel} trip could not be found.`
+    )
+
+  const travelDate = cleanText(
+    inventory.travelDate
+  )
+
+  const travelDateValidation =
+    validateCustomerTravelDate(
+      travelDate
+    )
+
+  if (!travelDateValidation.valid) {
+    throw new BookingError(
+      410,
+
+      travelDateValidation.error ||
+        `The selected ${journeyLabel} travel date is no longer bookable.`
+    )
+  }
+
+  const salesStatus = cleanText(
+    inventory.salesStatus
+  ).toUpperCase()
+
+  if (
+    inventory.isActive !== true ||
+    salesStatus !== "OPEN"
+  ) {
+    throw new BookingError(
+      410,
+      `The selected ${journeyLabel} trip is no longer open for booking.`
+    )
+  }
+
+  const scheduleId = cleanText(
+    inventory.scheduleId
+  )
+
+  const operatorId = cleanText(
+    inventory.operatorId
+  )
+
+  const vesselId = cleanText(
+    inventory.vesselId
+  )
+
+  const routeId = cleanText(
+    inventory.routeId
+  )
+
+  if (
+    !scheduleId ||
+    !operatorId ||
+    !vesselId ||
+    !routeId
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} trip has incomplete operational data.`
+    )
+  }
+
+  const [
+    schedule,
+    operator,
+    vessel,
+    route,
+  ] = await Promise.all([
+    getTransactionRow(
+      appwriteConfig
+        .tripSchedulesTableId,
+      scheduleId,
+      transactionId,
+      `The ${journeyLabel} schedule could not be found.`
+    ),
+
+    getTransactionRow(
+      appwriteConfig.operatorsTableId,
+      operatorId,
+      transactionId,
+      `The ${journeyLabel} operator could not be found.`
+    ),
+
+    getTransactionRow(
+      appwriteConfig.vesselsTableId,
+      vesselId,
+      transactionId,
+      `The ${journeyLabel} vessel could not be found.`
+    ),
+
+    getTransactionRow(
+      appwriteConfig.routesTableId,
+      routeId,
+      transactionId,
+      `The ${journeyLabel} route could not be found.`
+    ),
+  ])
+
+  if (
+    schedule.isActive !== true ||
+    operator.isActive !== true ||
+    vessel.isActive !== true ||
+    route.isActive !== true
+  ) {
+    throw new BookingError(
+      410,
+      `The selected ${journeyLabel} trip is currently inactive.`
+    )
+  }
+
+  if (
+    cleanText(schedule.operatorId) !==
+      operatorId ||
+    cleanText(schedule.vesselId) !==
+      vesselId ||
+    cleanText(schedule.routeId) !==
+      routeId
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} schedule has inconsistent operational data.`
+    )
+  }
+
+  if (
+    cleanText(vessel.operatorId) !==
+    operatorId
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} vessel is not assigned to its operator.`
+    )
+  }
+
+  const seatCapacity = toInteger(
+    inventory.seatCapacity
+  )
+
+  const bookedSeats = toInteger(
+    inventory.bookedSeats
+  )
+
+  const heldSeats = toInteger(
+    inventory.heldSeats
+  )
+
+  if (
+    seatCapacity === null ||
+    bookedSeats === null ||
+    heldSeats === null ||
+    seatCapacity < 0 ||
+    bookedSeats < 0 ||
+    heldSeats < 0
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} trip has invalid seat data.`
+    )
+  }
+
+  const availableSeats =
+    seatCapacity -
+    bookedSeats -
+    heldSeats
+
+  if (availableSeats < passengerCount) {
+    throw new BookingError(
+      409,
+
+      availableSeats <= 0
+        ? `The selected ${journeyLabel} trip is sold out.`
+        : `Only ${availableSeats} seats remain for the selected ${journeyLabel} trip.`
+    )
+  }
+
+  const adultPrice = toInteger(
+    inventory.adultPrice
+  )
+
+  const childPrice = toInteger(
+    inventory.childPrice
+  )
+
+  const infantPrice = toInteger(
+    inventory.infantPrice
+  )
+
+  const currency = cleanText(
+    inventory.currency
+  ).toUpperCase()
+
+  if (
+    adultPrice === null ||
+    childPrice === null ||
+    infantPrice === null ||
+    adultPrice < 0 ||
+    childPrice < 0 ||
+    infantPrice < 0 ||
+    !/^[A-Z]{3}$/.test(currency)
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} trip has invalid pricing data.`
+    )
+  }
+
+  const departureTime = cleanText(
+    inventory.departureTime
+  )
+
+  const arrivalTime = cleanText(
+    inventory.arrivalTime
+  )
+
+  const arrivalDayOffset = toInteger(
+    inventory.arrivalDayOffset
+  )
+
+  if (
+    timeToMinutes(departureTime) ===
+      null ||
+    timeToMinutes(arrivalTime) ===
+      null ||
+    arrivalDayOffset === null ||
+    arrivalDayOffset < 0 ||
+    arrivalDayOffset > 2
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} trip has invalid schedule times.`
+    )
+  }
+
+  const operatorName = cleanText(
+    operator.operatorName
+  )
+
+  const vesselName = cleanText(
+    vessel.vesselName
+  )
+
+  const fromPort = cleanText(
+    route.fromPort
+  )
+
+  const toPort = cleanText(
+    route.toPort
+  )
+
+  if (
+    !operatorName ||
+    !vesselName ||
+    !fromPort ||
+    !toPort
+  ) {
+    throw new BookingError(
+      500,
+      `The selected ${journeyLabel} trip has incomplete display information.`
+    )
+  }
+
+  return {
+    inventoryId,
+    inventoryCode: cleanText(
+      inventory.inventoryCode
+    ),
+
+    scheduleId,
+    scheduleCode: cleanText(
+      schedule.scheduleCode
+    ),
+
+    operatorId,
+    operatorCode: cleanText(
+      operator.operatorCode
+    ),
+    operatorName,
+
+    vesselId,
+    vesselCode: cleanText(
+      vessel.vesselCode
+    ),
+    vesselName,
+
+    routeId,
+    routeCode: cleanText(
+      route.routeCode
+    ),
+
+    fromPort,
+    toPort,
+
+    travelDate:
+      travelDateValidation.travelDate,
+
+    departureTime,
+    arrivalTime,
+    arrivalDayOffset,
+
+    duration: formatDuration(
+      departureTime,
+      arrivalTime,
+      arrivalDayOffset
+    ),
+
+    seatCapacity,
+    bookedSeats,
+    heldSeats,
+    availableSeats,
+
+    adultPrice,
+    childPrice,
+    infantPrice,
+    currency,
+
+    salesStatus,
+
+    checkInLocation:
+      "Check-in details will be provided after booking.",
+  }
+}
+
+function createTripConfirmation(
+  trip: LoadedTrip
+) {
+  return {
+    id: trip.inventoryId,
+    inventoryCode:
+      trip.inventoryCode,
+
+    operator:
+      trip.operatorName,
+
+    vesselName:
+      trip.vesselName,
+
+    routeCode:
+      trip.routeCode,
+
+    from:
+      trip.fromPort,
+
+    to:
+      trip.toPort,
+
+    departureTime:
+      trip.departureTime,
+
+    arrivalTime:
+      trip.arrivalTime,
+
+    arrivalDayOffset:
+      trip.arrivalDayOffset,
+
+    duration:
+      trip.duration,
+
+    price:
+      trip.adultPrice,
+
+    currency:
+      trip.currency,
+
+    checkInLocation:
+      trip.checkInLocation,
+  }
+}
+
+async function reserveTripSeats({
+  trip,
+  passengerCount,
+  transactionId,
+  journeyLabel,
+}: {
+  trip: LoadedTrip
+  passengerCount: number
+  transactionId: string
+  journeyLabel: "outbound" | "return"
+}) {
+  try {
+    await tablesDB.incrementRowColumn({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        trip.inventoryId,
+
+      column: "bookedSeats",
+      value: passengerCount,
+
+      max:
+        trip.seatCapacity -
+        trip.heldSeats,
+
+      transactionId,
+    })
+  } catch (error) {
+    console.error(
+      `${journeyLabel} inventory seat increment error:`,
+      error
+    )
+
+    throw new BookingError(
+      409,
+      `The remaining seats for the ${journeyLabel} trip changed while the booking was being processed. Please search again.`
+    )
+  }
+
+  const remainingSeats =
+    trip.availableSeats -
+    passengerCount
+
+  if (
+    remainingSeats <= 0 &&
+    trip.salesStatus === "OPEN"
+  ) {
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        trip.inventoryId,
+
+      data: {
+        salesStatus: "SOLD_OUT",
+      },
+
+      transactionId,
+    })
+  }
+}
+
 export async function POST(
   request: Request
 ) {
-  let transactionId: string | null = null
+  let transactionId:
+    | string
+    | null = null
 
   try {
-    const body =
-      (await request.json()) as BookingRequest
+    let body: BookingRequest
 
-    const tripInventoryId = cleanText(
-      body.tripInventoryId
-    )
+    try {
+      body =
+        (await request.json()) as BookingRequest
+    } catch {
+      throw new BookingError(
+        400,
+        "The request body is not valid JSON."
+      )
+    }
 
     const tripType = cleanText(
       body.tripType
-    )
-
-    const returnDate = cleanText(
-      body.returnDate
-    )
-
-    const passengerCount = toInteger(
-      body.passengerCount
-    )
-
-    if (!tripInventoryId) {
-      throw new BookingError(
-        400,
-        "Trip inventory ID is required."
-      )
-    }
+    ).toLowerCase()
 
     if (
       tripType !== "one-way" &&
@@ -289,20 +793,59 @@ export async function POST(
       )
     }
 
-    if (
-      passengerCount === null ||
-      passengerCount < 1 ||
-      passengerCount > 20
-    ) {
+    /*
+     * tripInventoryId dipertahankan
+     * untuk payload one-way lama.
+     */
+    const outboundTripInventoryId =
+      cleanText(
+        body.outboundTripInventoryId
+      ) ||
+      cleanText(
+        body.tripInventoryId
+      )
+
+    const returnTripInventoryId =
+      cleanText(
+        body.returnTripInventoryId
+      )
+
+    if (!outboundTripInventoryId) {
       throw new BookingError(
         400,
-        "Passenger count must be between 1 and 20."
+        "Outbound trip inventory ID is required."
       )
     }
 
     if (
       tripType === "round-trip" &&
-      !returnDate
+      !returnTripInventoryId
+    ) {
+      throw new BookingError(
+        400,
+        "Return trip inventory ID is required for a round trip."
+      )
+    }
+
+    if (
+      tripType === "round-trip" &&
+      outboundTripInventoryId ===
+        returnTripInventoryId
+    ) {
+      throw new BookingError(
+        400,
+        "Outbound and return trips cannot use the same inventory."
+      )
+    }
+
+    const requestedReturnDate =
+      cleanText(
+        body.returnDate
+      )
+
+    if (
+      tripType === "round-trip" &&
+      !requestedReturnDate
     ) {
       throw new BookingError(
         400,
@@ -311,12 +854,30 @@ export async function POST(
     }
 
     if (
-      returnDate &&
-      !isValidDateOnly(returnDate)
+      requestedReturnDate &&
+      !isValidDateOnly(
+        requestedReturnDate
+      )
     ) {
       throw new BookingError(
         400,
         "Return date must use YYYY-MM-DD format."
+      )
+    }
+
+    const passengerCount =
+      toInteger(
+        body.passengerCount
+      )
+
+    if (
+      passengerCount === null ||
+      passengerCount < 1 ||
+      passengerCount > 20
+    ) {
+      throw new BookingError(
+        400,
+        "Passenger count must be between 1 and 20."
       )
     }
 
@@ -434,7 +995,7 @@ export async function POST(
         ttl: 60,
       })
 
-    transactionId = String(
+    transactionId = cleanText(
       transaction.$id
     )
 
@@ -445,230 +1006,106 @@ export async function POST(
       )
     }
 
-    const inventory =
-      await getTransactionRow(
-        appwriteConfig
-          .tripInventoryTableId,
+    const outboundTrip =
+      await loadTripForBooking({
+        inventoryId:
+          outboundTripInventoryId,
 
-        tripInventoryId,
-        transactionId
-      )
+        passengerCount,
+        transactionId,
 
-    const travelDate = cleanText(
-      inventory.travelDate
-    )
+        journeyLabel:
+          "outbound",
+      })
 
-    const travelDateValidation =
-      validateCustomerTravelDate(
-        travelDate
-      )
+    const returnTrip =
+      tripType === "round-trip"
+        ? await loadTripForBooking({
+            inventoryId:
+              returnTripInventoryId,
 
-    if (!travelDateValidation.valid) {
-      throw new BookingError(
-        410,
-        travelDateValidation.error ||
-          "The selected travel date is no longer bookable."
-      )
+            passengerCount,
+            transactionId,
+
+            journeyLabel:
+              "return",
+          })
+        : null
+
+    if (returnTrip) {
+      const routeIsReversed =
+        normalizeRouteValue(
+          outboundTrip.fromPort
+        ) ===
+          normalizeRouteValue(
+            returnTrip.toPort
+          ) &&
+        normalizeRouteValue(
+          outboundTrip.toPort
+        ) ===
+          normalizeRouteValue(
+            returnTrip.fromPort
+          )
+
+      if (!routeIsReversed) {
+        throw new BookingError(
+          400,
+          "The selected return trip must travel back to the original departure port."
+        )
+      }
+
+      if (
+        returnTrip.travelDate <=
+        outboundTrip.travelDate
+      ) {
+        throw new BookingError(
+          400,
+          "The return trip must depart after the outbound trip date."
+        )
+      }
+
+      if (
+        requestedReturnDate !==
+        returnTrip.travelDate
+      ) {
+        throw new BookingError(
+          400,
+          "The selected return inventory does not match the requested return date."
+        )
+      }
+
+      if (
+        outboundTrip.currency !==
+        returnTrip.currency
+      ) {
+        throw new BookingError(
+          400,
+          "Outbound and return trips must use the same currency."
+        )
+      }
     }
 
-    if (
-      inventory.isActive !== true ||
-      cleanText(
-        inventory.salesStatus
-      ).toUpperCase() !== "OPEN"
-    ) {
-      throw new BookingError(
-        410,
-        "The selected trip is no longer open for booking."
-      )
-    }
-
-    const scheduleId = cleanText(
-      inventory.scheduleId
-    )
-
-    const operatorId = cleanText(
-      inventory.operatorId
-    )
-
-    const vesselId = cleanText(
-      inventory.vesselId
-    )
-
-    const routeId = cleanText(
-      inventory.routeId
-    )
-
-    if (
-      !scheduleId ||
-      !operatorId ||
-      !vesselId ||
-      !routeId
-    ) {
-      throw new BookingError(
-        500,
-        "The selected trip has incomplete operational data."
-      )
-    }
-
-    const [
-      schedule,
-      operator,
-      vessel,
-      route,
-    ] = await Promise.all([
-      getTransactionRow(
-        appwriteConfig
-          .tripSchedulesTableId,
-
-        scheduleId,
-        transactionId
-      ),
-
-      getTransactionRow(
-        appwriteConfig
-          .operatorsTableId,
-
-        operatorId,
-        transactionId
-      ),
-
-      getTransactionRow(
-        appwriteConfig
-          .vesselsTableId,
-
-        vesselId,
-        transactionId
-      ),
-
-      getTransactionRow(
-        appwriteConfig
-          .routesTableId,
-
-        routeId,
-        transactionId
-      ),
-    ])
-
-    if (
-      schedule.isActive !== true ||
-      operator.isActive !== true ||
-      vessel.isActive !== true ||
-      route.isActive !== true
-    ) {
-      throw new BookingError(
-        410,
-        "The selected trip is currently inactive."
-      )
-    }
-
-    if (
-      cleanText(
-        schedule.operatorId
-      ) !== operatorId ||
-      cleanText(
-        schedule.vesselId
-      ) !== vesselId ||
-      cleanText(
-        schedule.routeId
-      ) !== routeId
-    ) {
-      throw new BookingError(
-        500,
-        "The selected schedule has inconsistent operational data."
-      )
-    }
-
-    if (
-      cleanText(
-        vessel.operatorId
-      ) !== operatorId
-    ) {
-      throw new BookingError(
-        500,
-        "The selected vessel is not assigned to the trip operator."
-      )
-    }
-
-    const seatCapacity = toInteger(
-      inventory.seatCapacity
-    )
-
-    const bookedSeats = toInteger(
-      inventory.bookedSeats
-    )
-
-    const heldSeats = toInteger(
-      inventory.heldSeats
-    )
-
-    if (
-      seatCapacity === null ||
-      bookedSeats === null ||
-      heldSeats === null ||
-      seatCapacity < 0 ||
-      bookedSeats < 0 ||
-      heldSeats < 0
-    ) {
-      throw new BookingError(
-        500,
-        "The selected trip has invalid seat data."
-      )
-    }
-
-    const availableSeats =
-      seatCapacity -
-      bookedSeats -
-      heldSeats
-
-    if (
-      availableSeats <
+    const outboundTotal =
+      outboundTrip.adultPrice *
       passengerCount
-    ) {
-      throw new BookingError(
-        409,
-        availableSeats <= 0
-          ? "The selected trip is sold out."
-          : `Only ${availableSeats} seats remain for this trip.`
-      )
-    }
 
-    const adultPrice = toInteger(
-      inventory.adultPrice
-    )
-
-    const childPrice = toInteger(
-      inventory.childPrice
-    )
-
-    const infantPrice = toInteger(
-      inventory.infantPrice
-    )
-
-    const currency = cleanText(
-      inventory.currency
-    ).toUpperCase()
-
-    if (
-      adultPrice === null ||
-      childPrice === null ||
-      infantPrice === null ||
-      adultPrice < 0 ||
-      childPrice < 0 ||
-      infantPrice < 0 ||
-      !/^[A-Z]{3}$/.test(currency)
-    ) {
-      throw new BookingError(
-        500,
-        "The selected trip has invalid pricing data."
-      )
-    }
+    const returnTotal =
+      returnTrip
+        ? returnTrip.adultPrice *
+          passengerCount
+        : 0
 
     const totalPrice =
-      adultPrice *
-      passengerCount
+      outboundTotal +
+      returnTotal
 
     if (
+      !Number.isSafeInteger(
+        outboundTotal
+      ) ||
+      !Number.isSafeInteger(
+        returnTotal
+      ) ||
       !Number.isSafeInteger(
         totalPrice
       )
@@ -676,46 +1113,6 @@ export async function POST(
       throw new BookingError(
         500,
         "The calculated booking total is invalid."
-      )
-    }
-
-    const departureTime = cleanText(
-      inventory.departureTime
-    )
-
-    const arrivalTime = cleanText(
-      inventory.arrivalTime
-    )
-
-    const arrivalDayOffset = toInteger(
-      inventory.arrivalDayOffset
-    )
-
-    if (
-      timeToMinutes(
-        departureTime
-      ) === null ||
-      timeToMinutes(
-        arrivalTime
-      ) === null ||
-      arrivalDayOffset === null ||
-      arrivalDayOffset < 0 ||
-      arrivalDayOffset > 2
-    ) {
-      throw new BookingError(
-        500,
-        "The selected trip has invalid schedule times."
-      )
-    }
-
-    if (
-      returnDate &&
-      returnDate <
-        travelDateValidation.travelDate
-    ) {
-      throw new BookingError(
-        400,
-        "Return date cannot be before the departure date."
       )
     }
 
@@ -731,97 +1128,131 @@ export async function POST(
     const paymentStatus =
       "Pending"
 
-    const operatorName = cleanText(
-      operator.operatorName
-    )
-
-    const vesselName = cleanText(
-      vessel.vesselName
-    )
-
-    const fromPort = cleanText(
-      route.fromPort
-    )
-
-    const toPort = cleanText(
-      route.toPort
-    )
-
-    const duration =
-      formatDuration(
-        departureTime,
-        arrivalTime,
-        arrivalDayOffset
-      )
-
-    const checkInLocation =
-      "Check-in details will be provided after booking."
-
-    const rowData:
-      Record<string, string | number> = {
+    const rowData: Record<
+      string,
+      unknown
+    > = {
       bookingCode,
       bookingStatus,
       paymentStatus,
+
       tripType,
 
       departureDate:
-        travelDateValidation.travelDate,
+        outboundTrip.travelDate,
 
       passengerCount,
       totalPrice,
 
-      customerFullName: fullName,
-      customerEmail: email,
-      customerWhatsapp: whatsapp,
-      customerCountry: country,
+      customerFullName:
+        fullName,
+
+      customerEmail:
+        email,
+
+      customerWhatsapp:
+        whatsapp,
+
+      customerCountry:
+        country,
 
       passengersJson:
-        JSON.stringify(passengers),
+        JSON.stringify(
+          passengers
+        ),
 
+      /*
+       * Kolom lama dipertahankan
+       * sebagai snapshot outbound.
+       */
       tripId:
-        tripInventoryId,
+        outboundTrip.inventoryId,
 
-      operatorName,
-      fromPort,
-      toPort,
-      departureTime,
-      arrivalTime,
-      duration,
-
-      pricePerPassenger:
-        adultPrice,
-
-      checkInLocation,
-
-      tripInventoryId,
+      tripInventoryId:
+        outboundTrip.inventoryId,
 
       inventoryCode:
-        cleanText(
-          inventory.inventoryCode
-        ),
+        outboundTrip.inventoryCode,
 
-      scheduleId,
-      operatorId,
-      vesselId,
-      routeId,
-      vesselName,
+      scheduleId:
+        outboundTrip.scheduleId,
+
+      operatorId:
+        outboundTrip.operatorId,
+
+      vesselId:
+        outboundTrip.vesselId,
+
+      routeId:
+        outboundTrip.routeId,
+
+      operatorName:
+        outboundTrip.operatorName,
+
+      vesselName:
+        outboundTrip.vesselName,
 
       routeCode:
-        cleanText(
-          route.routeCode
-        ),
+        outboundTrip.routeCode,
 
-      currency,
-      arrivalDayOffset,
-    }
+      fromPort:
+        outboundTrip.fromPort,
 
-    if (returnDate) {
-      rowData.returnDate =
-        returnDate
+      toPort:
+        outboundTrip.toPort,
+
+      departureTime:
+        outboundTrip.departureTime,
+
+      arrivalTime:
+        outboundTrip.arrivalTime,
+
+      arrivalDayOffset:
+        outboundTrip.arrivalDayOffset,
+
+      duration:
+        outboundTrip.duration,
+
+      pricePerPassenger:
+        outboundTrip.adultPrice,
+
+      currency:
+        outboundTrip.currency,
+
+      checkInLocation:
+        outboundTrip.checkInLocation,
     }
 
     if (notes) {
       rowData.notes = notes
+    }
+
+    if (returnTrip) {
+      const returnTripSnapshot =
+        JSON.stringify(
+          createTripConfirmation(
+            returnTrip
+          )
+        )
+
+      if (
+        returnTripSnapshot.length >
+        5000
+      ) {
+        throw new BookingError(
+          500,
+          "The return trip snapshot is too large to store."
+        )
+      }
+
+      rowData.returnDate =
+        returnTrip.travelDate
+
+      rowData.returnTripInventoryId =
+        returnTrip.inventoryId
+
+      rowData.returnTripJson =
+        returnTripSnapshot
     }
 
     const bookingRow =
@@ -842,40 +1273,28 @@ export async function POST(
         transactionId,
       })
 
-    try {
-      await tablesDB.incrementRowColumn({
-        databaseId:
-          appwriteConfig.databaseId,
+    await reserveTripSeats({
+      trip:
+        outboundTrip,
 
-        tableId:
-          appwriteConfig
-            .tripInventoryTableId,
+      passengerCount,
+      transactionId,
 
-        rowId:
-          tripInventoryId,
+      journeyLabel:
+        "outbound",
+    })
 
-        column:
-          "bookedSeats",
+    if (returnTrip) {
+      await reserveTripSeats({
+        trip:
+          returnTrip,
 
-        value:
-          passengerCount,
-
-        max:
-          seatCapacity -
-          heldSeats,
-
+        passengerCount,
         transactionId,
-      })
-    } catch (error) {
-      console.error(
-        "Inventory seat increment error:",
-        error
-      )
 
-      throw new BookingError(
-        409,
-        "The remaining seats changed while the booking was being processed. Please search again."
-      )
+        journeyLabel:
+          "return",
+      })
     }
 
     await tablesDB.updateTransaction({
@@ -892,27 +1311,33 @@ export async function POST(
       {
         success: true,
 
-        rowId:
-          String(
-            bookingRow.$id
-          ),
+        rowId: cleanText(
+          bookingRow.$id
+        ),
 
         bookingCode,
 
         booking: {
           bookingCode,
           createdAt,
+
           bookingStatus,
           paymentStatus,
+
           tripType,
 
           departureDate:
-            travelDateValidation
-              .travelDate,
+            outboundTrip.travelDate,
 
-          returnDate,
+          returnDate:
+            returnTrip?.travelDate ??
+            "",
+
           passengerCount,
           totalPrice,
+
+          currency:
+            outboundTrip.currency,
 
           customer: {
             fullName,
@@ -924,28 +1349,17 @@ export async function POST(
           passengers,
           notes,
 
-          trip: {
-            id:
-              tripInventoryId,
+          trip:
+            createTripConfirmation(
+              outboundTrip
+            ),
 
-            operator:
-              operatorName,
-
-            from:
-              fromPort,
-
-            to:
-              toPort,
-
-            departureTime,
-            arrivalTime,
-            duration,
-
-            price:
-              adultPrice,
-
-            checkInLocation,
-          },
+          returnTrip:
+            returnTrip
+              ? createTripConfirmation(
+                  returnTrip
+                )
+              : null,
         },
       },
       201
@@ -981,6 +1395,7 @@ export async function POST(
       return noStoreJson(
         {
           success: false,
+
           error:
             "The trip inventory changed while the booking was processed. Please search again.",
         },
@@ -991,6 +1406,7 @@ export async function POST(
     return noStoreJson(
       {
         success: false,
+
         error:
           error instanceof Error
             ? error.message

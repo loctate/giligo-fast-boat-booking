@@ -28,6 +28,10 @@ type BookingStatus =
 type PaymentStatus =
   (typeof allowedPaymentStatuses)[number]
 
+type JourneyLabel =
+  | "outbound"
+  | "return"
+
 type UpdateBookingRequest = {
   bookingStatus?: unknown
   paymentStatus?: unknown
@@ -39,8 +43,19 @@ type RouteContext = {
   }>
 }
 
-type AppwriteRow = Record<string, unknown> & {
+type AppwriteRow = Record<
+  string,
+  unknown
+> & {
   $id?: string
+}
+
+type InventoryAdjustment = {
+  journey: JourneyLabel
+  inventoryId: string
+  adjusted: boolean
+  availableSeats: number | null
+  salesStatus: string | null
 }
 
 class StatusUpdateError extends Error {
@@ -104,7 +119,11 @@ function getErrorCode(
     "code" in error
   ) {
     const code = Number(
-      (error as { code?: unknown }).code
+      (
+        error as {
+          code?: unknown
+        }
+      ).code
     )
 
     return Number.isFinite(code)
@@ -135,8 +154,10 @@ function isAllowedTransition(
   currentStatus: BookingStatus,
   nextStatus: BookingStatus
 ): boolean {
-  const transitions:
-    Record<BookingStatus, BookingStatus[]> = {
+  const transitions: Record<
+    BookingStatus,
+    BookingStatus[]
+  > = {
     Pending: [
       "Pending",
       "Confirmed",
@@ -189,14 +210,15 @@ async function getTransactionRow(
   notFoundMessage: string
 ): Promise<AppwriteRow> {
   try {
-    const row = await tablesDB.getRow({
-      databaseId:
-        appwriteConfig.databaseId,
+    const row =
+      await tablesDB.getRow({
+        databaseId:
+          appwriteConfig.databaseId,
 
-      tableId,
-      rowId,
-      transactionId,
-    })
+        tableId,
+        rowId,
+        transactionId,
+      })
 
     return row as unknown as AppwriteRow
   } catch (error) {
@@ -211,11 +233,327 @@ async function getTransactionRow(
   }
 }
 
+async function adjustInventorySeats({
+  inventoryId,
+  passengerCount,
+  transactionId,
+  journey,
+  action,
+}: {
+  inventoryId: string
+  passengerCount: number
+  transactionId: string
+  journey: JourneyLabel
+  action:
+    | "cancel"
+    | "reactivate"
+}): Promise<InventoryAdjustment> {
+  const inventory =
+    await getTransactionRow(
+      appwriteConfig
+        .tripInventoryTableId,
+
+      inventoryId,
+      transactionId,
+
+      `The ${journey} trip inventory could not be found.`
+    )
+
+  const seatCapacity =
+    toInteger(
+      inventory.seatCapacity
+    )
+
+  const bookedSeats =
+    toInteger(
+      inventory.bookedSeats
+    )
+
+  const heldSeats =
+    toInteger(
+      inventory.heldSeats
+    )
+
+  if (
+    seatCapacity === null ||
+    bookedSeats === null ||
+    heldSeats === null ||
+    seatCapacity < 0 ||
+    bookedSeats < 0 ||
+    heldSeats < 0
+  ) {
+    throw new StatusUpdateError(
+      409,
+      `The ${journey} inventory has invalid seat data.`
+    )
+  }
+
+  const salesStatus =
+    cleanText(
+      inventory.salesStatus
+    ).toUpperCase()
+
+  if (action === "cancel") {
+    if (
+      bookedSeats <
+      passengerCount
+    ) {
+      throw new StatusUpdateError(
+        409,
+        `The booked-seat count for the ${journey} inventory is lower than this booking passenger count.`
+      )
+    }
+
+    try {
+      await tablesDB.decrementRowColumn({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId:
+          appwriteConfig
+            .tripInventoryTableId,
+
+        rowId:
+          inventoryId,
+
+        column:
+          "bookedSeats",
+
+        value:
+          passengerCount,
+
+        min: 0,
+        transactionId,
+      })
+    } catch (error) {
+      console.error(
+        `${journey} cancellation seat adjustment error:`,
+        error
+      )
+
+      throw new StatusUpdateError(
+        409,
+        `The ${journey} trip inventory changed while the cancellation was being processed.`
+      )
+    }
+
+    const nextBookedSeats =
+      bookedSeats -
+      passengerCount
+
+    const availableSeats =
+      seatCapacity -
+      nextBookedSeats -
+      heldSeats
+
+    let nextSalesStatus =
+      salesStatus
+
+    /*
+     * Pembatalan membuka kembali inventory
+     * yang sebelumnya SOLD_OUT apabila
+     * kursi sudah tersedia.
+     *
+     * Inventory CLOSED atau CANCELLED
+     * tidak dibuka secara otomatis.
+     */
+    if (
+      salesStatus === "SOLD_OUT" &&
+      availableSeats > 0
+    ) {
+      await tablesDB.updateRow({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId:
+          appwriteConfig
+            .tripInventoryTableId,
+
+        rowId:
+          inventoryId,
+
+        data: {
+          salesStatus:
+            "OPEN",
+        },
+
+        transactionId,
+      })
+
+      nextSalesStatus = "OPEN"
+    }
+
+    return {
+      journey,
+      inventoryId,
+      adjusted: true,
+      availableSeats,
+      salesStatus:
+        nextSalesStatus,
+    }
+  }
+
+  /*
+   * Reactivation
+   */
+  if (
+    inventory.isActive !== true
+  ) {
+    throw new StatusUpdateError(
+      409,
+      `The ${journey} inventory is inactive and cannot accept this booking.`
+    )
+  }
+
+  if (
+    salesStatus === "CLOSED" ||
+    salesStatus === "CANCELLED"
+  ) {
+    throw new StatusUpdateError(
+      409,
+      `The ${journey} inventory is not open for booking reactivation.`
+    )
+  }
+
+  const currentAvailableSeats =
+    seatCapacity -
+    bookedSeats -
+    heldSeats
+
+  if (
+    currentAvailableSeats <
+    passengerCount
+  ) {
+    throw new StatusUpdateError(
+      409,
+
+      currentAvailableSeats <= 0
+        ? `The ${journey} trip is sold out.`
+        : `Only ${currentAvailableSeats} seats remain in the ${journey} inventory.`
+    )
+  }
+
+  try {
+    await tablesDB.incrementRowColumn({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      column:
+        "bookedSeats",
+
+      value:
+        passengerCount,
+
+      max:
+        seatCapacity -
+        heldSeats,
+
+      transactionId,
+    })
+  } catch (error) {
+    console.error(
+      `${journey} reactivation seat adjustment error:`,
+      error
+    )
+
+    throw new StatusUpdateError(
+      409,
+      `The ${journey} trip inventory changed while the booking was being reactivated.`
+    )
+  }
+
+  const nextBookedSeats =
+    bookedSeats +
+    passengerCount
+
+  const availableSeats =
+    seatCapacity -
+    nextBookedSeats -
+    heldSeats
+
+  let nextSalesStatus =
+    salesStatus
+
+  if (
+    availableSeats <= 0 &&
+    salesStatus !== "SOLD_OUT"
+  ) {
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      data: {
+        salesStatus:
+          "SOLD_OUT",
+      },
+
+      transactionId,
+    })
+
+    nextSalesStatus =
+      "SOLD_OUT"
+  } else if (
+    availableSeats > 0 &&
+    salesStatus === "SOLD_OUT"
+  ) {
+    /*
+     * Penanganan defensif apabila status
+     * SOLD_OUT tidak sesuai dengan jumlah
+     * kursi aktual.
+     */
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      data: {
+        salesStatus:
+          "OPEN",
+      },
+
+      transactionId,
+    })
+
+    nextSalesStatus = "OPEN"
+  }
+
+  return {
+    journey,
+    inventoryId,
+    adjusted: true,
+    availableSeats,
+    salesStatus:
+      nextSalesStatus,
+  }
+}
+
 export async function PATCH(
   request: Request,
   context: RouteContext
 ) {
-  let transactionId: string | null = null
+  let transactionId:
+    | string
+    | null = null
 
   try {
     const admin =
@@ -228,9 +566,11 @@ export async function PATCH(
       )
     }
 
-    const { id } = await context.params
+    const { id } =
+      await context.params
 
-    const bookingId = cleanText(id)
+    const bookingId =
+      cleanText(id)
 
     if (!bookingId) {
       throw new StatusUpdateError(
@@ -239,15 +579,28 @@ export async function PATCH(
       )
     }
 
-    const body =
-      (await request.json()) as
-        UpdateBookingRequest
+    let body:
+      UpdateBookingRequest
+
+    try {
+      body =
+        (await request.json()) as UpdateBookingRequest
+    } catch {
+      throw new StatusUpdateError(
+        400,
+        "The request body is not valid JSON."
+      )
+    }
 
     const nextBookingStatus =
-      cleanText(body.bookingStatus)
+      cleanText(
+        body.bookingStatus
+      )
 
     const nextPaymentStatus =
-      cleanText(body.paymentStatus)
+      cleanText(
+        body.paymentStatus
+      )
 
     if (
       !isBookingStatus(
@@ -276,9 +629,10 @@ export async function PATCH(
         ttl: 60,
       })
 
-    transactionId = cleanText(
-      transaction.$id
-    )
+    transactionId =
+      cleanText(
+        transaction.$id
+      )
 
     if (!transactionId) {
       throw new StatusUpdateError(
@@ -289,9 +643,12 @@ export async function PATCH(
 
     const booking =
       await getTransactionRow(
-        appwriteConfig.bookingsTableId,
+        appwriteConfig
+          .bookingsTableId,
+
         bookingId,
         transactionId,
+
         "Booking could not be found."
       )
 
@@ -319,6 +676,7 @@ export async function PATCH(
     ) {
       throw new StatusUpdateError(
         409,
+
         `Booking status cannot be changed from ${currentBookingStatus} to ${nextBookingStatus}.`
       )
     }
@@ -335,261 +693,132 @@ export async function PATCH(
       nextBookingStatus !==
         "Cancelled"
 
-    const tripInventoryId =
-      cleanText(
-        booking.tripInventoryId
+    const needsSeatAdjustment =
+      isCancelling ||
+      isReactivating
+
+    const passengerCount =
+      toInteger(
+        booking.passengerCount
       )
 
-    let inventoryAdjusted = false
-    let availableSeats:
-      number | null = null
-
-    /*
-     * Booking lama yang tidak memiliki
-     * tripInventoryId tetap boleh diubah
-     * statusnya, tetapi tidak mengubah
-     * Trip Inventory.
-     */
     if (
-      tripInventoryId &&
-      (isCancelling ||
-        isReactivating)
-    ) {
-      const passengerCount =
-        toInteger(
-          booking.passengerCount
-        )
-
-      if (
+      needsSeatAdjustment &&
+      (
         passengerCount === null ||
         passengerCount < 1
-      ) {
-        throw new StatusUpdateError(
-          409,
-          "The booking has an invalid passenger count."
-        )
-      }
+      )
+    ) {
+      throw new StatusUpdateError(
+        409,
+        "The booking has an invalid passenger count."
+      )
+    }
 
-      const inventory =
-        await getTransactionRow(
-          appwriteConfig
-            .tripInventoryTableId,
+    /*
+     * Field lama tripInventoryId tetap
+     * menjadi outbound inventory.
+     * tripId dipakai sebagai fallback
+     * untuk booking lama.
+     */
+    const outboundInventoryId =
+      cleanText(
+        booking.tripInventoryId
+      ) ||
+      cleanText(
+        booking.tripId
+      )
 
-          tripInventoryId,
-          transactionId,
+    const returnInventoryId =
+      cleanText(
+        booking.returnTripInventoryId
+      )
 
-          "The booking inventory could not be found."
-        )
+    const bookingTripType =
+      cleanText(
+        booking.tripType
+      ).toLowerCase()
 
-      const seatCapacity =
-        toInteger(
-          inventory.seatCapacity
-        )
+    if (
+      needsSeatAdjustment &&
+      bookingTripType ===
+        "round-trip" &&
+      !returnInventoryId
+    ) {
+      throw new StatusUpdateError(
+        409,
+        "This round-trip booking does not contain a linked return inventory. Its status cannot be changed safely."
+      )
+    }
 
-      const bookedSeats =
-        toInteger(
-          inventory.bookedSeats
-        )
+    const inventoryAdjustments:
+      InventoryAdjustment[] = []
 
-      const heldSeats =
-        toInteger(
-          inventory.heldSeats
-        )
+    if (
+      needsSeatAdjustment &&
+      passengerCount !== null
+    ) {
+      const action =
+        isCancelling
+          ? "cancel"
+          : "reactivate"
 
-      if (
-        seatCapacity === null ||
-        bookedSeats === null ||
-        heldSeats === null ||
-        seatCapacity < 0 ||
-        bookedSeats < 0 ||
-        heldSeats < 0
-      ) {
-        throw new StatusUpdateError(
-          409,
-          "The linked inventory has invalid seat data."
-        )
-      }
+      /*
+       * Booking lama yang tidak memiliki
+       * inventory ID masih boleh diperbarui
+       * statusnya tanpa perubahan kursi.
+       *
+       * Booking round-trip baru wajib
+       * memiliki kedua inventory.
+       */
+      if (outboundInventoryId) {
+        const outboundAdjustment =
+          await adjustInventorySeats({
+            inventoryId:
+              outboundInventoryId,
 
-      const salesStatus =
-        cleanText(
-          inventory.salesStatus
-        ).toUpperCase()
-
-      if (isCancelling) {
-        if (
-          bookedSeats <
-          passengerCount
-        ) {
-          throw new StatusUpdateError(
-            409,
-            "The inventory booked-seat count is lower than this booking passenger count."
-          )
-        }
-
-        await tablesDB.decrementRowColumn({
-          databaseId:
-            appwriteConfig.databaseId,
-
-          tableId:
-            appwriteConfig
-              .tripInventoryTableId,
-
-          rowId:
-            tripInventoryId,
-
-          column:
-            "bookedSeats",
-
-          value:
             passengerCount,
-
-          min:
-            0,
-
-          transactionId,
-        })
-
-        const nextBookedSeats =
-          bookedSeats -
-          passengerCount
-
-        availableSeats =
-          seatCapacity -
-          nextBookedSeats -
-          heldSeats
-
-        /*
-         * Jika sebelumnya SOLD_OUT dan
-         * pembatalan membuat kursi tersedia,
-         * inventory dibuka kembali.
-         */
-        if (
-          salesStatus ===
-            "SOLD_OUT" &&
-          availableSeats > 0
-        ) {
-          await tablesDB.updateRow({
-            databaseId:
-              appwriteConfig.databaseId,
-
-            tableId:
-              appwriteConfig
-                .tripInventoryTableId,
-
-            rowId:
-              tripInventoryId,
-
-            data: {
-              salesStatus:
-                "OPEN",
-            },
-
             transactionId,
-          })
-        }
 
-        inventoryAdjusted = true
+            journey:
+              "outbound",
+
+            action,
+          })
+
+        inventoryAdjustments.push(
+          outboundAdjustment
+        )
       }
 
-      if (isReactivating) {
+      if (returnInventoryId) {
         if (
-          inventory.isActive !==
-          true
+          returnInventoryId ===
+          outboundInventoryId
         ) {
           throw new StatusUpdateError(
             409,
-            "The linked inventory is inactive and cannot accept this booking."
+            "Outbound and return inventory IDs cannot be identical."
           )
         }
 
-        if (
-          salesStatus ===
-            "CLOSED" ||
-          salesStatus ===
-            "CANCELLED"
-        ) {
-          throw new StatusUpdateError(
-            409,
-            "The linked inventory is not open for reactivation."
-          )
-        }
+        const returnAdjustment =
+          await adjustInventorySeats({
+            inventoryId:
+              returnInventoryId,
 
-        const currentAvailableSeats =
-          seatCapacity -
-          bookedSeats -
-          heldSeats
-
-        if (
-          currentAvailableSeats <
-          passengerCount
-        ) {
-          throw new StatusUpdateError(
-            409,
-            currentAvailableSeats <= 0
-              ? "The linked inventory is sold out."
-              : `Only ${currentAvailableSeats} seats remain in the linked inventory.`
-          )
-        }
-
-        await tablesDB.incrementRowColumn({
-          databaseId:
-            appwriteConfig.databaseId,
-
-          tableId:
-            appwriteConfig
-              .tripInventoryTableId,
-
-          rowId:
-            tripInventoryId,
-
-          column:
-            "bookedSeats",
-
-          value:
             passengerCount,
-
-          max:
-            seatCapacity -
-            heldSeats,
-
-          transactionId,
-        })
-
-        const nextBookedSeats =
-          bookedSeats +
-          passengerCount
-
-        availableSeats =
-          seatCapacity -
-          nextBookedSeats -
-          heldSeats
-
-        if (
-          availableSeats <= 0 &&
-          salesStatus ===
-            "OPEN"
-        ) {
-          await tablesDB.updateRow({
-            databaseId:
-              appwriteConfig.databaseId,
-
-            tableId:
-              appwriteConfig
-                .tripInventoryTableId,
-
-            rowId:
-              tripInventoryId,
-
-            data: {
-              salesStatus:
-                "SOLD_OUT",
-            },
-
             transactionId,
-          })
-        }
 
-        inventoryAdjusted = true
+            journey:
+              "return",
+
+            action,
+          })
+
+        inventoryAdjustments.push(
+          returnAdjustment
+        )
       }
     }
 
@@ -623,6 +852,20 @@ export async function PATCH(
 
     transactionId = null
 
+    const outboundAdjustment =
+      inventoryAdjustments.find(
+        (adjustment) =>
+          adjustment.journey ===
+          "outbound"
+      )
+
+    const returnAdjustment =
+      inventoryAdjustments.find(
+        (adjustment) =>
+          adjustment.journey ===
+          "return"
+      )
+
     return noStoreJson({
       success: true,
 
@@ -639,8 +882,26 @@ export async function PATCH(
           nextPaymentStatus,
       },
 
-      inventoryAdjusted,
-      availableSeats,
+      /*
+       * Field lama dipertahankan agar
+       * client lama tetap kompatibel.
+       */
+      inventoryAdjusted:
+        inventoryAdjustments.length >
+        0,
+
+      availableSeats:
+        outboundAdjustment
+          ?.availableSeats ??
+        null,
+
+      outboundInventory:
+        outboundAdjustment ?? null,
+
+      returnInventory:
+        returnAdjustment ?? null,
+
+      inventoryAdjustments,
     })
   } catch (error) {
     if (transactionId) {
@@ -656,7 +917,8 @@ export async function PATCH(
       return noStoreJson(
         {
           success: false,
-          error: error.message,
+          error:
+            error.message,
         },
         error.status
       )
@@ -674,8 +936,9 @@ export async function PATCH(
       return noStoreJson(
         {
           success: false,
+
           error:
-            "The booking or inventory changed while the status was being updated. Please reload and try again.",
+            "The booking or linked inventory changed while the status was being updated. Please reload and try again.",
         },
         409
       )
@@ -684,6 +947,7 @@ export async function PATCH(
     return noStoreJson(
       {
         success: false,
+
         error:
           error instanceof Error
             ? error.message

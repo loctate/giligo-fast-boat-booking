@@ -473,10 +473,9 @@ export default async function SearchPage({
               </p>
 
               <p className="mt-1 text-sm">
-                Select the outbound trip first.
-                Return-trip selection will be
-                connected in the next booking
-                integration stage.
+               Choose your outbound trip first. After that, you will
+  select an available return trip from {to} to {from} on{" "}
+  {formatDate(returnDate)}.
               </p>
             </div>
           )}
@@ -690,28 +689,41 @@ export default async function SearchPage({
                       </div>
 
                       <Link
-                        href={{
-                          pathname: "/checkout",
-
-                          query: {
-                            tripInventoryId:
-                              trip.tripInventoryId,
-
-                            departureDate:
-                              trip.travelDate,
-
-                            returnDate,
-
-                            tripType,
-
-                            passengers:
-                              passengerCount.toString(),
-                          },
-                        }}
-                        className="mt-6 block w-full rounded-xl bg-cyan-600 px-5 py-3.5 text-center font-black text-white transition hover:bg-cyan-700"
-                      >
-                        Select Trip
-                      </Link>
+  href={
+    tripType === "round-trip"
+      ? {
+          pathname: "/search/return",
+          query: {
+            outboundTripInventoryId:
+              trip.tripInventoryId,
+            from,
+            to,
+            departureDate:
+              trip.travelDate,
+            returnDate,
+            passengers:
+              passengerCount.toString(),
+          },
+        }
+      : {
+          pathname: "/checkout",
+          query: {
+            tripInventoryId:
+              trip.tripInventoryId,
+            departureDate:
+              trip.travelDate,
+            tripType: "one-way",
+            passengers:
+              passengerCount.toString(),
+          },
+        }
+  }
+  className="mt-6 block w-full rounded-xl bg-cyan-600 px-5 py-3.5 text-center font-black text-white transition hover:bg-cyan-700"
+>
+  {tripType === "round-trip"
+    ? "Choose Outbound Trip"
+    : "Select Trip"}
+</Link>
                     </div>
                   </div>
                 </article>
