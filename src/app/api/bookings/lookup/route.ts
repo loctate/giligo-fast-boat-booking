@@ -18,7 +18,27 @@ type Passenger = {
   name: string
 }
 
-type AppwriteRow = Record<string, unknown> & {
+type BookingTrip = {
+  id: string
+  inventoryCode: string
+  operator: string
+  vesselName: string
+  routeCode: string
+  from: string
+  to: string
+  departureTime: string
+  arrivalTime: string
+  arrivalDayOffset: number
+  duration: string
+  price: number
+  currency: string
+  checkInLocation: string
+}
+
+type AppwriteRow = Record<
+  string,
+  unknown
+> & {
   $id?: string
   $createdAt?: string
 }
@@ -108,7 +128,10 @@ function parsePassengers(
         }
 
         const passenger =
-          item as Record<string, unknown>
+          item as Record<
+            string,
+            unknown
+          >
 
         const name = cleanText(
           passenger.name
@@ -121,7 +144,8 @@ function parsePassengers(
         const number =
           toInteger(
             passenger.number
-          ) ?? index + 1
+          ) ??
+          index + 1
 
         return {
           number,
@@ -139,6 +163,137 @@ function parsePassengers(
   }
 }
 
+function parseReturnTrip(
+  value: unknown
+): BookingTrip | null {
+  if (
+    typeof value !== "string" ||
+    !value.trim()
+  ) {
+    return null
+  }
+
+  try {
+    const parsedValue: unknown =
+      JSON.parse(value)
+
+    if (
+      typeof parsedValue !== "object" ||
+      parsedValue === null ||
+      Array.isArray(parsedValue)
+    ) {
+      return null
+    }
+
+    const trip =
+      parsedValue as Record<
+        string,
+        unknown
+      >
+
+    const id = cleanText(
+      trip.id
+    )
+
+    const inventoryCode =
+      cleanText(
+        trip.inventoryCode
+      )
+
+    const operator = cleanText(
+      trip.operator
+    )
+
+    const vesselName =
+      cleanText(
+        trip.vesselName
+      )
+
+    const routeCode =
+      cleanText(
+        trip.routeCode
+      )
+
+    const from = cleanText(
+      trip.from
+    )
+
+    const to = cleanText(
+      trip.to
+    )
+
+    const departureTime =
+      cleanText(
+        trip.departureTime
+      )
+
+    const arrivalTime =
+      cleanText(
+        trip.arrivalTime
+      )
+
+    const duration = cleanText(
+      trip.duration
+    )
+
+    const currency =
+      cleanText(
+        trip.currency
+      ).toUpperCase() || "IDR"
+
+    const checkInLocation =
+      cleanText(
+        trip.checkInLocation
+      )
+
+    const arrivalDayOffset =
+      toInteger(
+        trip.arrivalDayOffset
+      ) ?? 0
+
+    const price = toInteger(
+      trip.price
+    )
+
+    if (
+      !id ||
+      !operator ||
+      !from ||
+      !to ||
+      !departureTime ||
+      !arrivalTime ||
+      price === null ||
+      price < 0 ||
+      arrivalDayOffset < 0
+    ) {
+      return null
+    }
+
+    return {
+      id,
+      inventoryCode,
+      operator,
+      vesselName,
+      routeCode,
+      from,
+      to,
+      departureTime,
+      arrivalTime,
+      arrivalDayOffset,
+      duration:
+        duration ||
+        "Duration unavailable",
+      price,
+      currency,
+      checkInLocation:
+        checkInLocation ||
+        "Check-in details will be provided after booking.",
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function POST(
   request: Request
 ) {
@@ -147,8 +302,7 @@ export async function POST(
 
     try {
       body =
-        (await request.json()) as
-          LookupRequest
+        (await request.json()) as LookupRequest
     } catch {
       throw new LookupError(
         400,
@@ -156,14 +310,15 @@ export async function POST(
       )
     }
 
-    const bookingCode = cleanText(
-      body.bookingCode
-    ).toUpperCase()
+    const bookingCode =
+      cleanText(
+        body.bookingCode
+      ).toUpperCase()
 
-    const email = cleanText(
-      body.email
-    ).toLowerCase()
-
+    const email =
+      cleanText(
+        body.email
+      ).toLowerCase()
 
     if (!bookingCode || !email) {
       throw new LookupError(
@@ -214,10 +369,10 @@ export async function POST(
       })
 
     const rows =
-      result.rows as unknown as
-        AppwriteRow[]
+      result.rows as unknown as AppwriteRow[]
 
-    const booking = rows[0]
+    const booking =
+      rows[0]
 
     const verificationError =
       "Booking could not be verified. Check the booking code and email address."
@@ -229,9 +384,10 @@ export async function POST(
       )
     }
 
-    const storedEmail = cleanText(
-      booking.customerEmail
-    ).toLowerCase()
+    const storedEmail =
+      cleanText(
+        booking.customerEmail
+      ).toLowerCase()
 
     /*
      * Gunakan pesan yang sama ketika booking
@@ -273,6 +429,16 @@ export async function POST(
         booking.passengersJson
       )
 
+    const tripType =
+      cleanText(
+        booking.tripType
+      ).toLowerCase()
+
+    const returnTrip =
+      parseReturnTrip(
+        booking.returnTripJson
+      )
+
     if (
       passengerCount === null ||
       passengerCount < 1 ||
@@ -285,6 +451,104 @@ export async function POST(
       throw new LookupError(
         500,
         "The stored booking data is incomplete."
+      )
+    }
+
+    if (
+      tripType === "round-trip" &&
+      !returnTrip
+    ) {
+      throw new LookupError(
+        500,
+        "The stored return-trip data is incomplete."
+      )
+    }
+
+    const currency =
+      cleanText(
+        booking.currency
+      ).toUpperCase() || "IDR"
+
+    const outboundTrip: BookingTrip = {
+      id:
+        cleanText(
+          booking.tripInventoryId
+        ) ||
+        cleanText(
+          booking.tripId
+        ),
+
+      inventoryCode:
+        cleanText(
+          booking.inventoryCode
+        ),
+
+      operator:
+        cleanText(
+          booking.operatorName
+        ),
+
+      vesselName:
+        cleanText(
+          booking.vesselName
+        ),
+
+      routeCode:
+        cleanText(
+          booking.routeCode
+        ),
+
+      from:
+        cleanText(
+          booking.fromPort
+        ),
+
+      to:
+        cleanText(
+          booking.toPort
+        ),
+
+      departureTime:
+        cleanText(
+          booking.departureTime
+        ),
+
+      arrivalTime:
+        cleanText(
+          booking.arrivalTime
+        ),
+
+      arrivalDayOffset,
+
+      duration:
+        cleanText(
+          booking.duration
+        ) ||
+        "Duration unavailable",
+
+      price:
+        pricePerPassenger,
+
+      currency,
+
+      checkInLocation:
+        cleanText(
+          booking.checkInLocation
+        ) ||
+        "Check-in details will be provided after booking.",
+    }
+
+    if (
+      !outboundTrip.id ||
+      !outboundTrip.operator ||
+      !outboundTrip.from ||
+      !outboundTrip.to ||
+      !outboundTrip.departureTime ||
+      !outboundTrip.arrivalTime
+    ) {
+      throw new LookupError(
+        500,
+        "The stored outbound-trip data is incomplete."
       )
     }
 
@@ -312,10 +576,7 @@ export async function POST(
             booking.paymentStatus
           ),
 
-        tripType:
-          cleanText(
-            booking.tripType
-          ),
+        tripType,
 
         departureDate:
           cleanText(
@@ -329,11 +590,7 @@ export async function POST(
 
         passengerCount,
         totalPrice,
-
-        currency:
-          cleanText(
-            booking.currency
-          ) || "IDR",
+        currency,
 
         customer: {
           fullName:
@@ -362,78 +619,22 @@ export async function POST(
             booking.notes
           ),
 
-        trip: {
-          id:
-            cleanText(
-              booking.tripInventoryId
-            ) ||
-            cleanText(
-              booking.tripId
-            ),
+        trip:
+          outboundTrip,
 
-          inventoryCode:
-            cleanText(
-              booking.inventoryCode
-            ),
-
-          operator:
-            cleanText(
-              booking.operatorName
-            ),
-
-          vesselName:
-            cleanText(
-              booking.vesselName
-            ),
-
-          routeCode:
-            cleanText(
-              booking.routeCode
-            ),
-
-          from:
-            cleanText(
-              booking.fromPort
-            ),
-
-          to:
-            cleanText(
-              booking.toPort
-            ),
-
-          departureTime:
-            cleanText(
-              booking.departureTime
-            ),
-
-          arrivalTime:
-            cleanText(
-              booking.arrivalTime
-            ),
-
-          arrivalDayOffset,
-
-          duration:
-            cleanText(
-              booking.duration
-            ),
-
-          price:
-            pricePerPassenger,
-
-          checkInLocation:
-            cleanText(
-              booking.checkInLocation
-            ),
-        },
+        returnTrip:
+          returnTrip,
       },
     })
   } catch (error) {
-    if (error instanceof LookupError) {
+    if (
+      error instanceof LookupError
+    ) {
       return noStoreJson(
         {
           success: false,
-          error: error.message,
+          error:
+            error.message,
         },
         error.status
       )
@@ -447,6 +648,7 @@ export async function POST(
     return noStoreJson(
       {
         success: false,
+
         error:
           "The booking lookup service is currently unavailable.",
       },
