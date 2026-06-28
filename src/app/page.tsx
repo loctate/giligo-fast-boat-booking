@@ -405,12 +405,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+            {/* Footer */}
       <footer
         id="contact"
         className="bg-slate-950 text-slate-300"
       >
-        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-[1.6fr_0.7fr_0.9fr] lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-2 lg:grid-cols-[1.5fr_0.7fr_1fr_0.8fr] lg:px-8">
           {/* Brand */}
           <div>
             <a
@@ -500,6 +500,50 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Information and policies */}
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">
+              Information
+            </h3>
+
+            <div className="mt-6 flex flex-col gap-4 text-sm">
+              <a
+                href="/about"
+                className="transition hover:text-cyan-300"
+              >
+                About Us
+              </a>
+
+              <a
+                href="/contact"
+                className="transition hover:text-cyan-300"
+              >
+                Contact Us
+              </a>
+
+              <a
+                href="/terms-and-conditions"
+                className="transition hover:text-cyan-300"
+              >
+                Terms and Conditions
+              </a>
+
+              <a
+                href="/privacy-policy"
+                className="transition hover:text-cyan-300"
+              >
+                Privacy Policy
+              </a>
+
+              <a
+                href="/refund-and-cancellation-policy"
+                className="transition hover:text-cyan-300"
+              >
+                Refund and Cancellation
+              </a>
+            </div>
+          </div>
+
           {/* Contact */}
           <div>
             <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">
@@ -543,15 +587,35 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Footer bottom */}
         <div className="border-t border-slate-800">
-          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
             <p>
               © 2026 Nusa Gili Boat. All rights reserved.
             </p>
 
-            <p>
-              Fast boat booking for Bali and the Gili Islands.
-            </p>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <a
+                href="/terms-and-conditions"
+                className="transition hover:text-cyan-300"
+              >
+                Terms
+              </a>
+
+              <a
+                href="/privacy-policy"
+                className="transition hover:text-cyan-300"
+              >
+                Privacy
+              </a>
+
+              <a
+                href="/refund-and-cancellation-policy"
+                className="transition hover:text-cyan-300"
+              >
+                Refund Policy
+              </a>
+            </div>
           </div>
         </div>
       </footer>
