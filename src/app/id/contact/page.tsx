@@ -9,63 +9,63 @@ import PublicInfoPage from "@/components/PublicInfoPage"
 import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
 
 export const metadata: Metadata = createPublicPageMetadata({
-  locale: "en",
+  locale: "id",
   path: "/contact",
-  title: "Contact Us | Nusa Gili Boat",
-  description: "Contact the Nusa Gili Boat team for help with fast boat bookings, schedules, travel changes, payments, cancellations, refunds, and e-tickets.",
+  title: "Hubungi Kami | Nusa Gili Boat",
+  description: "Hubungi tim Nusa Gili Boat untuk bantuan booking tiket fast boat, informasi jadwal, perubahan perjalanan, pembayaran, pembatalan, refund, dan e-ticket.",
 })
 
 const supportTopics = [
   {
-    title: "Fast boat ticket bookings",
+    title: "Pemesanan tiket fast boat",
     description:
-      "Assistance with finding journeys, selecting an operator, making one-way or round-trip bookings, and checking seat availability.",
+      "Bantuan mencari perjalanan, memilih operator, membuat booking one-way atau round-trip, dan memeriksa ketersediaan kursi.",
   },
   {
-    title: "Schedule and route information",
+    title: "Informasi jadwal dan rute",
     description:
-      "Information about travel schedules, routes, departure ports, destinations, operators, and vessels.",
+      "Informasi mengenai jadwal perjalanan, rute, pelabuhan keberangkatan, tujuan, operator, dan kapal.",
   },
   {
-    title: "Booking changes",
+    title: "Perubahan booking",
     description:
-      "Requests to change passenger names, travel dates, schedules, routes, or booking details, subject to operator terms.",
+      "Permintaan perubahan nama penumpang, tanggal perjalanan, jadwal, rute, atau data booking sesuai ketentuan operator.",
   },
   {
-    title: "Cancellations and refunds",
+    title: "Pembatalan dan refund",
     description:
-      "Assistance with booking cancellations, refund eligibility, supporting documents, and refund status.",
+      "Bantuan terkait pembatalan booking, kelayakan refund, dokumen pendukung, dan status pengembalian dana.",
   },
   {
-    title: "Payments",
+    title: "Pembayaran",
     description:
-      "Assistance with pending payments, failed transactions, duplicate payments, or payment statuses that have not been updated.",
+      "Bantuan untuk pembayaran tertunda, transaksi gagal, pembayaran ganda, atau status pembayaran yang belum diperbarui.",
   },
   {
-    title: "Check-in and travel",
+    title: "Check-in dan perjalanan",
     description:
-      "Information about check-in locations, arrival times, travel documents, e-tickets, and pre-departure requirements.",
+      "Informasi titik check-in, waktu kedatangan, dokumen perjalanan, e-ticket, dan persyaratan sebelum keberangkatan.",
   },
 ]
 
 const requiredInformation = [
-  "Full name of the person who made the booking.",
-  "Booking code or Booking ID, if available.",
-  "Email address used when making the booking.",
-  "A telephone or WhatsApp number where you can be reached.",
-  "Travel date and route.",
-  "Operator or vessel name, if available.",
-  "A brief explanation of your question or issue.",
-  "Proof of payment or supporting documents, where relevant.",
+  "Nama lengkap pemesan.",
+  "Kode booking atau Booking ID, apabila sudah tersedia.",
+  "Alamat email yang digunakan saat booking.",
+  "Nomor telepon atau WhatsApp yang dapat dihubungi.",
+  "Tanggal dan rute perjalanan.",
+  "Nama operator atau kapal, apabila tersedia.",
+  "Penjelasan singkat mengenai pertanyaan atau kendala.",
+  "Bukti pembayaran atau dokumen pendukung apabila relevan.",
 ]
 
 export default function ContactPage() {
   return (
     <PublicInfoPage
-      locale="en"
-      eyebrow="Customer Support"
-      title="We are here to help with your journey"
-      description="Contact the Nusa Gili Boat team with questions about ticket bookings, departure schedules, travel changes, payments, cancellations, refunds, e-tickets, and other travel information."
+      locale="id"
+      eyebrow="Layanan Pelanggan"
+      title="Kami siap membantu perjalanan Anda"
+      description="Hubungi tim Nusa Gili Boat untuk pertanyaan mengenai booking tiket, jadwal keberangkatan, perubahan perjalanan, pembayaran, pembatalan, refund, e-ticket, dan informasi perjalanan lainnya."
     >
       <section className="grid gap-5 md:grid-cols-2">
         <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
@@ -74,15 +74,14 @@ export default function ContactPage() {
           </p>
 
           <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Send us your enquiry by email
+            Kirim pertanyaan melalui email
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use the official Nusa Gili Boat email
-            address for general enquiries, bookings,
-            payments, travel changes, cancellations,
-            refunds, and personal data protection
-            requests.
+            Gunakan email resmi Nusa Gili Boat untuk
+            pertanyaan umum, booking, pembayaran,
+            perubahan perjalanan, pembatalan, refund,
+            dan pelindungan data pribadi.
           </p>
 
           <a
@@ -99,13 +98,14 @@ export default function ContactPage() {
           </p>
 
           <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Contact customer support
+            Hubungi layanan pelanggan
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use WhatsApp for booking assistance,
-            departure information, schedule changes,
-            or journeys taking place soon.
+            Gunakan WhatsApp untuk bantuan booking,
+            informasi keberangkatan, perubahan jadwal,
+            atau perjalanan yang akan berlangsung dalam
+            waktu dekat.
           </p>
 
           <a
@@ -123,38 +123,39 @@ export default function ContactPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Operating hours
+              Jam operasional
             </p>
 
             <h2 className="mt-3 text-2xl font-bold text-slate-950">
-              Monday–Sunday
+              Senin–Minggu
             </h2>
 
             <p className="mt-3 text-3xl font-black text-slate-950">
-              08:00–20:00 WITA
+              08.00–20.00 WITA
             </p>
 
             <p className="mt-3 text-sm leading-7 text-slate-500">
-              WITA is Central Indonesia Time, or UTC+8.
+              WITA adalah Waktu Indonesia Tengah atau
+              UTC+8.
             </p>
           </div>
 
           <div className="space-y-3 leading-7 text-slate-600">
             <p>
-              We aim to respond as quickly as possible
-              during our operating hours.
+              Kami berupaya memberikan respons secepat
+              mungkin selama jam operasional.
             </p>
 
             <p>
-              Messages received outside operating hours
-              will be reviewed during the next service
-              period.
+              Pesan yang diterima di luar jam layanan
+              akan ditinjau pada periode operasional
+              berikutnya.
             </p>
 
             <p>
-              Response times may vary depending on the
-              number of requests, urgency, and whether
-              confirmation from an operator is required.
+              Waktu respons dapat berbeda tergantung
+              jumlah permintaan, tingkat urgensi, dan
+              kebutuhan konfirmasi kepada operator.
             </p>
           </div>
         </div>
@@ -163,11 +164,11 @@ export default function ContactPage() {
       <section className="space-y-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Support Services
+            Layanan bantuan
           </p>
 
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            How we can help
+            Hal yang dapat kami bantu
           </h2>
         </div>
 
@@ -191,13 +192,13 @@ export default function ContactPage() {
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Information to include
+          Informasi yang perlu disertakan
         </h2>
 
         <p className="leading-8 text-slate-600">
-          To help us review your request quickly and
-          accurately, please provide the following
-          relevant information:
+          Agar permintaan dapat diperiksa dengan lebih
+          cepat dan tepat, sertakan informasi yang
+          relevan berikut:
         </p>
 
         <ul className="list-disc space-y-3 pl-6 leading-7 text-slate-600">
@@ -210,104 +211,105 @@ export default function ContactPage() {
 
         <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <h3 className="font-semibold text-amber-950">
-            Protect your payment information
+            Lindungi informasi pembayaran Anda
           </h3>
 
           <p className="mt-2 leading-7 text-amber-900">
-            Do not send your PIN, banking password,
-            complete card number, CVV, or OTP code by
-            email, WhatsApp, or any other customer
-            support channel.
+            Jangan mengirimkan PIN, kata sandi
+            perbankan, nomor kartu lengkap, CVV, atau
+            kode OTP melalui email, WhatsApp, maupun
+            saluran layanan pelanggan lainnya.
           </p>
         </aside>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Travel taking place soon
+          Perjalanan dalam waktu dekat
         </h2>
 
         <p className="leading-8 text-slate-600">
-          For a journey departing soon, include the word
+          Untuk perjalanan yang akan berangkat dalam
+          waktu dekat, cantumkan kata
           <strong className="font-semibold text-slate-950">
             {" URGENT "}
           </strong>
-          and your booking code at the beginning of your
-          message or email subject.
+          dan kode booking pada awal pesan atau subjek
+          email.
         </p>
 
         <p className="leading-8 text-slate-600">
-          When you are already at the port, also follow
-          the instructions provided by port staff and
-          the fast boat operator listed in your travel
-          confirmation or e-ticket.
+          Apabila Anda sudah berada di pelabuhan,
+          ikuti juga arahan petugas pelabuhan dan
+          operator fast boat yang tercantum pada
+          konfirmasi perjalanan atau e-ticket.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat is not an emergency service.
-          In a situation that threatens your safety,
-          immediately contact port staff, the vessel
-          operator, or local emergency services.
+          Nusa Gili Boat bukan layanan darurat. Dalam
+          kondisi yang mengancam keselamatan, segera
+          hubungi petugas pelabuhan, operator kapal,
+          atau layanan darurat setempat.
         </p>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Check your booking
+          Periksa booking Anda
         </h2>
 
         <p className="leading-8 text-slate-600">
-          You can retrieve your booking details using
-          the booking code and email address provided
-          when the booking was made.
+          Detail booking dapat diperiksa kembali
+          menggunakan kode booking dan alamat email
+          yang digunakan saat pemesanan.
         </p>
 
         <Link
           href="/"
           className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
         >
-          Check booking
+          Periksa booking
         </Link>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Service policies
+          Kebijakan layanan
         </h2>
 
         <p className="leading-8 text-slate-600">
-          Before requesting a change, cancellation,
-          refund, or action relating to personal data,
-          please read the relevant policy.
+          Sebelum mengajukan perubahan, pembatalan,
+          refund, atau permintaan terkait data pribadi,
+          silakan membaca kebijakan yang relevan.
         </p>
 
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/terms-and-conditions"
+            href="/id/terms-and-conditions"
             className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
           >
-            Terms and Conditions
+            Syarat dan Ketentuan
           </Link>
 
           <Link
-            href="/refund-and-cancellation-policy"
+            href="/id/refund-and-cancellation-policy"
             className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
           >
-            Refunds and Cancellations
+            Refund dan Pembatalan
           </Link>
 
           <Link
-            href="/privacy-policy"
+            href="/id/privacy-policy"
             className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
           >
-            Privacy Policy
+            Kebijakan Privasi
           </Link>
         </div>
       </section>
 
       <section className="rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
-          Official contact information
+          Informasi kontak resmi
         </p>
 
         <h2 className="mt-3 text-2xl font-bold tracking-tight">
@@ -359,11 +361,11 @@ export default function ContactPage() {
 
           <div>
             <dt className="font-semibold text-white">
-              Operating hours
+              Jam operasional
             </dt>
 
             <dd className="mt-1">
-              Daily, 08:00–20:00 WITA
+              Setiap hari, 08.00–20.00 WITA
             </dd>
           </div>
         </dl>
@@ -371,13 +373,13 @@ export default function ContactPage() {
 
       <section className="rounded-3xl border border-slate-200 p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Business Location and Service Area
+          Lokasi Bisnis dan Wilayah Layanan
         </p>
 
         <div className="mt-5 grid gap-6 md:grid-cols-2">
           <div>
             <h2 className="text-xl font-bold text-slate-950">
-              Business and customer support operations
+              Operasional bisnis dan layanan pelanggan
             </h2>
 
             <p className="mt-3 text-lg font-semibold text-slate-700">
@@ -385,27 +387,27 @@ export default function ContactPage() {
             </p>
 
             <p className="mt-3 leading-7 text-slate-600">
-              Business administration and customer
-              support are managed online from Jakarta
-              through WhatsApp and email.
+              Administrasi bisnis dan layanan pelanggan
+              dikelola secara online dari Jakarta
+              melalui WhatsApp dan email.
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-slate-950">
-              Fast boat service area
+              Wilayah layanan fast boat
             </h2>
 
             <p className="mt-3 leading-7 text-slate-600">
               Bali, Nusa Penida, Nusa Lembongan,
-              Nusa Ceningan, the Gili Islands, and
+              Nusa Ceningan, Kepulauan Gili, dan
               Lombok.
             </p>
 
             <p className="mt-3 leading-7 text-slate-600">
-              Transportation services are provided by
-              the fast boat operator selected in the
-              customer&apos;s booking.
+              Layanan transportasi dijalankan oleh
+              operator fast boat yang dipilih dalam
+              booking pelanggan.
             </p>
           </div>
         </div>

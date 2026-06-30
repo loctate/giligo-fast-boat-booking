@@ -10,12 +10,14 @@ import Link from "next/link"
 
 import PublicInfoPage from "@/components/PublicInfoPage"
 
-export const metadata: Metadata = {
-  title:
-    "Kebijakan Privasi | Nusa Gili Boat",
-  description:
-    "Kebijakan Privasi Nusa Gili Boat menjelaskan pengumpulan, penggunaan, penyimpanan, pembagian, dan perlindungan data pribadi pelanggan serta penumpang.",
-}
+import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
+
+export const metadata: Metadata = createPublicPageMetadata({
+  locale: "en",
+  path: "/privacy-policy",
+  title: "Privacy Policy | Nusa Gili Boat",
+  description: "The Nusa Gili Boat Privacy Policy explains how we collect, use, store, share, and protect the personal data of customers and passengers.",
+})
 
 type PolicySectionProps = {
   number: number
@@ -60,335 +62,332 @@ function BulletList({
 export default function PrivacyPolicyPage() {
   return (
     <PublicInfoPage
-      eyebrow="Pelindungan Data Pribadi"
-      title="Kebijakan Privasi"
-      description="Kebijakan Privasi ini menjelaskan bagaimana Nusa Gili Boat memperoleh, mengumpulkan, menggunakan, menyimpan, membagikan, dan melindungi data pribadi ketika Anda menggunakan situs dan layanan pemesanan kami."
-      lastUpdated="30 Juni 2026"
+      locale="en"
+      eyebrow="Personal Data Protection"
+      title="Privacy Policy"
+      description="This Privacy Policy explains how Nusa Gili Boat obtains, collects, uses, stores, shares, and protects personal data when you use our website and booking services."
+      lastUpdated="June 30, 2026"
     >
       <PolicySection
         number={1}
-        title="Pendahuluan"
+        title="Introduction"
       >
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat menghargai privasi pelanggan,
-          penumpang, dan setiap pengguna situs kami.
-          Kami berkomitmen memproses data pribadi
-          secara bertanggung jawab, transparan, aman,
-          dan sesuai dengan ketentuan hukum yang
-          berlaku.
+          Nusa Gili Boat respects the privacy of our
+          customers, passengers, and every user of our
+          website. We are committed to processing
+          personal data responsibly, transparently,
+          securely, and in accordance with applicable
+          law.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kebijakan Privasi ini berlaku ketika Anda
-          mengunjungi situs, mencari perjalanan,
-          membuat booking, melakukan pembayaran,
-          memeriksa booking, menghubungi layanan
-          pelanggan, atau menggunakan layanan lain
-          yang disediakan Nusa Gili Boat.
+          This Privacy Policy applies when you visit
+          our website, search for a journey, make a
+          booking, complete a payment, retrieve a
+          booking, contact customer support, or use
+          another service provided by Nusa Gili Boat.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Dengan menggunakan layanan kami, Anda
-          mengakui telah menerima dan membaca Kebijakan
-          Privasi ini. Apabila persetujuan diperlukan
-          untuk suatu pemrosesan tertentu, kami akan
-          meminta persetujuan tersebut secara terpisah
-          sesuai kebutuhan.
+          By using our services, you acknowledge that
+          you have received and read this Privacy
+          Policy. Where consent is required for a
+          specific processing activity, we will request
+          that consent separately where necessary.
         </p>
       </PolicySection>
 
       <PolicySection
         number={2}
-        title="Pihak yang mengendalikan data"
+        title="Data controller"
       >
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat bertindak sebagai pihak yang
-          menentukan tujuan dan cara pemrosesan data
-          pribadi yang dilakukan dalam pengoperasian
-          situs dan layanan pemesanan kami.
+          Nusa Gili Boat acts as the party that
+          determines the purposes and methods of
+          processing personal data in connection with
+          the operation of our website and booking
+          services.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Dalam pelaksanaan perjalanan dan pembayaran,
-          operator fast boat serta penyedia pembayaran
-          dapat bertindak sebagai pengendali atau
-          pemroses data sesuai peran, layanan, dan
-          kebijakan masing-masing.
+          In connection with travel and payment
+          services, fast boat operators and payment
+          providers may act as data controllers or data
+          processors according to their respective
+          roles, services, and policies.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pertanyaan atau permintaan terkait data
-          pribadi dapat disampaikan melalui informasi
-          kontak yang tercantum pada bagian akhir
-          Kebijakan Privasi ini.
+          Questions or requests relating to personal
+          data may be submitted using the contact
+          information provided at the end of this
+          Privacy Policy.
         </p>
       </PolicySection>
 
       <PolicySection
         number={3}
-        title="Data pribadi yang kami kumpulkan"
+        title="Personal data we collect"
       >
         <p className="leading-8 text-slate-600">
-          Jenis data yang dikumpulkan bergantung pada
-          cara Anda menggunakan layanan kami. Data
-          tersebut dapat mencakup:
+          The types of data we collect depend on how
+          you use our services. This data may include:
         </p>
 
         <h3 className="text-lg font-semibold text-slate-950">
-          A. Informasi pelanggan
+          A. Customer information
         </h3>
 
         <BulletList
           items={[
-            "Nama lengkap.",
-            "Alamat email.",
-            "Nomor telepon atau WhatsApp.",
-            "Kewarganegaraan apabila diperlukan.",
-            "Informasi kontak lain yang diberikan secara sukarela.",
+            "Full name.",
+            "Email address.",
+            "Telephone or WhatsApp number.",
+            "Nationality where required.",
+            "Other contact information provided voluntarily.",
           ]}
         />
 
         <h3 className="text-lg font-semibold text-slate-950">
-          B. Informasi penumpang
+          B. Passenger information
         </h3>
 
         <BulletList
           items={[
-            "Nama penumpang.",
-            "Kategori penumpang, seperti dewasa, anak, atau bayi.",
-            "Jumlah penumpang.",
-            "Kewarganegaraan atau data identitas apabila diperlukan operator.",
-            "Informasi kebutuhan bantuan khusus yang diberikan secara sukarela.",
+            "Passenger names.",
+            "Passenger category, such as adult, child, or infant.",
+            "Number of passengers.",
+            "Nationality or identification information where required by an operator.",
+            "Information about special assistance requirements provided voluntarily.",
           ]}
         />
 
         <h3 className="text-lg font-semibold text-slate-950">
-          C. Informasi booking dan perjalanan
+          C. Booking and travel information
         </h3>
 
         <BulletList
           items={[
-            "Kode booking.",
-            "Rute dan tanggal perjalanan.",
-            "Pelabuhan keberangkatan dan tujuan.",
-            "Jadwal keberangkatan dan kedatangan.",
-            "Operator dan kapal yang dipilih.",
-            "Perjalanan satu arah atau pulang-pergi.",
-            "Jumlah kursi dan harga perjalanan.",
-            "Status booking, perubahan, pembatalan, dan refund.",
+            "Booking code.",
+            "Travel route and date.",
+            "Departure and destination ports.",
+            "Departure and arrival schedule.",
+            "Selected operator and vessel.",
+            "One-way or round-trip journey.",
+            "Number of seats and travel price.",
+            "Booking, change, cancellation, and refund status.",
           ]}
         />
 
         <h3 className="text-lg font-semibold text-slate-950">
-          D. Informasi pembayaran
+          D. Payment information
         </h3>
 
         <BulletList
           items={[
-            "Nomor referensi atau ID transaksi.",
-            "Order ID dari penyedia pembayaran.",
-            "Jumlah transaksi.",
-            "Metode pembayaran.",
-            "Status pembayaran.",
-            "Waktu transaksi.",
-            "Informasi refund atau pembatalan pembayaran.",
+            "Reference number or transaction ID.",
+            "Order ID issued by the payment provider.",
+            "Transaction amount.",
+            "Payment method.",
+            "Payment status.",
+            "Transaction time.",
+            "Refund or payment cancellation information.",
           ]}
         />
 
         <h3 className="text-lg font-semibold text-slate-950">
-          E. Informasi teknis
+          E. Technical information
         </h3>
 
         <BulletList
           items={[
-            "Alamat IP.",
-            "Jenis dan versi browser.",
-            "Sistem operasi.",
-            "Jenis perangkat.",
-            "Tanggal dan waktu akses.",
-            "Halaman yang dikunjungi.",
-            "Situs atau halaman rujukan.",
-            "Data log, kesalahan sistem, dan aktivitas keamanan.",
-            "Cookie, session storage, dan teknologi serupa.",
+            "IP address.",
+            "Browser type and version.",
+            "Operating system.",
+            "Device type.",
+            "Access date and time.",
+            "Pages visited.",
+            "Referring website or page.",
+            "Log data, system errors, and security activity.",
+            "Cookies, session storage, and similar technologies.",
           ]}
         />
 
         <h3 className="text-lg font-semibold text-slate-950">
-          F. Komunikasi dan dukungan pelanggan
+          F. Communications and customer support
         </h3>
 
         <BulletList
           items={[
-            "Pesan email dan WhatsApp.",
-            "Permintaan perubahan atau pembatalan.",
-            "Keluhan serta kronologi kejadian.",
-            "Dokumen atau bukti yang diberikan untuk menangani permintaan.",
-            "Pilihan pelanggan terkait komunikasi pemasaran.",
+            "Email and WhatsApp messages.",
+            "Change or cancellation requests.",
+            "Complaints and descriptions of events.",
+            "Documents or evidence provided to handle a request.",
+            "Customer preferences relating to marketing communications.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Kami meminta agar Anda tidak mengirimkan PIN,
-          CVV, kata sandi perbankan, kode OTP, atau data
-          finansial rahasia lainnya melalui email,
-          WhatsApp, maupun formulir layanan pelanggan.
+          Please do not send a PIN, CVV, banking
+          password, OTP code, or other confidential
+          financial information through email,
+          WhatsApp, or a customer support form.
         </p>
       </PolicySection>
 
       <PolicySection
         number={4}
-        title="Sumber data pribadi"
+        title="Sources of personal data"
       >
         <p className="leading-8 text-slate-600">
-          Data pribadi dapat kami peroleh:
+          We may obtain personal data:
         </p>
 
         <BulletList
           items={[
-            "Secara langsung dari pelanggan ketika mencari perjalanan, membuat booking, atau menghubungi kami.",
-            "Dari orang yang membuat booking atas nama penumpang lain.",
-            "Dari operator fast boat yang menangani perjalanan.",
-            "Dari payment gateway, bank, atau penyedia metode pembayaran.",
-            "Dari sistem teknis, log server, cookie, dan alat keamanan.",
-            "Dari penyedia layanan yang membantu operasional situs dan booking.",
+            "Directly from customers when they search for a journey, make a booking, or contact us.",
+            "From a person making a booking on behalf of another passenger.",
+            "From the fast boat operator responsible for the journey.",
+            "From a payment gateway, bank, or payment method provider.",
+            "From technical systems, server logs, cookies, and security tools.",
+            "From service providers that support our website and booking operations.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Pelanggan yang memberikan data penumpang lain
-          harus memastikan bahwa data tersebut diberikan
-          untuk tujuan perjalanan yang sah dan bahwa
-          penumpang telah diberi informasi yang
-          diperlukan mengenai pemrosesan datanya.
+          A customer who provides another
+          passenger&apos;s data must ensure that the
+          data is provided for a lawful travel purpose
+          and that the passenger has received the
+          necessary information about how their data
+          will be processed.
         </p>
       </PolicySection>
 
       <PolicySection
         number={5}
-        title="Tujuan penggunaan data"
+        title="Purposes for which we use data"
       >
         <p className="leading-8 text-slate-600">
-          Kami dapat menggunakan data pribadi untuk:
+          We may use personal data to:
         </p>
 
         <BulletList
           items={[
-            "Menampilkan dan memproses pilihan perjalanan.",
-            "Membuat, mengelola, dan mengonfirmasi booking.",
-            "Mengalokasikan kursi pada perjalanan yang dipilih.",
-            "Menyampaikan data yang diperlukan kepada operator fast boat.",
-            "Memproses serta memverifikasi pembayaran.",
-            "Menerbitkan dan mengirim konfirmasi booking.",
-            "Menerbitkan serta mengirim e-ticket ketika fitur tersebut tersedia.",
-            "Memberikan informasi check-in dan keberangkatan.",
-            "Menyampaikan perubahan jadwal, keterlambatan, atau pembatalan.",
-            "Memproses perubahan booking, pengaduan, dan refund.",
-            "Memberikan dukungan pelanggan.",
-            "Mendeteksi dan mencegah penipuan atau penyalahgunaan.",
-            "Menjaga keamanan situs, server, database, dan transaksi.",
-            "Menganalisis serta meningkatkan kinerja situs dan pengalaman pengguna.",
-            "Memenuhi kewajiban akuntansi, perpajakan, hukum, dan regulator.",
-            "Menangani klaim, sengketa, audit, atau pemeriksaan.",
-            "Mengirim komunikasi pemasaran apabila pelanggan telah memilih untuk menerimanya.",
+            "Display and process travel options.",
+            "Create, manage, and confirm bookings.",
+            "Allocate seats on a selected journey.",
+            "Provide necessary information to a fast boat operator.",
+            "Process and verify payments.",
+            "Issue and send booking confirmations.",
+            "Issue and send e-tickets when that feature becomes available.",
+            "Provide check-in and departure information.",
+            "Communicate schedule changes, delays, or cancellations.",
+            "Process booking changes, complaints, and refunds.",
+            "Provide customer support.",
+            "Detect and prevent fraud or misuse.",
+            "Protect the security of the website, server, database, and transactions.",
+            "Analyze and improve website performance and user experience.",
+            "Comply with accounting, tax, legal, and regulatory obligations.",
+            "Handle claims, disputes, audits, or inspections.",
+            "Send marketing communications where the customer has chosen to receive them.",
           ]}
         />
       </PolicySection>
 
       <PolicySection
         number={6}
-        title="Dasar pemrosesan data"
+        title="Legal bases for processing"
       >
         <p className="leading-8 text-slate-600">
-          Bergantung pada konteksnya, pemrosesan data
-          pribadi dapat dilakukan berdasarkan:
+          Depending on the circumstances, personal
+          data may be processed on the basis of:
         </p>
 
         <BulletList
           items={[
-            "Pelaksanaan perjanjian atau tindakan yang diminta pelanggan untuk membuat dan menjalankan booking.",
-            "Persetujuan pelanggan untuk pemrosesan tertentu, seperti komunikasi pemasaran.",
-            "Pemenuhan kewajiban hukum dan peraturan.",
-            "Pelindungan kepentingan vital pelanggan atau penumpang dalam keadaan tertentu.",
-            "Kepentingan yang sah untuk keamanan, pencegahan penipuan, pengelolaan layanan, dan peningkatan sistem, sepanjang tidak mengesampingkan hak pengguna.",
-            "Dasar pemrosesan lain yang diperbolehkan peraturan perundang-undangan.",
+            "Performance of a contract or action requested by a customer to create and fulfill a booking.",
+            "Customer consent for specific processing, such as marketing communications.",
+            "Compliance with legal and regulatory obligations.",
+            "Protection of the vital interests of a customer or passenger in certain circumstances.",
+            "Legitimate interests relating to security, fraud prevention, service management, and system improvement, provided those interests do not override user rights.",
+            "Another legal basis permitted under applicable laws and regulations.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Apabila pemrosesan didasarkan pada
-          persetujuan, pengguna dapat menarik
-          persetujuannya sesuai ketentuan hukum.
-          Penarikan persetujuan tidak memengaruhi
-          keabsahan pemrosesan yang telah dilakukan
-          sebelumnya.
+          Where processing is based on consent, a user
+          may withdraw that consent in accordance with
+          applicable law. Withdrawal of consent does
+          not affect the lawfulness of processing
+          completed before the withdrawal.
         </p>
       </PolicySection>
 
       <PolicySection
         number={7}
-        title="Pembagian data dengan operator fast boat"
+        title="Sharing data with fast boat operators"
       >
         <p className="leading-8 text-slate-600">
-          Kami dapat memberikan data yang diperlukan
-          kepada operator yang menyediakan perjalanan
-          yang dipilih pelanggan.
+          We may provide necessary information to the
+          operator responsible for the journey selected
+          by the customer.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Data tersebut dapat mencakup:
+          This information may include:
         </p>
 
         <BulletList
           items={[
-            "Nama pelanggan dan penumpang.",
-            "Nomor kontak.",
-            "Kode atau referensi booking.",
-            "Jumlah dan kategori penumpang.",
-            "Rute, jadwal, dan tanggal perjalanan.",
-            "Informasi yang diperlukan untuk check-in dan boarding.",
-            "Informasi kebutuhan khusus yang relevan dan telah diberikan pelanggan.",
+            "Customer and passenger names.",
+            "Contact number.",
+            "Booking code or reference.",
+            "Number and category of passengers.",
+            "Travel route, schedule, and date.",
+            "Information required for check-in and boarding.",
+            "Relevant special assistance information provided by the customer.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Operator dapat memproses data tersebut sesuai
-          kebutuhan transportasi, keselamatan,
-          manifest penumpang, check-in, dan kewajiban
-          hukum yang berlaku.
+          The operator may process this data for
+          transportation, safety, passenger manifest,
+          check-in, and applicable legal purposes.
         </p>
       </PolicySection>
 
       <PolicySection
         number={8}
-        title="Pemrosesan pembayaran"
+        title="Payment processing"
       >
         <p className="leading-8 text-slate-600">
-          Pembayaran online dapat diproses melalui
-          Midtrans atau penyedia pembayaran lain yang
-          ditampilkan pada halaman pembayaran.
+          Online payments may be processed through
+          Midtrans or another payment provider
+          displayed on the payment page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penyedia pembayaran dapat mengumpulkan dan
-          memproses data yang dibutuhkan untuk
-          memverifikasi, mengotorisasi, menyelesaikan,
-          membatalkan, atau mengembalikan transaksi.
+          A payment provider may collect and process
+          the data required to verify, authorize,
+          complete, cancel, or refund a transaction.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat dapat menerima informasi
-          transaksi seperti order ID, ID transaksi,
-          metode pembayaran, jumlah pembayaran, status
-          transaksi, waktu pembayaran, dan status
-          refund.
+          Nusa Gili Boat may receive transaction
+          information such as the order ID,
+          transaction ID, payment method, payment
+          amount, transaction status, payment time,
+          and refund status.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat tidak bermaksud menyimpan
-          nomor kartu pembayaran secara lengkap, CVV,
-          PIN, kata sandi perbankan, maupun kode OTP.
-          Informasi sensitif tersebut diproses melalui
-          sistem penyedia pembayaran terkait.
+          Nusa Gili Boat does not intend to store
+          complete payment card numbers, CVV codes,
+          PINs, banking passwords, or OTP codes. That
+          sensitive information is processed through
+          the relevant payment provider&apos;s system.
         </p>
 
         <a
@@ -397,487 +396,486 @@ export default function PrivacyPolicyPage() {
           rel="noreferrer"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Baca Pemberitahuan Privasi Midtrans
+          Read the Midtrans Privacy Notice
         </a>
       </PolicySection>
 
       <PolicySection
         number={9}
-        title="Pihak lain yang dapat menerima data"
+        title="Other parties that may receive data"
       >
         <p className="leading-8 text-slate-600">
-          Sepanjang diperlukan untuk menjalankan
-          layanan, kami dapat membagikan data kepada:
+          Where necessary to operate our services, we
+          may share data with:
         </p>
 
         <BulletList
           items={[
-            "Penyedia hosting, server, cloud, database, dan penyimpanan data.",
-            "Penyedia email, notifikasi, dan komunikasi pelanggan.",
-            "Penyedia layanan keamanan, pemantauan, dan pencegahan penipuan.",
-            "Penyedia analytics dan pengukuran kinerja situs.",
-            "Penyedia layanan akuntansi, audit, pajak, atau bantuan profesional.",
-            "Bank, payment gateway, dan penyedia jasa pembayaran.",
-            "Instansi pemerintah, regulator, pengadilan, atau aparat penegak hukum apabila diwajibkan.",
-            "Pihak lain berdasarkan instruksi atau persetujuan pengguna.",
+            "Hosting, server, cloud, database, and data storage providers.",
+            "Email, notification, and customer communication providers.",
+            "Security, monitoring, and fraud prevention providers.",
+            "Analytics and website performance measurement providers.",
+            "Accounting, audit, tax, or professional service providers.",
+            "Banks, payment gateways, and payment service providers.",
+            "Government agencies, regulators, courts, or law enforcement authorities where required.",
+            "Other parties acting on the user's instructions or with the user's consent.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Kami hanya berupaya memberikan data yang
-          relevan dan diperlukan untuk tujuan layanan
-          pihak tersebut.
+          We aim to provide only the data that is
+          relevant and necessary for the purpose of
+          the recipient&apos;s service.
         </p>
       </PolicySection>
 
       <PolicySection
         number={10}
-        title="Penjualan data pribadi"
+        title="Sale of personal data"
       >
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat tidak menjual atau menyewakan
-          data pribadi pelanggan sebagai basis data
-          komersial kepada pihak lain.
+          Nusa Gili Boat does not sell or rent
+          customer personal data as a commercial
+          database to another party.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pembagian data kepada operator, penyedia
-          pembayaran, dan penyedia teknis dilakukan
-          untuk menjalankan layanan atau memenuhi
-          kewajiban yang sah, bukan untuk menjual data
-          pribadi.
+          Data is shared with operators, payment
+          providers, and technical service providers
+          to deliver services or fulfill lawful
+          obligations, not for the purpose of selling
+          personal data.
         </p>
       </PolicySection>
 
       <PolicySection
         number={11}
-        title="Cookie dan penyimpanan browser"
+        title="Cookies and browser storage"
       >
         <p className="leading-8 text-slate-600">
-          Situs kami dapat menggunakan cookie, session
-          storage, local storage, dan teknologi serupa
-          untuk:
+          Our website may use cookies, session
+          storage, local storage, and similar
+          technologies to:
         </p>
 
         <BulletList
           items={[
-            "Menjaga fungsi navigasi dan sesi pengguna.",
-            "Menyimpan informasi booking sementara.",
-            "Membantu pelanggan membuka halaman konfirmasi.",
-            "Menjaga keamanan dan mencegah penyalahgunaan.",
-            "Mengingat pilihan atau preferensi tertentu.",
-            "Mengukur kinerja dan penggunaan situs.",
-            "Mendeteksi serta memperbaiki kesalahan teknis.",
+            "Maintain website navigation and user sessions.",
+            "Temporarily store booking information.",
+            "Help customers access a confirmation page.",
+            "Maintain security and prevent misuse.",
+            "Remember certain choices or preferences.",
+            "Measure website performance and usage.",
+            "Detect and resolve technical errors.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Pengguna dapat menghapus atau membatasi
-          cookie melalui pengaturan browser. Beberapa
-          fungsi situs mungkin tidak bekerja secara
-          optimal apabila teknologi tersebut
-          dinonaktifkan.
+          Users may delete or restrict cookies through
+          their browser settings. Some website
+          functions may not operate properly when
+          these technologies are disabled.
         </p>
       </PolicySection>
 
       <PolicySection
         number={12}
-        title="Analytics dan komunikasi pemasaran"
+        title="Analytics and marketing communications"
       >
         <p className="leading-8 text-slate-600">
-          Kami dapat menggunakan informasi penggunaan
-          situs untuk memahami performa halaman,
-          memperbaiki proses booking, dan meningkatkan
-          pengalaman pengguna.
+          We may use website usage information to
+          understand page performance, improve the
+          booking process, and enhance the user
+          experience.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila alat analytics pihak ketiga
-          digunakan, informasinya akan diperbarui dalam
-          Kebijakan Privasi atau pemberitahuan cookie
-          yang relevan.
+          If a third-party analytics tool is used,
+          information about that tool will be added to
+          this Privacy Policy or the relevant cookie
+          notice.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Komunikasi promosi, penawaran tiket,
-          informasi destinasi, dan newsletter hanya
-          akan dikirim berdasarkan pilihan atau
-          persetujuan pelanggan apabila diperlukan.
+          Promotional communications, ticket offers,
+          destination information, and newsletters
+          will only be sent based on customer choice
+          or consent where required.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pelanggan dapat berhenti menerima komunikasi
-          promosi melalui tautan berhenti berlangganan
-          atau dengan menghubungi kami. Pesan penting
-          mengenai booking dan perjalanan tetap dapat
-          dikirim karena diperlukan untuk menjalankan
-          layanan.
+          Customers may stop receiving promotional
+          communications using an unsubscribe link or
+          by contacting us. Important booking and
+          travel messages may still be sent where
+          necessary to provide the service.
         </p>
       </PolicySection>
 
       <PolicySection
         number={13}
-        title="Keakuratan data"
+        title="Accuracy of data"
       >
         <p className="leading-8 text-slate-600">
-          Pelanggan bertanggung jawab memberikan data
-          yang benar, lengkap, dan terkini.
+          Customers are responsible for providing
+          accurate, complete, and current information.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Informasi yang salah dapat menyebabkan
-          kegagalan komunikasi, kesalahan e-ticket,
-          kendala check-in, penolakan boarding, atau
-          masalah dalam proses refund.
+          Incorrect information may result in failed
+          communication, an incorrect e-ticket,
+          check-in difficulties, boarding refusal, or
+          problems with a refund.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pelanggan harus segera menghubungi kami
-          apabila terdapat kesalahan pada data booking
-          atau penumpang.
+          Customers should contact us immediately if
+          they identify an error in booking or
+          passenger information.
         </p>
       </PolicySection>
 
       <PolicySection
         number={14}
-        title="Penyimpanan dan masa retensi"
+        title="Storage and retention periods"
       >
         <p className="leading-8 text-slate-600">
-          Data dapat disimpan dalam sistem booking,
-          database, server, backup, sistem pembayaran,
-          email, serta catatan dukungan pelanggan.
+          Data may be stored in booking systems,
+          databases, servers, backups, payment
+          systems, emails, and customer support
+          records.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kami menyimpan data hanya selama diperlukan
-          untuk:
+          We retain data only for as long as necessary
+          to:
         </p>
 
         <BulletList
           items={[
-            "Menjalankan dan membuktikan transaksi booking.",
-            "Memberikan dukungan pelanggan.",
-            "Menangani perubahan, refund, klaim, dan sengketa.",
-            "Mencegah penipuan dan menjaga keamanan.",
-            "Memenuhi kewajiban akuntansi, audit, pajak, dan hukum.",
-            "Menjaga backup dan keberlangsungan layanan.",
+            "Complete and provide evidence of booking transactions.",
+            "Provide customer support.",
+            "Handle changes, refunds, claims, and disputes.",
+            "Prevent fraud and maintain security.",
+            "Comply with accounting, audit, tax, and legal obligations.",
+            "Maintain backups and service continuity.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Masa penyimpanan dapat berbeda berdasarkan
-          jenis data, tujuan pemrosesan, hubungan dengan
-          pelanggan, dan kewajiban hukum.
+          Retention periods may vary depending on the
+          type of data, purpose of processing,
+          relationship with the customer, and legal
+          obligations.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Data yang tidak lagi diperlukan akan dihapus,
-          dimusnahkan, dianonimkan, atau dibatasi
-          pemrosesannya sesuai kebijakan serta ketentuan
-          yang berlaku.
+          Data that is no longer required will be
+          deleted, destroyed, anonymized, or restricted
+          from further processing in accordance with
+          applicable policies and requirements.
         </p>
       </PolicySection>
 
       <PolicySection
         number={15}
-        title="Keamanan data"
+        title="Data security"
       >
         <p className="leading-8 text-slate-600">
-          Kami menerapkan langkah administratif,
-          teknis, dan organisasional yang wajar untuk
-          melindungi data dari:
+          We implement reasonable administrative,
+          technical, and organizational measures to
+          protect data against:
         </p>
 
         <BulletList
           items={[
-            "Akses tanpa izin.",
-            "Penggunaan atau pengungkapan yang tidak sah.",
-            "Perubahan data yang tidak semestinya.",
-            "Kehilangan atau kerusakan data.",
-            "Penghancuran data.",
-            "Serangan, penipuan, dan penyalahgunaan sistem.",
+            "Unauthorized access.",
+            "Unauthorized use or disclosure.",
+            "Improper alteration of data.",
+            "Loss or damage to data.",
+            "Destruction of data.",
+            "Attacks, fraud, and misuse of systems.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Perlindungan dapat mencakup koneksi
-          terenkripsi, pembatasan akses server,
-          autentikasi, firewall, pemantauan keamanan,
-          pencadangan, pembaruan sistem, serta
-          pencatatan aktivitas.
+          Protection measures may include encrypted
+          connections, restricted server access,
+          authentication, firewalls, security
+          monitoring, backups, system updates, and
+          activity logging.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Tidak ada metode pengiriman atau penyimpanan
-          elektronik yang dapat dijamin sepenuhnya
-          bebas risiko. Kami akan terus menyesuaikan
-          perlindungan berdasarkan kebutuhan dan risiko
-          layanan.
+          No method of electronic transmission or
+          storage can be guaranteed to be entirely
+          risk-free. We will continue to adjust our
+          protections according to service needs and
+          identified risks.
         </p>
       </PolicySection>
 
       <PolicySection
         number={16}
-        title="Kegagalan pelindungan data"
+        title="Personal data breaches"
       >
         <p className="leading-8 text-slate-600">
-          Apabila terjadi insiden yang mengakibatkan
-          kerusakan, kehilangan, perubahan,
-          pengungkapan, atau akses tidak sah terhadap
-          data pribadi, kami akan melakukan
-          pemeriksaan, penanganan, pemulihan, dan
-          mitigasi risiko.
+          If an incident results in damage, loss,
+          alteration, disclosure, or unauthorized
+          access to personal data, we will investigate,
+          respond, recover, and take steps to mitigate
+          the associated risks.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kami akan memberikan pemberitahuan kepada
-          pihak yang terdampak dan otoritas terkait
-          dalam bentuk serta tenggat waktu yang
-          diwajibkan oleh peraturan perundang-undangan.
+          We will notify affected parties and the
+          relevant authorities in the form and within
+          the time required by applicable laws and
+          regulations.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pemberitahuan dapat memuat jenis data yang
-          terdampak, waktu dan penyebab insiden yang
-          diketahui, dampak potensial, serta tindakan
-          penanganan dan pemulihan.
+          A notification may include the type of data
+          affected, the known time and cause of the
+          incident, the potential impact, and the
+          response and recovery actions taken.
         </p>
       </PolicySection>
 
       <PolicySection
         number={17}
-        title="Pemrosesan dan transfer lintas wilayah"
+        title="Cross-border processing and transfers"
       >
         <p className="leading-8 text-slate-600">
-          Sebagian penyedia layanan teknologi dapat
-          menggunakan infrastruktur atau personel yang
-          berada di luar lokasi pengguna atau di luar
-          wilayah Indonesia.
+          Some technology service providers may use
+          infrastructure or personnel located outside
+          the user&apos;s location or outside
+          Indonesia.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila data perlu ditransfer ke luar wilayah
-          Indonesia, kami akan memperhatikan persyaratan
-          pelindungan data yang berlaku, termasuk
-          tingkat pelindungan, pengamanan yang mengikat,
-          atau persetujuan ketika diperlukan.
+          Where data must be transferred outside
+          Indonesia, we will consider applicable data
+          protection requirements, including the level
+          of protection, binding safeguards, or consent
+          where required.
         </p>
       </PolicySection>
 
       <PolicySection
         number={18}
-        title="Data anak"
+        title="Children's data"
       >
         <p className="leading-8 text-slate-600">
-          Pihak yang membuat booking harus berusia
-          sekurang-kurangnya 18 tahun.
+          The person making a booking must be at least
+          18 years old.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Data anak atau bayi dapat diproses sebagai
-          data penumpang apabila booking dilakukan oleh
-          orang tua, wali, atau orang dewasa yang
-          bertanggung jawab.
+          Data relating to a child or infant may be
+          processed as passenger data where the booking
+          is made by a parent, legal guardian, or
+          responsible adult.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pihak yang memberikan data anak menyatakan
-          memiliki kewenangan yang diperlukan untuk
-          memberikan data tersebut bagi tujuan booking
-          dan perjalanan.
+          A person providing a child&apos;s data
+          confirms that they have the authority
+          required to provide that data for booking
+          and travel purposes.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila kami mengetahui data anak telah
-          diberikan tanpa kewenangan yang sesuai, kami
-          dapat mengambil langkah untuk membatasi atau
-          menghapusnya, sejauh tidak bertentangan
-          dengan kewajiban hukum dan booking yang sah.
+          If we become aware that a child&apos;s data
+          has been provided without appropriate
+          authority, we may take steps to restrict or
+          delete it, provided this does not conflict
+          with legal obligations or a lawful booking.
         </p>
       </PolicySection>
 
       <PolicySection
         number={19}
-        title="Hak pengguna atas data pribadi"
+        title="User rights relating to personal data"
       >
         <p className="leading-8 text-slate-600">
-          Sesuai ketentuan hukum dan setelah verifikasi
-          identitas, pengguna dapat memiliki hak untuk:
+          Subject to applicable law and identity
+          verification, users may have the right to:
         </p>
 
         <BulletList
           items={[
-            "Memperoleh informasi mengenai tujuan dan dasar pemrosesan data.",
-            "Memperoleh akses dan salinan data pribadi.",
-            "Melengkapi, memperbarui, atau memperbaiki data yang tidak akurat.",
-            "Menarik persetujuan apabila pemrosesan didasarkan pada persetujuan.",
-            "Meminta penghentian, penghapusan, atau pemusnahan data dalam kondisi yang diperbolehkan.",
-            "Meminta penundaan atau pembatasan pemrosesan dalam kondisi tertentu.",
-            "Mengajukan keberatan atas keputusan yang hanya didasarkan pada pemrosesan otomatis dan menimbulkan akibat hukum atau dampak signifikan.",
-            "Memperoleh atau memindahkan data dalam format yang sesuai apabila berlaku.",
-            "Mengajukan keluhan dan meminta ganti rugi sesuai mekanisme hukum yang berlaku.",
+            "Obtain information about the purposes and legal basis of processing.",
+            "Access and obtain a copy of their personal data.",
+            "Complete, update, or correct inaccurate data.",
+            "Withdraw consent where processing is based on consent.",
+            "Request that data be stopped, deleted, or destroyed where permitted.",
+            "Request the suspension or restriction of processing in certain circumstances.",
+            "Object to decisions based solely on automated processing that produce legal or similarly significant effects.",
+            "Obtain or transfer data in an appropriate format where applicable.",
+            "Submit a complaint and seek compensation using an available legal mechanism.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Hak tertentu dapat dibatasi apabila data
-          masih diperlukan untuk menjalankan booking,
-          memenuhi kewajiban hukum, mencegah penipuan,
-          menyelesaikan sengketa, atau melindungi hak
-          pihak lain.
+          Certain rights may be restricted where data
+          remains necessary to fulfill a booking,
+          comply with a legal obligation, prevent
+          fraud, resolve a dispute, or protect the
+          rights of another party.
         </p>
       </PolicySection>
 
       <PolicySection
         number={20}
-        title="Cara menggunakan hak data pribadi"
+        title="How to exercise your data rights"
       >
         <p className="leading-8 text-slate-600">
-          Permintaan terkait data dapat disampaikan
-          melalui email atau halaman kontak Nusa Gili
-          Boat.
+          A data-related request may be submitted by
+          email or through the Nusa Gili Boat contact
+          page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Permintaan sebaiknya mencantumkan:
+          The request should include:
         </p>
 
         <BulletList
           items={[
-            "Nama lengkap.",
-            "Email atau nomor kontak yang digunakan ketika booking.",
-            "Kode booking apabila berkaitan dengan transaksi.",
-            "Jenis permintaan yang diajukan.",
-            "Informasi pendukung yang diperlukan untuk verifikasi.",
+            "Full name.",
+            "Email address or contact number used when making the booking.",
+            "Booking code where the request relates to a transaction.",
+            "The type of request being submitted.",
+            "Supporting information required for verification.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Kami dapat meminta verifikasi identitas untuk
-          mencegah data diberikan, diubah, atau dihapus
-          atas permintaan pihak yang tidak berwenang.
+          We may request identity verification to
+          prevent data from being disclosed, changed,
+          or deleted at the request of an unauthorized
+          person.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kami akan menangani permintaan sesuai
-          ketentuan dan tenggat waktu yang diwajibkan
-          peraturan perundang-undangan.
+          We will handle the request in accordance
+          with the procedures and timeframes required
+          by applicable laws and regulations.
         </p>
       </PolicySection>
 
       <PolicySection
         number={21}
-        title="Keputusan otomatis dan pencegahan penipuan"
+        title="Automated decisions and fraud prevention"
       >
         <p className="leading-8 text-slate-600">
-          Sistem dapat melakukan pemeriksaan otomatis
-          terhadap ketersediaan kursi, validitas input,
-          status pembayaran, dan aktivitas yang
-          mencurigakan.
+          Our systems may automatically check seat
+          availability, input validity, payment status,
+          and suspicious activity.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penyedia pembayaran juga dapat menggunakan
-          sistem otomatis untuk menilai risiko,
-          mengotorisasi transaksi, dan mencegah
-          penipuan berdasarkan kebijakan mereka.
+          Payment providers may also use automated
+          systems to assess risk, authorize
+          transactions, and prevent fraud according to
+          their own policies.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila suatu keputusan otomatis menimbulkan
-          dampak signifikan terhadap pengguna, pengguna
-          dapat menghubungi kami untuk meminta
-          penjelasan atau peninjauan, sejauh hak
-          tersebut berlaku.
+          Where an automated decision has a significant
+          effect on a user, the user may contact us to
+          request an explanation or review to the
+          extent that right applies.
         </p>
       </PolicySection>
 
       <PolicySection
         number={22}
-        title="Tautan dan layanan pihak ketiga"
+        title="Third-party links and services"
       >
         <p className="leading-8 text-slate-600">
-          Situs kami dapat memuat tautan ke operator,
-          penyedia pembayaran, peta, media sosial, atau
-          situs pihak ketiga lainnya.
+          Our website may contain links to operators,
+          payment providers, maps, social media, or
+          other third-party websites.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pemrosesan data pada situs pihak ketiga
-          tunduk pada kebijakan privasi mereka.
-          Nusa Gili Boat tidak mengendalikan seluruh
-          praktik privasi pihak yang independen
-          tersebut.
+          Data processing on a third-party website is
+          subject to that party&apos;s privacy policy.
+          Nusa Gili Boat does not control all privacy
+          practices of those independent parties.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pengguna disarankan membaca pemberitahuan
-          privasi pihak ketiga sebelum memberikan data.
+          Users are encouraged to read a third
+          party&apos;s privacy notice before providing
+          personal data.
         </p>
       </PolicySection>
 
       <PolicySection
         number={23}
-        title="Perubahan Kebijakan Privasi"
+        title="Changes to this Privacy Policy"
       >
         <p className="leading-8 text-slate-600">
-          Kami dapat memperbarui Kebijakan Privasi ini
-          untuk menyesuaikan perubahan layanan,
-          teknologi, penyedia pembayaran, proses
-          bisnis, atau peraturan.
+          We may update this Privacy Policy to reflect
+          changes in our services, technology, payment
+          providers, business processes, or
+          regulations.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Versi terbaru akan diterbitkan pada halaman
-          ini bersama tanggal pembaruan.
+          The latest version will be published on this
+          page together with the date of the update.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila perubahan berdampak material terhadap
-          cara kami memproses data, kami akan berupaya
-          memberikan pemberitahuan tambahan yang
-          sesuai.
+          Where a change materially affects how we
+          process data, we will aim to provide an
+          appropriate additional notice.
         </p>
       </PolicySection>
 
       <PolicySection
         number={24}
-        title="Hukum dan bahasa yang berlaku"
+        title="Governing law and language"
       >
         <p className="leading-8 text-slate-600">
-          Kebijakan Privasi ini diatur dan ditafsirkan
-          berdasarkan hukum Republik Indonesia,
-          termasuk ketentuan mengenai pelindungan data
-          pribadi dan sistem elektronik.
+          This Privacy Policy is governed by and
+          interpreted in accordance with the laws of
+          the Republic of Indonesia, including
+          requirements relating to personal data
+          protection and electronic systems.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kebijakan ini dibuat dalam Bahasa Indonesia.
-          Terjemahan dalam bahasa lain dapat disediakan
-          untuk membantu pengguna.
+          This policy was originally prepared in
+          Bahasa Indonesia. A translation into another
+          language may be provided for the convenience
+          of users.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila terdapat perbedaan penafsiran, versi
-          Bahasa Indonesia menjadi acuan sejauh
-          diperbolehkan oleh hukum.
+          If there is any difference in interpretation,
+          the Bahasa Indonesia version will prevail to
+          the extent permitted by law.
         </p>
       </PolicySection>
 
       <PolicySection
         number={25}
-        title="Hubungi kami"
+        title="Contact us"
       >
         <p className="leading-8 text-slate-600">
-          Pertanyaan, keluhan, serta permintaan terkait
-          data pribadi dapat disampaikan melalui:
+          Questions, complaints, and requests relating
+          to personal data may be submitted through:
         </p>
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <dl className="space-y-4 text-slate-600">
             <div>
               <dt className="font-semibold text-slate-950">
-                Nama layanan
+                Service name
               </dt>
 
               <dd className="mt-1">
@@ -902,7 +900,7 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
-                Situs
+                Website
               </dt>
 
               <dd className="mt-1">
@@ -912,11 +910,11 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
-                Jam layanan
+                Service hours
               </dt>
 
               <dd className="mt-1">
-                Setiap hari, pukul 08.00–20.00 WITA
+                Daily, 08:00–20:00 WITA
               </dd>
             </div>
           </dl>
@@ -926,23 +924,10 @@ export default function PrivacyPolicyPage() {
           href="/contact"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Buka halaman kontak
+          Open the contact page
         </Link>
       </PolicySection>
 
-      <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-        <h2 className="font-semibold text-amber-950">
-          Informasi identitas usaha akan dilengkapi
-        </h2>
-
-        <p className="mt-2 leading-7 text-amber-900">
-          Nama resmi pemilik usaha, alamat operasional,
-          informasi pengendali data, daftar penyedia
-          analytics, dan jadwal retensi data yang lebih
-          terperinci akan diperbarui sebelum pembayaran
-          production diaktifkan.
-        </p>
-      </aside>
     </PublicInfoPage>
   )
 }

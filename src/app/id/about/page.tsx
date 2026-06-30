@@ -9,42 +9,42 @@ import PublicInfoPage from "@/components/PublicInfoPage"
 import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
 
 export const metadata: Metadata = createPublicPageMetadata({
-  locale: "en",
+  locale: "id",
   path: "/about",
-  title: "About Us | Nusa Gili Boat",
-  description: "Learn about Nusa Gili Boat, an online fast boat booking platform for journeys between Bali, Nusa Penida, Nusa Lembongan, Nusa Ceningan, the Gili Islands, and Lombok.",
+  title: "Tentang Kami | Nusa Gili Boat",
+  description: "Nusa Gili Boat adalah platform pemesanan tiket fast boat online untuk perjalanan antara Bali, Nusa Penida, Nusa Lembongan, Nusa Ceningan, Kepulauan Gili, dan Lombok.",
 })
 
 const serviceValues = [
   {
-    title: "Simple online booking",
+    title: "Pemesanan online yang mudah",
     description:
-      "Search for a route, select a schedule, enter passenger details, and complete your booking through a straightforward process.",
+      "Cari rute, pilih jadwal, isi data penumpang, dan selesaikan pemesanan melalui alur yang sederhana.",
   },
   {
-    title: "Clear travel options",
+    title: "Pilihan perjalanan yang jelas",
     description:
-      "Operator, vessel, schedule, route, price, and seat availability information is displayed before you book.",
+      "Informasi operator, kapal, jadwal, rute, harga, dan ketersediaan kursi ditampilkan sebelum booking.",
   },
   {
-    title: "Transparent pricing",
+    title: "Harga yang transparan",
     description:
-      "A breakdown of the travel price is displayed before customers complete their booking.",
+      "Rincian harga perjalanan ditampilkan sebelum pelanggan menyelesaikan pemesanan.",
   },
   {
-    title: "Customer support",
+    title: "Dukungan pelanggan",
     description:
-      "Our team assists customers with bookings, travel information, schedule changes, and other enquiries.",
+      "Tim kami membantu pelanggan terkait booking, informasi perjalanan, perubahan jadwal, dan pertanyaan lainnya.",
   },
 ]
 
 const bookingAdvantages = [
-  "A selection of carefully chosen fast boat operators",
-  "One-way and round-trip bookings",
-  "Clear price and schedule information",
-  "Booking confirmation with a unique booking code",
-  "Booking lookup using your email address",
-  "Support before and after booking",
+  "Pilihan operator fast boat yang telah diseleksi",
+  "Pemesanan one-way dan round-trip",
+  "Informasi harga dan jadwal yang jelas",
+  "Konfirmasi booking dengan kode pemesanan",
+  "Booking dapat diperiksa kembali menggunakan email",
+  "Dukungan sebelum dan setelah pemesanan",
 ]
 
 const destinations = [
@@ -66,65 +66,65 @@ const routeExamples = [
   "Bali – Gili Air",
   "Bali – Gili Meno",
   "Bali – Lombok",
-  "Other inter-island routes subject to operator availability",
+  "Rute antar pulau sesuai ketersediaan operator",
 ]
 
 export default function AboutPage() {
   return (
     <PublicInfoPage
-      locale="en"
-      eyebrow="About Us"
-      title="Making inter-island travel easier to plan"
-      description="Nusa Gili Boat is an online fast boat booking platform that helps travelers search for and book journeys between Bali, Nusa Penida, Nusa Lembongan, Nusa Ceningan, the Gili Islands, and Lombok."
+      locale="id"
+      eyebrow="Tentang Kami"
+      title="Membuat perjalanan antar pulau lebih mudah direncanakan"
+      description="Nusa Gili Boat adalah platform pemesanan tiket fast boat secara online yang membantu wisatawan mencari dan memesan perjalanan antara Bali, Nusa Penida, Nusa Lembongan, Nusa Ceningan, Kepulauan Gili, dan Lombok."
     >
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          About Nusa Gili Boat
+          Tentang Nusa Gili Boat
         </h2>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat was created to help travelers
-          plan inter-island journeys in a simpler, more
-          convenient, and more organized way.
+          Nusa Gili Boat hadir untuk membantu wisatawan
+          merencanakan perjalanan antar pulau dengan lebih
+          mudah, praktis, dan terstruktur.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Through our platform, customers can search for
-          travel schedules, view operator and vessel
-          information, check seat availability, and make
-          a booking through one straightforward process.
+          Melalui platform kami, pelanggan dapat mencari
+          jadwal perjalanan, melihat informasi operator dan
+          kapal, memeriksa ketersediaan kursi, serta melakukan
+          pemesanan dalam satu alur yang sederhana.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Our service can support various travel needs,
-          including holidays, island-hopping trips,
-          family visits, and business travel.
+          Layanan kami dapat digunakan untuk berbagai
+          kebutuhan perjalanan, mulai dari liburan,
+          island hopping, kunjungan keluarga, hingga
+          perjalanan bisnis.
         </p>
 
         <p className="leading-8 text-slate-600">
-          As a growing service, our focus is to build a
-          booking experience that is clear, responsible,
-          and easy to use from the beginning.
+          Sebagai layanan yang sedang berkembang, fokus kami
+          adalah membangun pengalaman pemesanan yang jelas,
+          bertanggung jawab, dan mudah digunakan sejak awal.
         </p>
       </section>
 
       <section className="space-y-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Our Mission
+            Misi Kami
           </p>
 
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            Simplifying sea transportation bookings
+            Menyederhanakan pemesanan transportasi laut
           </h2>
         </div>
 
         <p className="leading-8 text-slate-600">
-          The mission of Nusa Gili Boat is to help
-          travelers find and book fast boat journeys
-          through a service that is easy to use,
-          transparent, and supported by clear travel
-          information.
+          Misi Nusa Gili Boat adalah membantu wisatawan
+          menemukan dan memesan perjalanan fast boat melalui
+          layanan yang mudah digunakan, transparan, dan
+          didukung oleh informasi perjalanan yang jelas.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -148,17 +148,17 @@ export default function AboutPage() {
       <section className="space-y-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Why Choose Us
+            Mengapa memilih kami
           </p>
 
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            Clearer information before you book
+            Informasi lebih jelas sebelum Anda memesan
           </h2>
         </div>
 
         <p className="leading-8 text-slate-600">
-          We aim to provide the important information
-          customers need before completing a booking.
+          Kami berupaya memberikan informasi penting yang
+          dibutuhkan pelanggan sebelum menyelesaikan booking.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -185,18 +185,19 @@ export default function AboutPage() {
       <section className="space-y-5">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Our Services
+            Layanan Kami
           </p>
 
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            Fast boat bookings for popular destinations
+            Pemesanan fast boat untuk destinasi populer
           </h2>
         </div>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat provides fast boat booking
-          services for routes connecting Bali, the Nusa
-          Islands, the Gili Islands, and Lombok.
+          Nusa Gili Boat menyediakan layanan pemesanan
+          perjalanan fast boat untuk berbagai rute yang
+          menghubungkan Bali, Kepulauan Nusa, Kepulauan
+          Gili, dan Lombok.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -211,15 +212,15 @@ export default function AboutPage() {
         </div>
 
         <p className="text-sm leading-7 text-slate-500">
-          Route, schedule, vessel, and seat availability
-          depends on travel data and inventory provided
-          by operators for the selected date.
+          Ketersediaan rute, jadwal, kapal, dan kursi
+          bergantung pada data perjalanan serta inventory
+          dari operator pada tanggal pencarian.
         </p>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Destinations we serve
+          Destinasi yang kami layani
         </h2>
 
         <div className="flex flex-wrap gap-3">
@@ -234,94 +235,90 @@ export default function AboutPage() {
         </div>
 
         <p className="leading-8 text-slate-600">
-          We will continue to expand our routes and
-          travel services based on operator partnerships,
-          customer needs, and service availability.
+          Kami akan terus mengembangkan pilihan rute dan
+          layanan perjalanan berdasarkan kerja sama operator,
+          kebutuhan pelanggan, dan ketersediaan layanan.
         </p>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          The role of Nusa Gili Boat
+          Peran Nusa Gili Boat
         </h2>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat provides travel search, ticket
-          booking, booking record management, and
-          customer assistance services. We act as a
-          booking intermediary between customers and
-          their selected fast boat operator.
+          Nusa Gili Boat menyediakan layanan pencarian,
+          pemesanan tiket, pencatatan booking, dan bantuan
+          pelanggan. Kami bertindak sebagai perantara
+          pemesanan antara pelanggan dan operator fast boat
+          yang dipilih.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Sailing services, vessel operations, crew,
-          transportation safety, departure decisions,
-          and on-site services remain the responsibility
-          of the relevant fast boat operator.
+          Layanan pelayaran, pengoperasian kapal, awak kapal,
+          keselamatan transportasi, keputusan keberangkatan,
+          dan pelayanan di lapangan menjadi tanggung jawab
+          operator fast boat terkait.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Schedules, vessels, routes, ports, and journey
-          times may change due to weather, sea
-          conditions, safety requirements, operational
-          needs, passenger capacity, or instructions
-          from the relevant authorities.
+          Jadwal, kapal, rute, pelabuhan, dan waktu perjalanan
+          dapat berubah karena kondisi cuaca, keadaan laut,
+          keselamatan, kebutuhan operasional, kapasitas
+          penumpang, atau instruksi otoritas terkait.
         </p>
 
         <aside className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
           <h3 className="font-semibold text-sky-950">
-            Operator transparency
+            Transparansi operator
           </h3>
 
           <p className="mt-2 leading-7 text-sky-900">
-            The name of the operator providing the
-            journey will be displayed in the search
-            results, trip details, checkout page, and
-            customer booking confirmation.
+            Nama operator yang menyediakan perjalanan akan
+            ditampilkan pada hasil pencarian, detail trip,
+            checkout, dan konfirmasi booking pelanggan.
           </p>
         </aside>
       </section>
 
       <section className="space-y-5">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Our Commitment
+          Komitmen Kami
         </h2>
 
         <p className="leading-8 text-slate-600">
-          We work with selected fast boat operators and
-          aim to provide clear information regarding
-          schedules, routes, prices, and seat
-          availability.
+          Kami bekerja sama dengan operator fast boat yang
+          telah dipilih dan berupaya menyediakan informasi
+          jadwal, rute, harga, serta ketersediaan kursi secara
+          jelas.
         </p>
 
         <p className="leading-8 text-slate-600">
-          We are committed to helping customers from
-          the travel search and booking process through
-          to receiving the departure information they
-          need.
+          Kami berkomitmen membantu pelanggan sejak proses
+          pencarian dan pemesanan hingga memperoleh informasi
+          keberangkatan yang dibutuhkan.
         </p>
 
         <p className="leading-8 text-slate-600">
-          As Nusa Gili Boat grows, we will continue to
-          improve our booking system, payment methods,
-          customer support, operator selection, and
-          other travel services.
+          Seiring berkembangnya Nusa Gili Boat, kami akan
+          terus meningkatkan sistem pemesanan, metode
+          pembayaran, dukungan pelanggan, pilihan operator,
+          dan layanan perjalanan lainnya.
         </p>
       </section>
 
       <section className="rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
-          Your journey starts here
+          Perjalanan Anda dimulai di sini
         </p>
 
         <h2 className="mt-3 text-2xl font-bold tracking-tight">
-          Find the right fast boat journey
+          Temukan perjalanan fast boat yang sesuai
         </h2>
 
         <p className="mt-4 max-w-2xl leading-8 text-slate-300">
-          Select your route, travel date, and number of
-          passengers to view available schedules and
-          seats.
+          Pilih rute, tanggal, dan jumlah penumpang untuk
+          melihat jadwal serta kursi yang tersedia.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -329,41 +326,42 @@ export default function AboutPage() {
             href="/"
             className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
           >
-            Search trips
+            Cari perjalanan
           </Link>
 
           <Link
-            href="/contact"
+            href="/id/contact"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-bold text-white transition hover:border-slate-500 hover:bg-slate-900"
           >
-            Contact us
+            Hubungi kami
           </Link>
         </div>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Business Operations
+          Operasional Bisnis
         </p>
 
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">
-          Operated from Jakarta, serving Bali and nearby islands
+          Dikelola dari Jakarta, melayani Bali dan kepulauan sekitarnya
         </h2>
 
         <p className="mt-4 leading-8 text-slate-600">
-          Nusa Gili Boat&apos;s business administration
-          and customer support are managed from Jakarta,
-          Indonesia. Our platform provides access to
-          fast boat journeys serving Bali, the Nusa
-          Islands, the Gili Islands, and Lombok.
+          Administrasi bisnis dan layanan pelanggan
+          Nusa Gili Boat dikelola dari Jakarta,
+          Indonesia. Platform kami menyediakan akses
+          pemesanan perjalanan fast boat yang melayani
+          Bali, Kepulauan Nusa, Kepulauan Gili, dan
+          Lombok.
         </p>
 
         <p className="mt-4 leading-8 text-slate-600">
-          Fast boat journeys are operated by the
-          transportation operator selected by the
-          customer. Nusa Gili Boat provides the online
-          search, booking, payment, and customer support
-          services.
+          Perjalanan fast boat dijalankan oleh operator
+          transportasi yang dipilih pelanggan. Nusa
+          Gili Boat menyediakan layanan pencarian,
+          pemesanan, pembayaran, dan bantuan pelanggan
+          secara online.
         </p>
       </section>
 

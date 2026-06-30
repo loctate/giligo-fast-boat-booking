@@ -10,12 +10,14 @@ import Link from "next/link"
 
 import PublicInfoPage from "@/components/PublicInfoPage"
 
-export const metadata: Metadata = {
-  title:
-    "Syarat dan Ketentuan | Nusa Gili Boat",
-  description:
-    "Syarat dan ketentuan penggunaan situs, pencarian perjalanan, pemesanan, pembayaran, perubahan, pembatalan, dan layanan fast boat melalui Nusa Gili Boat.",
-}
+import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
+
+export const metadata: Metadata = createPublicPageMetadata({
+  locale: "en",
+  path: "/terms-and-conditions",
+  title: "Terms and Conditions | Nusa Gili Boat",
+  description: "Terms and conditions governing website use, trip searches, bookings, payments, changes, cancellations, and fast boat services booked through Nusa Gili Boat.",
+})
 
 type PolicySectionProps = {
   number: number
@@ -60,943 +62,937 @@ function BulletList({
 export default function TermsAndConditionsPage() {
   return (
     <PublicInfoPage
-      eyebrow="Informasi Hukum"
-      title="Syarat dan Ketentuan"
-      description="Syarat dan Ketentuan ini mengatur penggunaan situs, pencarian perjalanan, pemesanan tiket, pembayaran, perubahan, pembatalan, dan layanan fast boat yang dipesan melalui Nusa Gili Boat."
-      lastUpdated="30 Juni 2026"
+      locale="en"
+      eyebrow="Legal Information"
+      title="Terms and Conditions"
+      description="These Terms and Conditions govern the use of our website, trip searches, ticket bookings, payments, changes, cancellations, and fast boat services booked through Nusa Gili Boat."
+      lastUpdated="June 30, 2026"
     >
       <PolicySection
         number={1}
-        title="Persetujuan terhadap Syarat dan Ketentuan"
+        title="Agreement to these Terms and Conditions"
       >
         <p className="leading-8 text-slate-600">
-          Selamat datang di Nusa Gili Boat. Dengan
-          mengakses, menjelajahi, mencari perjalanan,
-          membuat booking, melakukan pembayaran, atau
-          menggunakan layanan yang tersedia melalui
-          situs Nusa Gili Boat, pengguna dianggap telah
-          membaca, memahami, dan menyetujui seluruh
-          Syarat dan Ketentuan ini.
+          Welcome to Nusa Gili Boat. By accessing,
+          browsing, searching for a trip, making a
+          booking, completing a payment, or using any
+          service available through the Nusa Gili Boat
+          website, the user is considered to have read,
+          understood, and agreed to these Terms and
+          Conditions.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila pengguna tidak menyetujui sebagian
-          atau seluruh ketentuan ini, pengguna tidak
-          disarankan melanjutkan penggunaan layanan
-          atau membuat booking.
+          A user who does not agree with any part of
+          these terms should not continue using the
+          service or make a booking.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pengguna yang membuat booking untuk orang
-          lain menyatakan bahwa pengguna berwenang
-          memberikan data penumpang tersebut dan telah
-          menyampaikan ketentuan perjalanan yang berlaku
-          kepada seluruh penumpang dalam booking.
+          A user who makes a booking on behalf of
+          another person confirms that they are
+          authorized to provide the passenger&apos;s
+          information and have communicated the
+          applicable travel terms to every passenger
+          included in the booking.
         </p>
       </PolicySection>
 
       <PolicySection
         number={2}
-        title="Definisi"
+        title="Definitions"
       >
         <p className="leading-8 text-slate-600">
-          Dalam Syarat dan Ketentuan ini, istilah berikut
-          memiliki arti sebagai berikut:
+          In these Terms and Conditions, the following
+          terms have the meanings described below:
         </p>
 
         <BulletList
           items={[
-            "Nusa Gili Boat adalah platform daring yang menyediakan layanan pencarian dan pemesanan tiket fast boat.",
-            "Pengguna adalah setiap orang yang mengakses situs atau menggunakan layanan Nusa Gili Boat.",
-            "Pelanggan adalah pengguna yang membuat atau membayar sebuah booking.",
-            "Penumpang adalah orang yang namanya tercatat dalam booking untuk menggunakan layanan transportasi.",
-            "Operator adalah penyedia layanan transportasi fast boat yang menjalankan perjalanan yang dipilih pelanggan.",
-            "Booking adalah reservasi perjalanan yang dibuat melalui sistem Nusa Gili Boat.",
-            "Kode booking adalah kode unik yang digunakan untuk mengidentifikasi reservasi pelanggan.",
-            "Konfirmasi booking adalah informasi elektronik yang memuat detail dan status reservasi pelanggan.",
-            "E-ticket adalah tiket atau voucher elektronik yang diterbitkan setelah pembayaran berhasil dan booking dikonfirmasi.",
-            "Perjalanan atau trip adalah satu layanan transportasi dari pelabuhan keberangkatan menuju pelabuhan tujuan.",
+            "Nusa Gili Boat is an online platform that provides fast boat trip search and ticket booking services.",
+            "User means any person who accesses the website or uses a Nusa Gili Boat service.",
+            "Customer means a user who creates or pays for a booking.",
+            "Passenger means a person whose name is recorded in a booking to use a transportation service.",
+            "Operator means the fast boat transportation provider that operates the journey selected by the customer.",
+            "Booking means a travel reservation created through the Nusa Gili Boat system.",
+            "Booking code means the unique code used to identify a customer reservation.",
+            "Booking confirmation means electronic information containing the details and status of a customer reservation.",
+            "E-ticket means an electronic ticket or voucher issued after payment has been completed and the booking has been confirmed.",
+            "Journey or trip means a transportation service from a departure port to a destination port.",
           ]}
         />
       </PolicySection>
 
       <PolicySection
         number={3}
-        title="Ruang lingkup layanan"
+        title="Scope of services"
       >
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat membantu pengguna mencari,
-          membandingkan, dan memesan perjalanan fast
-          boat menuju destinasi yang tersedia pada
-          platform.
+          Nusa Gili Boat helps users search for,
+          compare, and book fast boat journeys to
+          destinations available through the platform.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Destinasi tersebut dapat mencakup Bali, Nusa
-          Penida, Nusa Lembongan, Nusa Ceningan,
-          Gili Trawangan, Gili Air, Gili Meno, Lombok,
-          dan rute antar pulau lainnya sesuai
-          ketersediaan operator.
+          Destinations may include Bali, Nusa Penida,
+          Nusa Lembongan, Nusa Ceningan, Gili
+          Trawangan, Gili Air, Gili Meno, Lombok, and
+          other inter-island routes subject to operator
+          availability.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat bertindak sebagai perantara
-          pemesanan antara pelanggan dan operator.
-          Transportasi laut, kapal, awak kapal,
-          keselamatan pelayaran, check-in, boarding,
-          dan pelaksanaan perjalanan disediakan oleh
-          operator terkait.
+          Nusa Gili Boat acts as a booking intermediary
+          between the customer and the operator. Sea
+          transportation, vessels, crew, sailing
+          safety, check-in, boarding, and the operation
+          of the journey are provided by the relevant
+          operator.
         </p>
       </PolicySection>
 
       <PolicySection
         number={4}
-        title="Persyaratan pengguna"
+        title="User eligibility and requirements"
       >
         <p className="leading-8 text-slate-600">
-          Pihak yang membuat booking harus berusia
-          sekurang-kurangnya 18 tahun dan memiliki
-          kewenangan hukum untuk melakukan transaksi.
+          The person making a booking must be at least
+          18 years old and have the legal authority to
+          complete the transaction.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Booking untuk anak atau bayi harus dilakukan
-          oleh orang tua, wali, atau orang dewasa yang
-          bertanggung jawab atas perjalanan tersebut.
+          A booking for a child or infant must be made
+          by a parent, legal guardian, or responsible
+          adult accompanying or responsible for the
+          journey.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pengguna wajib memberikan informasi yang
-          benar, lengkap, terkini, dan dapat
-          diverifikasi.
+          Users must provide information that is
+          accurate, complete, current, and capable of
+          being verified.
         </p>
       </PolicySection>
 
       <PolicySection
         number={5}
-        title="Proses pemesanan"
+        title="Booking process"
       >
         <p className="leading-8 text-slate-600">
-          Pelanggan harus memilih rute, tanggal,
-          jadwal, operator, jumlah penumpang, dan detail
-          perjalanan sebelum mengisi informasi
-          pelanggan dan penumpang.
+          Customers must select the route, date,
+          schedule, operator, number of passengers, and
+          travel details before entering customer and
+          passenger information.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Sebelum mengirim booking, pelanggan wajib
-          memeriksa kembali seluruh informasi yang
-          ditampilkan pada halaman checkout.
+          Before submitting a booking, customers must
+          carefully review all information displayed on
+          the checkout page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Setelah booking berhasil dibuat, sistem akan
-          menerbitkan kode booking dan halaman
-          konfirmasi yang berisi detail serta status
-          reservasi.
+          After a booking is successfully created, the
+          system will issue a booking code and display
+          a confirmation page containing the
+          reservation details and status.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Booking belum dianggap telah dibayar atau
-          dikonfirmasi hanya karena kode booking telah
-          diterbitkan. Pelanggan harus memeriksa status
-          pembayaran dan status booking.
+          A booking is not considered paid or confirmed
+          merely because a booking code has been
+          issued. Customers must check both the payment
+          status and booking status.
         </p>
       </PolicySection>
 
       <PolicySection
         number={6}
-        title="Ketersediaan kursi"
+        title="Seat availability"
       >
         <p className="leading-8 text-slate-600">
-          Hasil pencarian didasarkan pada informasi
-          jadwal, inventory, dan ketersediaan kursi
-          yang tercatat pada sistem saat pencarian
-          dilakukan.
+          Search results are based on schedule,
+          inventory, and seat availability information
+          recorded in the system at the time of the
+          search.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Ketersediaan kursi dapat berubah sebelum
-          booking berhasil diproses. Pemilihan
-          perjalanan pada hasil pencarian tidak dengan
-          sendirinya menjamin bahwa kursi telah dipesan.
+          Seat availability may change before a booking
+          is successfully processed. Selecting a
+          journey from the search results does not by
+          itself guarantee that a seat has been
+          reserved.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pemesanan hanya dapat dilakukan untuk tanggal
-          perjalanan yang memenuhi batas waktu minimum
-          pemesanan yang ditentukan dalam sistem Nusa
-          Gili Boat.
+          Bookings may only be made for travel dates
+          that satisfy the minimum advance-booking
+          period configured in the Nusa Gili Boat
+          system.
         </p>
       </PolicySection>
 
       <PolicySection
         number={7}
-        title="Harga dan biaya tambahan"
+        title="Prices and additional charges"
       >
         <p className="leading-8 text-slate-600">
-          Harga yang ditampilkan berlaku pada saat
-          booking dibuat dan dapat berubah sebelum
-          pembayaran berhasil diselesaikan.
+          The displayed price applies when the booking
+          is created and may change before payment is
+          successfully completed.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Harga pada situs ditampilkan dalam Rupiah
-          Indonesia, kecuali dinyatakan lain secara
-          jelas.
+          Prices on the website are displayed in
+          Indonesian Rupiah unless clearly stated
+          otherwise.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Harga dapat mencakup tiket fast boat serta
-          pajak atau biaya lain yang secara jelas
-          dicantumkan dalam rincian pembayaran.
+          The price may include the fast boat ticket
+          and any tax or other charge clearly listed in
+          the payment breakdown.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Bergantung pada rute dan operator, harga tiket
-          dapat tidak mencakup:
+          Depending on the route and operator, the
+          ticket price may not include:
         </p>
 
         <BulletList
           items={[
-            "Biaya pelabuhan.",
-            "Retribusi daerah.",
-            "Biaya masuk kawasan wisata.",
-            "Biaya konservasi atau pungutan pemerintah.",
-            "Transportasi atau layanan antar-jemput hotel.",
-            "Bagasi berlebih atau barang khusus.",
-            "Layanan tambahan yang tidak disebutkan dalam detail perjalanan.",
+            "Port fees.",
+            "Local government charges.",
+            "Tourism area entrance fees.",
+            "Conservation fees or government levies.",
+            "Hotel transportation or shuttle services.",
+            "Excess baggage or special-item charges.",
+            "Additional services not included in the trip details.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Biaya lokal yang tidak termasuk dalam harga
-          online dapat ditagihkan oleh operator,
-          pelabuhan, pengelola destinasi, atau otoritas
-          terkait.
+          Local charges not included in the online
+          price may be collected by the operator, port,
+          destination manager, or relevant authority.
         </p>
       </PolicySection>
 
       <PolicySection
         number={8}
-        title="Pembayaran"
+        title="Payment"
       >
         <p className="leading-8 text-slate-600">
-          Pembayaran dilakukan melalui metode yang
-          tersedia pada halaman pembayaran.
+          Payment must be completed using one of the
+          methods available on the payment page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pembayaran online dapat diproses oleh penyedia
-          payment gateway, bank, virtual account,
-          dompet elektronik, QRIS, kartu pembayaran,
-          atau penyedia pembayaran lainnya.
+          Online payments may be processed by a payment
+          gateway provider, bank, virtual account,
+          electronic wallet, QRIS, payment card
+          provider, or another payment service
+          provider.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Status resmi yang diterima dari penyedia
-          pembayaran akan menjadi dasar penentuan
-          apakah transaksi berhasil, tertunda,
-          kedaluwarsa, dibatalkan, ditolak, atau telah
-          dikembalikan.
+          The official status received from the payment
+          provider will be used to determine whether a
+          transaction is successful, pending, expired,
+          cancelled, rejected, or refunded.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Booking yang tidak dibayar sampai batas waktu
-          pembayaran dapat kedaluwarsa. Kursi yang
-          sebelumnya dialokasikan dapat dilepas kembali
-          tanpa pemberitahuan tambahan.
+          A booking that is not paid before the payment
+          deadline may expire. Any seat previously
+          allocated may be released without further
+          notice.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat tidak meminta PIN, CVV,
-          password perbankan, maupun kode OTP melalui
-          email, WhatsApp, atau layanan pelanggan.
+          Nusa Gili Boat does not request a PIN, CVV,
+          banking password, or OTP code through email,
+          WhatsApp, or customer support.
         </p>
       </PolicySection>
 
       <PolicySection
         number={9}
-        title="Konfirmasi booking dan e-ticket"
+        title="Booking confirmation and e-tickets"
       >
         <p className="leading-8 text-slate-600">
-          Booking dinyatakan terkonfirmasi setelah
-          pembayaran berhasil diterima dan status
-          booking telah diperbarui menjadi dikonfirmasi
-          oleh sistem atau tim Nusa Gili Boat.
+          A booking is confirmed after successful
+          payment has been received and the booking
+          status has been updated to confirmed by the
+          system or the Nusa Gili Boat team.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Setelah pembayaran berhasil dan booking
-          dikonfirmasi, pelanggan akan memperoleh
-          konfirmasi booking yang memuat kode booking
-          serta informasi perjalanan.
+          After payment has been completed and the
+          booking has been confirmed, the customer will
+          receive a booking confirmation containing
+          the booking code and travel information.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Setelah fitur e-ticket diaktifkan pada
-          layanan Nusa Gili Boat, sistem juga akan
-          menerbitkan e-ticket atau voucher elektronik
-          secara otomatis.
+          After the e-ticket feature is activated for
+          the Nusa Gili Boat service, the system will
+          also automatically issue an e-ticket or
+          electronic voucher.
         </p>
 
         <p className="leading-8 text-slate-600">
-          E-ticket akan dikirimkan ke alamat email yang
-          digunakan saat pemesanan dan dapat tersedia
-          melalui halaman detail booking.
+          The e-ticket will be sent to the email
+          address used when making the booking and may
+          also be available through the booking details
+          page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pelanggan bertanggung jawab memeriksa kode
-          booking, nama penumpang, rute, tanggal,
-          operator, jadwal, jumlah penumpang, status
-          pembayaran, dan informasi lain yang tercantum
-          dalam konfirmasi maupun e-ticket.
+          Customers are responsible for checking the
+          booking code, passenger names, route, date,
+          operator, schedule, number of passengers,
+          payment status, and all other information
+          included in the confirmation or e-ticket.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila terdapat kesalahan atau perbedaan
-          informasi, pelanggan harus segera menghubungi
-          layanan pelanggan setelah mengetahuinya dan
-          sebelum waktu keberangkatan.
+          If the customer identifies an error or
+          discrepancy, the customer must contact
+          customer support immediately after becoming
+          aware of it and before the departure time.
         </p>
       </PolicySection>
 
       <PolicySection
         number={10}
-        title="Kewajiban penumpang dan check-in"
+        title="Passenger responsibilities and check-in"
       >
         <p className="leading-8 text-slate-600">
-          Penumpang wajib mengikuti waktu check-in yang
-          ditentukan oleh operator atau tercantum dalam
-          konfirmasi perjalanan maupun e-ticket.
+          Passengers must comply with the check-in time
+          specified by the operator or shown in the
+          travel confirmation or e-ticket.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Sebagai pedoman umum, penumpang dianjurkan
-          berada di lokasi check-in sekurang-kurangnya
-          60 menit sebelum keberangkatan, kecuali
-          operator memberikan instruksi waktu yang
-          berbeda.
+          As a general guideline, passengers should
+          arrive at the check-in location at least 60
+          minutes before departure unless the operator
+          provides different instructions.
         </p>
 
         <BulletList
           items={[
-            "Membawa identitas dan dokumen perjalanan yang diperlukan.",
-            "Membawa konfirmasi booking atau e-ticket apabila telah diterbitkan.",
-            "Mengikuti prosedur check-in dan boarding.",
-            "Mematuhi aturan pelabuhan.",
-            "Mematuhi instruksi keselamatan dari operator dan awak kapal.",
-            "Memastikan informasi kontak dapat digunakan untuk menerima pembaruan perjalanan.",
+            "Bring the identification and travel documents required for the journey.",
+            "Bring the booking confirmation or e-ticket if one has been issued.",
+            "Follow the applicable check-in and boarding procedures.",
+            "Comply with port rules.",
+            "Follow safety instructions provided by the operator and vessel crew.",
+            "Ensure that the provided contact information can receive travel updates.",
           ]}
         />
       </PolicySection>
 
       <PolicySection
         number={11}
-        title="Jadwal perjalanan"
+        title="Travel schedules"
       >
         <p className="leading-8 text-slate-600">
-          Waktu keberangkatan, waktu kedatangan, dan
-          durasi perjalanan merupakan perkiraan
-          berdasarkan jadwal yang tersedia.
+          Departure times, arrival times, and journey
+          durations are estimates based on the
+          available schedule.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Operator dapat mengubah waktu, kapal, rute,
-          pelabuhan, titik check-in, atau pengaturan
-          perjalanan karena:
+          An operator may change the time, vessel,
+          route, port, check-in location, or travel
+          arrangements due to:
         </p>
 
         <BulletList
           items={[
-            "Cuaca dan kondisi laut.",
-            "Pasang surut air laut.",
-            "Kepadatan atau penutupan pelabuhan.",
-            "Gangguan atau pemeriksaan teknis.",
-            "Pertimbangan keselamatan.",
-            "Kapasitas dan kebutuhan operasional.",
-            "Instruksi pemerintah atau otoritas pelabuhan.",
+            "Weather and sea conditions.",
+            "Tidal conditions.",
+            "Port congestion or closure.",
+            "Technical disruption or inspection.",
+            "Safety considerations.",
+            "Capacity and operational requirements.",
+            "Instructions from the government or port authorities.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat akan berupaya menyampaikan
-          pembaruan yang diterima dari operator melalui
-          informasi kontak pelanggan.
+          Nusa Gili Boat will make reasonable efforts
+          to communicate updates received from the
+          operator using the customer&apos;s contact
+          information.
         </p>
       </PolicySection>
 
       <PolicySection
         number={12}
-        title="Keterlambatan dan perjalanan lanjutan"
+        title="Delays and onward travel arrangements"
       >
         <p className="leading-8 text-slate-600">
-          Transportasi laut dapat mengalami
-          keterlambatan karena faktor cuaca, kondisi
-          laut, pelabuhan, teknis, keselamatan, atau
-          operasional.
+          Sea transportation may be delayed due to
+          weather, sea conditions, port conditions,
+          technical issues, safety considerations, or
+          operational circumstances.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pelanggan disarankan memberikan jeda waktu
-          yang memadai sebelum penerbangan, hotel, tur,
-          rapat, atau transportasi lanjutan.
+          Customers should allow sufficient time before
+          a flight, hotel check-in, tour, meeting, or
+          onward transportation connection.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Sejauh diperbolehkan hukum, biaya tidak
-          langsung yang terjadi karena perubahan
-          jadwal operator, seperti tiket lanjutan,
-          hotel, agenda pribadi, atau kehilangan
-          kesempatan bisnis, tidak otomatis menjadi
-          tanggungan Nusa Gili Boat.
+          To the extent permitted by law, indirect
+          costs arising from an operator schedule
+          change, including onward tickets, hotel
+          costs, personal arrangements, or lost
+          business opportunities, do not automatically
+          become the responsibility of Nusa Gili Boat.
         </p>
       </PolicySection>
 
       <PolicySection
         number={13}
-        title="Perubahan dan pembatalan oleh pelanggan"
+        title="Changes and cancellations requested by customers"
       >
         <p className="leading-8 text-slate-600">
-          Permintaan perubahan nama, tanggal, jadwal,
-          rute, penumpang, atau pembatalan harus
-          diajukan melalui saluran layanan pelanggan
-          resmi.
+          Requests to change a passenger name, travel
+          date, schedule, route, passenger details, or
+          to cancel a booking must be submitted through
+          an official customer support channel.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Persetujuan perubahan bergantung pada
-          kebijakan operator, kondisi tarif,
-          ketersediaan kursi, status pembayaran, dan
-          waktu pengajuan.
+          Approval of a change depends on operator
+          policy, fare conditions, seat availability,
+          payment status, and when the request is
+          submitted.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Selisih harga, penalti operator, biaya
-          administrasi, atau biaya pemrosesan dapat
-          berlaku apabila telah diinformasikan dan
-          memang relevan terhadap permintaan tersebut.
+          Fare differences, operator penalties,
+          administrative charges, or processing fees
+          may apply where they have been disclosed and
+          are relevant to the request.
         </p>
 
         <Link
           href="/refund-and-cancellation-policy"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Baca Kebijakan Refund dan Pembatalan
+          Read the Refund and Cancellation Policy
         </Link>
       </PolicySection>
 
       <PolicySection
         number={14}
-        title="Pembatalan oleh operator"
+        title="Cancellations by an operator"
       >
         <p className="leading-8 text-slate-600">
-          Operator dapat membatalkan perjalanan karena
-          cuaca buruk, kondisi laut yang tidak aman,
-          masalah teknis, alasan operasional, penutupan
-          pelabuhan, instruksi otoritas, atau keadaan
-          kahar.
+          An operator may cancel a journey because of
+          severe weather, unsafe sea conditions,
+          technical problems, operational reasons,
+          port closure, instructions from an authority,
+          or force majeure.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila perjalanan dibatalkan operator,
-          alternatif yang tersedia dapat berupa:
+          When a journey is cancelled by an operator,
+          the available alternatives may include:
         </p>
 
         <BulletList
           items={[
-            "Pemindahan ke jadwal lain.",
-            "Pemindahan ke operator lain dengan persetujuan pelanggan.",
-            "Kredit perjalanan apabila disepakati.",
-            "Refund untuk perjalanan yang terdampak sesuai kebijakan yang berlaku.",
+            "Transfer to another schedule.",
+            "Transfer to another operator with the customer's approval.",
+            "Travel credit where agreed.",
+            "A refund for the affected journey in accordance with the applicable policy.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Alternatif perjalanan tetap bergantung pada
-          ketersediaan kursi dan kondisi operasional.
+          Alternative travel arrangements remain
+          subject to seat availability and operational
+          conditions.
         </p>
       </PolicySection>
 
       <PolicySection
         number={15}
-        title="Tidak hadir atau no-show"
+        title="Failure to attend or no-show"
       >
         <p className="leading-8 text-slate-600">
-          Penumpang dapat dianggap no-show apabila:
+          A passenger may be considered a no-show when
+          the passenger:
         </p>
 
         <BulletList
           items={[
-            "Tidak hadir pada waktu check-in.",
-            "Datang setelah proses boarding ditutup.",
-            "Tidak berada di titik keberangkatan yang ditentukan.",
-            "Tidak membawa identitas atau dokumen wajib.",
-            "Tidak memenuhi persyaratan perjalanan yang berlaku.",
+            "Does not attend at the required check-in time.",
+            "Arrives after boarding has closed.",
+            "Is not present at the designated departure point.",
+            "Does not bring the required identification or documents.",
+            "Does not satisfy the applicable travel requirements.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Booking no-show pada umumnya tidak dapat
-          direfund atau dijadwalkan ulang, kecuali
-          operator memutuskan lain.
+          A no-show booking is generally not eligible
+          for a refund or rescheduling unless the
+          operator decides otherwise.
         </p>
       </PolicySection>
 
       <PolicySection
         number={16}
-        title="Booking pulang-pergi"
+        title="Round-trip bookings"
       >
         <p className="leading-8 text-slate-600">
-          Booking pulang-pergi terdiri dari perjalanan
-          keberangkatan dan perjalanan kembali yang
-          diperlakukan sebagai dua perjalanan.
+          A round-trip booking consists of an outbound
+          journey and a return journey that are treated
+          as two separate journeys.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Setiap perjalanan dapat memiliki operator,
-          kapal, harga, jadwal, ketentuan perubahan,
-          dan kebijakan pembatalan yang berbeda.
+          Each journey may have a different operator,
+          vessel, price, schedule, change conditions,
+          and cancellation policy.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pembatalan atau perubahan satu perjalanan
-          tidak otomatis membatalkan perjalanan lainnya,
-          kecuali telah disetujui dan dikonfirmasi.
+          The cancellation or change of one journey
+          does not automatically cancel the other
+          journey unless this has been approved and
+          confirmed.
         </p>
       </PolicySection>
 
       <PolicySection
         number={17}
-        title="Bagasi"
+        title="Baggage"
       >
         <p className="leading-8 text-slate-600">
-          Jumlah, berat, ukuran, dan jenis bagasi yang
-          diperbolehkan mengikuti ketentuan operator.
+          Permitted baggage quantity, weight, size, and
+          type are subject to the operator&apos;s
+          conditions.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Papan selancar, sepeda, peralatan menyelam,
-          perlengkapan olahraga, hewan, atau barang
-          berukuran besar dapat memerlukan persetujuan
-          dan biaya tambahan.
+          Surfboards, bicycles, diving equipment,
+          sporting equipment, animals, or oversized
+          items may require prior approval and an
+          additional charge.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Barang berbahaya, mudah terbakar, mudah
-          meledak, ilegal, atau berpotensi mengganggu
-          keselamatan dilarang dibawa.
+          Dangerous, flammable, explosive, illegal, or
+          potentially unsafe items must not be carried.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penumpang bertanggung jawab menjaga uang,
-          dokumen, perangkat elektronik, obat-obatan,
-          perhiasan, dan barang berharga lainnya.
+          Passengers are responsible for safeguarding
+          money, documents, electronic devices,
+          medication, jewelry, and other valuables.
         </p>
       </PolicySection>
 
       <PolicySection
         number={18}
-        title="Kesehatan dan keselamatan"
+        title="Health and safety"
       >
         <p className="leading-8 text-slate-600">
-          Perjalanan fast boat dapat melibatkan
-          pergerakan kapal, gelombang, proses naik turun
-          kapal, dan fasilitas yang berbeda dari
-          transportasi darat.
+          Fast boat travel may involve vessel movement,
+          waves, boarding and disembarking procedures,
+          and facilities that differ from land
+          transportation.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penumpang yang sedang hamil, memiliki kondisi
-          jantung, gangguan punggung, keterbatasan
-          mobilitas, kondisi medis tertentu, atau
-          membutuhkan bantuan khusus harus meminta
-          saran medis dan menghubungi kami sebelum
-          membuat booking.
+          Passengers who are pregnant, have a heart
+          condition, back problem, limited mobility,
+          another medical condition, or require special
+          assistance should obtain medical advice and
+          contact us before making a booking.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Operator dapat menerapkan pembatasan
-          perjalanan berdasarkan kondisi keselamatan,
-          fasilitas kapal, keadaan laut, dan rekomendasi
-          medis.
+          An operator may impose travel restrictions
+          based on safety conditions, vessel
+          facilities, sea conditions, and medical
+          recommendations.
         </p>
       </PolicySection>
 
       <PolicySection
         number={19}
-        title="Anak dan bayi"
+        title="Children and infants"
       >
         <p className="leading-8 text-slate-600">
-          Anak dan bayi harus didampingi orang dewasa
-          yang bertanggung jawab selama check-in,
-          boarding, dan perjalanan.
+          Children and infants must be accompanied by a
+          responsible adult during check-in, boarding,
+          and the journey.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kategori usia, harga, tempat duduk, dokumen,
-          dan persyaratan anak atau bayi mengikuti
-          ketentuan operator yang dipilih.
+          Age categories, fares, seating, documents,
+          and other requirements for children or
+          infants are subject to the conditions of the
+          selected operator.
         </p>
       </PolicySection>
 
       <PolicySection
         number={20}
-        title="Dokumen perjalanan"
+        title="Travel documents"
       >
         <p className="leading-8 text-slate-600">
-          Penumpang bertanggung jawab memiliki
-          identitas, paspor, visa, izin perjalanan,
-          tiket, atau dokumen lain yang diwajibkan.
+          Passengers are responsible for possessing
+          the identification, passport, visa, travel
+          authorization, ticket, or other documents
+          required for the journey.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat tidak bertanggung jawab atas
-          penolakan check-in atau boarding yang
-          disebabkan dokumen penumpang tidak lengkap,
-          tidak sesuai, atau tidak berlaku.
+          Nusa Gili Boat is not responsible for a
+          check-in or boarding refusal caused by
+          incomplete, incorrect, or invalid passenger
+          documentation.
         </p>
       </PolicySection>
 
       <PolicySection
         number={21}
-        title="Asuransi perjalanan"
+        title="Travel insurance"
       >
         <p className="leading-8 text-slate-600">
-          Pelanggan dianjurkan memiliki asuransi
-          perjalanan yang sesuai dengan kebutuhan dan
-          risiko perjalanannya.
+          Customers are encouraged to obtain travel
+          insurance appropriate to their travel needs
+          and risks.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pertanggungan dapat mencakup kecelakaan,
-          biaya medis, pembatalan perjalanan, kehilangan
-          bagasi, keterlambatan, dan evakuasi darurat,
-          sesuai polis yang dipilih pelanggan.
+          Depending on the policy selected by the
+          customer, coverage may include accidents,
+          medical expenses, trip cancellation, baggage
+          loss, delays, and emergency evacuation.
         </p>
       </PolicySection>
 
       <PolicySection
         number={22}
-        title="Keadaan kahar"
+        title="Force majeure"
       >
         <p className="leading-8 text-slate-600">
-          Keadaan kahar adalah peristiwa di luar
-          kendali wajar yang menghambat atau menyebabkan
-          layanan tidak dapat dilaksanakan sebagaimana
-          direncanakan.
+          Force majeure means an event beyond
+          reasonable control that prevents or disrupts
+          the delivery of a service as planned.
         </p>
 
         <BulletList
           items={[
-            "Cuaca ekstrem dan kondisi laut berbahaya.",
-            "Gempa bumi, tsunami, letusan gunung berapi, atau bencana alam lainnya.",
-            "Wabah, pandemi, atau keadaan darurat kesehatan.",
-            "Perang, terorisme, kerusuhan, atau gangguan keamanan.",
-            "Pemogokan atau gangguan layanan publik.",
-            "Penutupan pelabuhan atau pembatasan pemerintah.",
-            "Gangguan teknis besar pada sistem atau infrastruktur.",
+            "Extreme weather and dangerous sea conditions.",
+            "Earthquakes, tsunamis, volcanic eruptions, or other natural disasters.",
+            "Outbreaks, pandemics, or public health emergencies.",
+            "War, terrorism, civil unrest, or security disruption.",
+            "Strikes or disruption to public services.",
+            "Port closures or government restrictions.",
+            "Major technical failures affecting systems or infrastructure.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Penyelesaian booking dalam keadaan tersebut
-          akan mempertimbangkan kondisi aktual,
-          kebijakan operator, metode pembayaran, dan
-          ketentuan hukum yang berlaku.
+          The resolution of an affected booking will
+          take into account the actual circumstances,
+          operator policy, payment method, and
+          applicable law.
         </p>
       </PolicySection>
 
       <PolicySection
         number={23}
-        title="Pembagian tanggung jawab"
+        title="Allocation of responsibility"
       >
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat bertanggung jawab atas
-          pelaksanaan layanan pemesanan yang berada
-          dalam kendali kami, termasuk pemrosesan data
-          booking, penyajian informasi, dan bantuan
-          pelanggan dengan kehati-hatian yang wajar.
+          Nusa Gili Boat is responsible for the
+          booking services within our control,
+          including processing booking data, presenting
+          information, and providing customer
+          assistance with reasonable care.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Operator bertanggung jawab atas pengoperasian
-          kapal, awak kapal, pelayanan transportasi,
-          keselamatan pelayaran, bagasi yang diterima
-          operator, dan tindakan operasionalnya.
+          The operator is responsible for vessel
+          operations, crew, transportation services,
+          sailing safety, baggage accepted by the
+          operator, and its operational decisions and
+          actions.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Keluhan mengenai pelaksanaan transportasi
-          dapat diteruskan kepada operator terkait.
-          Nusa Gili Boat dapat membantu komunikasi dan
-          penanganan keluhan berdasarkan informasi yang
-          tersedia.
+          Complaints regarding the operation of the
+          transportation service may be referred to the
+          relevant operator. Nusa Gili Boat may assist
+          with communication and complaint handling
+          based on the available information.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Tidak ada bagian dalam Syarat dan Ketentuan
-          ini yang dimaksudkan untuk menghapus hak
-          konsumen atau tanggung jawab yang tidak dapat
-          dikesampingkan berdasarkan hukum Republik
-          Indonesia.
+          Nothing in these Terms and Conditions is
+          intended to remove consumer rights or
+          liabilities that cannot be excluded under
+          the laws of the Republic of Indonesia.
         </p>
       </PolicySection>
 
       <PolicySection
         number={24}
-        title="Akurasi informasi"
+        title="Accuracy of information"
       >
         <p className="leading-8 text-slate-600">
-          Kami berupaya menampilkan informasi rute,
-          jadwal, harga, operator, kapal, dan
-          ketersediaan kursi secara akurat.
+          We aim to display route, schedule, price,
+          operator, vessel, and seat availability
+          information accurately.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Informasi tersebut dapat berubah karena
-          pembaruan operator, perubahan inventory,
-          kebutuhan operasional, atau kesalahan teknis.
+          This information may change because of
+          operator updates, inventory changes,
+          operational requirements, or technical
+          errors.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila ditemukan kesalahan yang berdampak
-          material terhadap booking, kami akan
-          menghubungi pelanggan untuk menawarkan
-          koreksi atau penyelesaian yang sesuai.
+          If an error is identified that materially
+          affects a booking, we will contact the
+          customer to offer an appropriate correction
+          or resolution.
         </p>
       </PolicySection>
 
       <PolicySection
         number={25}
-        title="Ketersediaan situs"
+        title="Website availability"
       >
         <p className="leading-8 text-slate-600">
-          Kami berupaya menjaga situs dan layanan tetap
-          tersedia, tetapi tidak menjamin situs akan
-          selalu bebas gangguan.
+          We aim to keep the website and services
+          available but do not guarantee uninterrupted
+          access at all times.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Gangguan sementara dapat terjadi akibat
-          pemeliharaan, pembaruan perangkat lunak,
-          gangguan jaringan, masalah server, serangan
-          keamanan, atau keadaan lain di luar kendali
-          kami.
+          Temporary disruption may occur because of
+          maintenance, software updates, network
+          disruption, server problems, security
+          incidents, or other circumstances beyond our
+          control.
         </p>
       </PolicySection>
 
       <PolicySection
         number={26}
-        title="Hak kekayaan intelektual"
+        title="Intellectual property"
       >
         <p className="leading-8 text-slate-600">
-          Logo, nama, teks, desain, ilustrasi,
-          tampilan, kode perangkat lunak, dan konten
-          asli Nusa Gili Boat dilindungi sesuai
-          ketentuan hak kekayaan intelektual yang
-          berlaku.
+          The Nusa Gili Boat logo, name, text, design,
+          illustrations, visual presentation, software
+          code, and original content are protected
+          under applicable intellectual property laws.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Konten milik operator, fotografer, penyedia
-          layanan, atau pihak lain tetap menjadi hak
-          pemiliknya masing-masing.
+          Content owned by an operator, photographer,
+          service provider, or another party remains
+          the property of its respective owner.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pengguna tidak diperbolehkan menyalin,
-          menjual, memodifikasi, atau menggunakan
-          konten secara komersial tanpa izin.
+          Users must not copy, sell, modify, or use
+          content commercially without permission.
         </p>
       </PolicySection>
 
       <PolicySection
         number={27}
-        title="Perilaku pengguna"
+        title="User conduct"
       >
         <p className="leading-8 text-slate-600">
-          Pengguna dilarang:
+          Users must not:
         </p>
 
         <BulletList
           items={[
-            "Mengirimkan data atau booking palsu.",
-            "Melakukan transaksi yang menipu atau tidak sah.",
-            "Mengakses sistem tanpa izin.",
-            "Mengganggu keamanan atau operasional situs.",
-            "Menggunakan program berbahaya atau otomatisasi yang merugikan layanan.",
-            "Menggunakan situs untuk kegiatan yang melanggar hukum.",
+            "Submit false information or fraudulent bookings.",
+            "Carry out fraudulent or unauthorized transactions.",
+            "Access systems without authorization.",
+            "Disrupt the security or operation of the website.",
+            "Use malicious software or automation that harms the service.",
+            "Use the website for activities that violate the law.",
           ]}
         />
 
         <p className="leading-8 text-slate-600">
-          Kami dapat menolak booking, membatasi akses,
-          menahan transaksi untuk pemeriksaan, atau
-          melaporkan aktivitas yang diduga melanggar
-          hukum kepada pihak terkait.
+          We may reject a booking, restrict access,
+          hold a transaction for review, or report
+          suspected unlawful activity to the relevant
+          parties or authorities.
         </p>
       </PolicySection>
 
       <PolicySection
         number={28}
-        title="Perlindungan data pribadi"
+        title="Personal data protection"
       >
         <p className="leading-8 text-slate-600">
-          Data pelanggan dan penumpang akan diproses
-          untuk menyediakan booking, pembayaran,
-          pelayanan pelanggan, komunikasi perjalanan,
-          penerbitan e-ticket, pencegahan penipuan, dan
-          pemenuhan kewajiban hukum.
+          Customer and passenger data will be processed
+          to provide bookings, payments, customer
+          service, travel communications, e-ticket
+          issuance, fraud prevention, and compliance
+          with legal obligations.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Informasi lebih lengkap mengenai data yang
-          dikumpulkan, tujuan penggunaan, pembagian
-          data, penyimpanan, keamanan, dan hak pengguna
-          tersedia dalam Kebijakan Privasi.
+          More information about the data we collect,
+          its purposes, data sharing, retention,
+          security, and user rights is available in our
+          Privacy Policy.
         </p>
 
         <Link
           href="/privacy-policy"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Baca Kebijakan Privasi
+          Read the Privacy Policy
         </Link>
       </PolicySection>
 
       <PolicySection
         number={29}
-        title="Refund"
+        title="Refunds"
       >
         <p className="leading-8 text-slate-600">
-          Kelayakan dan jumlah refund bergantung pada
-          alasan pembatalan, waktu pengajuan, status
-          pembayaran, perjalanan yang terdampak,
-          kebijakan operator, dan ketentuan tarif.
+          Refund eligibility and the refund amount
+          depend on the reason for cancellation, when
+          the request is submitted, payment status,
+          affected journey, operator policy, and fare
+          conditions.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Waktu penyelesaian refund dapat berbeda
-          bergantung pada verifikasi operator, payment
-          gateway, bank, dompet elektronik, dan metode
-          pembayaran.
+          Refund processing times may vary depending on
+          operator verification, the payment gateway,
+          bank, electronic wallet, and payment method.
         </p>
 
         <Link
           href="/refund-and-cancellation-policy"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Baca Kebijakan Refund dan Pembatalan
+          Read the Refund and Cancellation Policy
         </Link>
       </PolicySection>
 
       <PolicySection
         number={30}
-        title="Keluhan dan penyelesaian sengketa"
+        title="Complaints and dispute resolution"
       >
         <p className="leading-8 text-slate-600">
-          Pelanggan dapat menyampaikan keluhan melalui
-          saluran kontak resmi dengan menyertakan kode
-          booking, email pemesan, kronologi, dan bukti
-          pendukung.
+          Customers may submit a complaint through an
+          official contact channel and should include
+          the booking code, booking email address, a
+          description of the circumstances, and
+          supporting evidence.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kami akan berupaya menyelesaikan perselisihan
-          terlebih dahulu melalui komunikasi dan
-          musyawarah dengan pelanggan serta operator
-          terkait.
+          We will first attempt to resolve a dispute
+          through communication and good-faith
+          discussion with the customer and relevant
+          operator.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila tidak dapat diselesaikan melalui
-          musyawarah, para pihak dapat menggunakan
-          mekanisme penyelesaian sengketa yang tersedia
-          berdasarkan hukum Republik Indonesia.
+          If the matter cannot be resolved through
+          discussion, the parties may use a dispute
+          resolution mechanism available under the
+          laws of the Republic of Indonesia.
         </p>
       </PolicySection>
 
       <PolicySection
         number={31}
-        title="Hukum dan bahasa yang berlaku"
+        title="Governing law and language"
       >
         <p className="leading-8 text-slate-600">
-          Syarat dan Ketentuan ini diatur dan
-          ditafsirkan berdasarkan hukum Republik
-          Indonesia.
+          These Terms and Conditions are governed by
+          and interpreted in accordance with the laws
+          of the Republic of Indonesia.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Dokumen ini dibuat dalam Bahasa Indonesia.
-          Terjemahan bahasa Inggris atau bahasa lain
-          dapat disediakan untuk membantu pelanggan.
+          This document was originally prepared in
+          Bahasa Indonesia. An English or other
+          language translation may be provided for the
+          convenience of customers.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Apabila terdapat perbedaan penafsiran, versi
-          Bahasa Indonesia menjadi acuan sejauh
-          diperbolehkan oleh hukum.
+          If there is any difference in interpretation,
+          the Bahasa Indonesia version will prevail to
+          the extent permitted by law.
         </p>
       </PolicySection>
 
       <PolicySection
         number={32}
-        title="Perubahan Syarat dan Ketentuan"
+        title="Changes to these Terms and Conditions"
       >
         <p className="leading-8 text-slate-600">
-          Kami dapat memperbarui Syarat dan Ketentuan
-          ini untuk menyesuaikan perubahan layanan,
-          teknologi, operator, metode pembayaran, atau
-          ketentuan hukum.
+          We may update these Terms and Conditions to
+          reflect changes to our services, technology,
+          operators, payment methods, or legal
+          requirements.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Versi terbaru dan tanggal pembaruannya akan
-          diterbitkan pada halaman ini.
+          The latest version and its update date will
+          be published on this page.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Kecuali diperlukan oleh hukum, keamanan, atau
-          keadaan tertentu, hak dan kewajiban booking
-          yang telah dibuat akan mengacu pada ketentuan
-          yang berlaku ketika booking dilakukan.
+          Unless required by law, security
+          considerations, or exceptional circumstances,
+          the rights and obligations relating to an
+          existing booking will refer to the terms in
+          effect when the booking was made.
         </p>
       </PolicySection>
 
       <PolicySection
         number={33}
-        title="Hubungi kami"
+        title="Contact us"
       >
         <p className="leading-8 text-slate-600">
-          Pertanyaan mengenai Syarat dan Ketentuan,
-          booking, pembayaran, e-ticket, perubahan
-          perjalanan, atau keluhan dapat disampaikan
-          melalui halaman kontak.
+          Questions regarding these Terms and
+          Conditions, bookings, payments, e-tickets,
+          travel changes, or complaints may be
+          submitted through our contact page.
         </p>
 
         <Link
           href="/contact"
           className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
         >
-          Hubungi Nusa Gili Boat
+          Contact Nusa Gili Boat
         </Link>
       </PolicySection>
 
-      <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-        <h2 className="font-semibold text-amber-950">
-          Informasi usaha sedang dilengkapi
-        </h2>
-
-        <p className="mt-2 leading-7 text-amber-900">
-          Nama resmi pemilik usaha, alamat operasional,
-          nomor layanan pelanggan, jam operasional,
-          metode pembayaran final, dan ketentuan khusus
-          masing-masing operator akan diperbarui sebelum
-          pembayaran production diaktifkan.
-        </p>
-      </aside>
     </PublicInfoPage>
   )
 }
