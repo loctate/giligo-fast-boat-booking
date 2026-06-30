@@ -21,7 +21,7 @@ export default function PublicInfoPage({
 }: PublicInfoPageProps) {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
           <Link
             href="/"
@@ -72,7 +72,7 @@ export default function PublicInfoPage({
         </div>
       </header>
 
-      <section className="border-b border-slate-200 bg-white">
+      <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
             {eyebrow}
@@ -95,12 +95,12 @@ export default function PublicInfoPage({
       </section>
 
       <section className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-        <article className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+        <article className="space-y-8 rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm sm:p-10">
           {children}
         </article>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white">
+      <footer className="border-t border-slate-200 bg-slate-50">
         <div className="mx-auto flex max-w-6xl flex-col gap-5 px-6 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} Nusa Gili Boat.
