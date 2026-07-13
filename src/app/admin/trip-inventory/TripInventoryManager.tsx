@@ -305,6 +305,74 @@ export default function TripInventoryManager({
       0
     )
 
+  const isInventoryFormStarted = Boolean(
+    editingId ||
+      form.scheduleId ||
+      form.travelDate ||
+      form.seatCapacity ||
+      form.adultPrice
+  )
+
+  const seatCapacityValue = Number(
+    form.seatCapacity
+  )
+
+  const hasSeatCapacityInput =
+    form.seatCapacity.trim() !== ""
+
+  const formWarnings: string[] = []
+
+  if (
+    isInventoryFormStarted &&
+    !hasSeatCapacityInput
+  ) {
+    formWarnings.push(
+      "Seat capacity wajib diisi sesuai alokasi kursi dari vendor."
+    )
+  }
+
+  if (
+    hasSeatCapacityInput &&
+    Number.isInteger(seatCapacityValue)
+  ) {
+    if (
+      seatCapacityValue === 0 &&
+      form.salesStatus === "OPEN"
+    ) {
+      formWarnings.push(
+        "Kursi 0 tetapi sales status masih OPEN. Gunakan SOLD_OUT atau CLOSED agar jadwal tidak dijual."
+      )
+    }
+
+    if (
+      seatCapacityValue > 0 &&
+      form.salesStatus === "SOLD_OUT"
+    ) {
+      formWarnings.push(
+        "Status SOLD_OUT tetapi seat capacity masih lebih dari 0. Pastikan kursi memang sudah habis."
+      )
+    }
+
+    if (
+      selectedSchedule &&
+      seatCapacityValue >
+        selectedSchedule.vesselActiveCapacity
+    ) {
+      formWarnings.push(
+        `Seat capacity melebihi alokasi kapal (${selectedSchedule.vesselActiveCapacity} seats).`
+      )
+    }
+  }
+
+  if (
+    form.salesStatus === "OPEN" &&
+    !form.isActive
+  ) {
+    formWarnings.push(
+      "Sales status OPEN tidak akan tampil di pencarian jika Trip inventory is active tidak dicentang."
+    )
+  }
+
   function updateField<
     Key extends keyof InventoryForm,
   >(
@@ -625,6 +693,22 @@ export default function TripInventoryManager({
         {error && (
           <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
             {error}
+          </div>
+        )}
+
+        {formWarnings.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-black">
+              Periksa sebelum simpan
+            </p>
+
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {formWarnings.map((warning) => (
+                <li key={warning}>
+                  {warning}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
