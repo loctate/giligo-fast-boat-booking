@@ -738,6 +738,10 @@ export default function TripSchedulesManager({
               placeholder="EKA25-PB-GT-0900"
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Gunakan kode singkat dan konsisten, contoh EKA25-PB-GT-0900.
+            </p>
           </label>
 
           <label className="block">
@@ -775,6 +779,10 @@ export default function TripSchedulesManager({
                 )
               )}
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Pilih vendor fast boat terlebih dahulu agar daftar kapal tersaring otomatis.
+            </p>
           </label>
 
           <label className="block">
@@ -816,6 +824,10 @@ export default function TripSchedulesManager({
                 )
               )}
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Kapal yang muncul mengikuti operator yang dipilih.
+            </p>
           </label>
 
           <label className="block md:col-span-2">
@@ -854,6 +866,10 @@ export default function TripSchedulesManager({
                 </option>
               ))}
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Rute menentukan pelabuhan asal dan tujuan yang akan tampil di pencarian customer.
+            </p>
           </label>
 
           <label className="block">
@@ -873,6 +889,10 @@ export default function TripSchedulesManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Jam keberangkatan sesuai jadwal resmi vendor.
+            </p>
           </label>
 
           <label className="block">
@@ -892,6 +912,10 @@ export default function TripSchedulesManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Jam tiba perkiraan. Gunakan arrival day offset jika tiba di hari berikutnya.
+            </p>
           </label>
 
           <label className="block">
@@ -923,6 +947,10 @@ export default function TripSchedulesManager({
                 Two days later
               </option>
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Pilih Same day untuk tiba di hari yang sama.
+            </p>
           </label>
 
           <label className="block">
@@ -947,6 +975,10 @@ export default function TripSchedulesManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Isi 0 untuk saat ini. Aturan minimal H+2 tetap diatur terpisah oleh sistem.
+            </p>
 
             <p className="mt-2 text-xs text-slate-500">
               Use 0 for now. The H+2 booking

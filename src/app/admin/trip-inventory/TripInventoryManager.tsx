@@ -671,6 +671,10 @@ export default function TripInventoryManager({
                 )
               )}
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Pilih jadwal dasar yang sesuai dengan vendor, rute, kapal, dan jam keberangkatan.
+            </p>
           </label>
 
           {selectedSchedule && (
@@ -716,6 +720,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Tanggal keberangkatan yang bisa dijual untuk customer.
+            </p>
           </label>
 
           <label className="block">
@@ -742,6 +750,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Jumlah kursi yang dialokasikan vendor untuk NusaGiliBoat pada tanggal ini.
+            </p>
           </label>
 
           <label className="block">
@@ -763,6 +775,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Harga jual per penumpang dewasa. Isi angka tanpa titik atau koma.
+            </p>
           </label>
 
           <label className="block">
@@ -784,6 +800,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Isi 0 jika vendor tidak membedakan harga anak.
+            </p>
           </label>
 
           <label className="block">
@@ -805,6 +825,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Isi 0 jika bayi tidak dikenakan biaya tiket.
+            </p>
           </label>
 
           <label className="block">
@@ -827,6 +851,10 @@ export default function TripInventoryManager({
               maxLength={3}
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 uppercase outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Gunakan IDR untuk penjualan lokal NusaGiliBoat.
+            </p>
           </label>
 
           <label className="block md:col-span-2">
@@ -856,6 +884,10 @@ export default function TripInventoryManager({
                 Cancelled
               </option>
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              OPEN tampil di pencarian, CLOSED ditutup sementara, SOLD_OUT jika kursi habis.
+            </p>
           </label>
 
           <label className="block md:col-span-2">
