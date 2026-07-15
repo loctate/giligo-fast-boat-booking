@@ -22,6 +22,7 @@ type WebhookPayload =
     status_code?: unknown
     gross_amount?: unknown
     signature_key?: unknown
+    transaction_status?: unknown
   }
 
 type BookingRow =
@@ -460,19 +461,55 @@ export async function POST(
       )
 
     /*
-     * Notifikasi dari percobaan Snap lama
-     * diakui dengan HTTP 200, tetapi tidak
-     * boleh mengubah booking.
+     * Booking tanpa active order ID tidak
+     * menerima perubahan dari Midtrans.
+     */
+    if (!activeOrderId) {
+      return noStoreJson({
+        success: true,
+        ignored: true,
+        reason:
+          "The booking has no active Midtrans order.",
+      })
+    }
+
+    const orderIsActive =
+      activeOrderId === orderId
+
+    const notificationTransactionStatus =
+      normalizeStatus(
+        notification
+          .transaction_status
+      )
+
+    const notificationMayRepresentMoneyMovement =
+      notificationTransactionStatus ===
+        "capture" ||
+      notificationTransactionStatus ===
+        "settlement" ||
+      REFUND_STATUSES.has(
+        notificationTransactionStatus
+      )
+
+    /*
+     * Order lama yang belum berhasil,
+     * ditolak, dibatalkan, atau expired
+     * dapat langsung diabaikan.
+     *
+     * Order lama yang mengaku sukses atau
+     * refund tetap diverifikasi melalui
+     * Get Status agar pembayaran valid
+     * tidak hilang dari pencatatan.
      */
     if (
-      !activeOrderId ||
-      activeOrderId !== orderId
+      !orderIsActive &&
+      !notificationMayRepresentMoneyMovement
     ) {
       return noStoreJson({
         success: true,
         ignored: true,
         reason:
-          "The notification belongs to an inactive Midtrans order.",
+          "The inactive Midtrans order has no final money movement.",
       })
     }
 
@@ -602,6 +639,35 @@ export async function POST(
         502,
         "Midtrans returned no transaction status."
       )
+    }
+
+    const authoritativeHasMoneyMovement =
+      transactionStatus ===
+        "capture" ||
+      transactionStatus ===
+        "settlement" ||
+      REFUND_STATUSES.has(
+        transactionStatus
+      )
+
+    /*
+     * Payload awal hanya digunakan untuk
+     * menentukan apakah order lama perlu
+     * diperiksa. Keputusan akhir tetap
+     * berasal dari Get Status Midtrans.
+     */
+    if (
+      !orderIsActive &&
+      !authoritativeHasMoneyMovement
+    ) {
+      return noStoreJson({
+        success: true,
+        ignored: true,
+        reason:
+          "The inactive Midtrans order is not successful or refunded.",
+        orderId,
+        transactionStatus,
+      })
     }
 
     const fraudStatus =
