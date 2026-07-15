@@ -457,6 +457,47 @@ export async function POST(
       )
     }
 
+
+    /*
+     * Simpan hanya transaksi Snap terbaru
+     * sebagai transaksi aktif booking.
+     *
+     * Webhook nantinya akan mengabaikan
+     * notifikasi dari order ID lama.
+     */
+    try {
+      await tablesDB.updateRow({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId:
+          appwriteConfig
+            .bookingsTableId,
+
+        rowId:
+          bookingRowId,
+
+        data: {
+          midtransOrderId:
+            orderId,
+        },
+      })
+    } catch (error) {
+      console.error(
+        "Failed to save Midtrans order ID:",
+        {
+          bookingRowId,
+          orderId,
+          error,
+        }
+      )
+
+      throw new PaymentError(
+        502,
+        "The payment reference could not be saved. Please try again."
+      )
+    }
+
     return noStoreJson({
       success: true,
       environment:
