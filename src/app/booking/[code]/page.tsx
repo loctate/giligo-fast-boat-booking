@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import PaymentActions from "./PaymentActions"
 import { useParams } from "next/navigation"
 import {
   useCallback,
@@ -992,6 +993,42 @@ export default function BookingConfirmationPage() {
                     {booking.paymentStatus}
                   </span>
                 </div>
+
+                  <PaymentActions
+                    bookingCode={
+                      booking.bookingCode
+                    }
+                    bookingStatus={
+                      booking.bookingStatus
+                    }
+                    paymentStatus={
+                      booking.paymentStatus
+                    }
+                    customerFullName={
+                      booking.customer.fullName
+                    }
+                    customerEmail={
+                      booking.customer.email
+                    }
+                    routeFrom={
+                      booking.trip.from
+                    }
+                    routeTo={
+                      booking.trip.to
+                    }
+                    departureLabel={
+                      formatDate(
+                        booking.departureDate
+                      )
+                    }
+                    totalLabel={
+                      formatCurrency(
+                        booking.totalPrice,
+                        currency
+                      )
+                    }
+                  />
+
               </section>
 
               <section className="rounded-3xl border border-slate-200 p-6">
