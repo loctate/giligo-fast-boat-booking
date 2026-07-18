@@ -63,6 +63,7 @@ export default function SearchForm() {
             <option value="Gili Trawangan">Gili Trawangan</option>
             <option value="Gili Air">Gili Air</option>
             <option value="Bangsal Lombok">Bangsal Lombok</option>
+              <option value="Nusa Penida">Nusa Penida</option>
           </select>
         </label>
 
@@ -88,6 +89,7 @@ export default function SearchForm() {
             <option value="Padang Bai">Padang Bai</option>
             <option value="Nusa Penida">Nusa Penida</option>
             <option value="Nusa Lembongan">Nusa Lembongan</option>
+              <option value="Sanur">Sanur</option>
           </select>
         </label>
 
