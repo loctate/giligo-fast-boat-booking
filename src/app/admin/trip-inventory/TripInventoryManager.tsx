@@ -95,6 +95,11 @@ type ApiResponse = {
   error?: string
 }
 
+type InventoryView =
+  | "UPCOMING"
+  | "PAST"
+  | "ALL"
+
 type TripInventoryManagerProps = {
   initialInventory: TripInventoryRow[]
   schedules: ScheduleOption[]
@@ -171,6 +176,58 @@ function sortInventory(
       )
     }
   )
+}
+
+function getCurrentBaliDate(): string {
+  const formatter =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Makassar",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }
+    )
+
+  const values: Record<
+    string,
+    string
+  > = {}
+
+  for (
+    const part of
+    formatter.formatToParts(
+      new Date()
+    )
+  ) {
+    values[part.type] =
+      part.value
+  }
+
+  return (
+    `${values.year}-` +
+    `${values.month}-` +
+    `${values.day}`
+  )
+}
+
+function isPastInventory(
+  item: TripInventoryRow,
+  baliToday: string
+): boolean {
+  const travelDate =
+    item.travelDate.trim()
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(
+      travelDate
+    )
+  ) {
+    return false
+  }
+
+  return travelDate < baliToday
 }
 
 function formatMoney(
@@ -300,6 +357,16 @@ export default function TripInventoryManager({
   const [search, setSearch] =
     useState("")
 
+  const [
+    inventoryView,
+    setInventoryView,
+  ] = useState<InventoryView>(
+    "UPCOMING"
+  )
+
+  const baliToday =
+    getCurrentBaliDate()
+
   const [editingId, setEditingId] =
     useState<string | null>(null)
 
@@ -326,6 +393,50 @@ export default function TripInventoryManager({
       [schedules, form.scheduleId]
     )
 
+  const upcomingInventory =
+    useMemo(
+      () =>
+        inventory.filter(
+          (item) =>
+            !isPastInventory(
+              item,
+              baliToday
+            )
+        ),
+      [inventory, baliToday]
+    )
+
+  const pastInventory =
+    useMemo(
+      () =>
+        inventory.filter(
+          (item) =>
+            isPastInventory(
+              item,
+              baliToday
+            )
+        ),
+      [inventory, baliToday]
+    )
+
+  const inventoryForView =
+    useMemo(() => {
+      if (inventoryView === "PAST") {
+        return pastInventory
+      }
+
+      if (inventoryView === "ALL") {
+        return inventory
+      }
+
+      return upcomingInventory
+    }, [
+      inventory,
+      inventoryView,
+      pastInventory,
+      upcomingInventory,
+    ])
+
   const filteredInventory =
     useMemo(() => {
       const keyword = search
@@ -333,10 +444,10 @@ export default function TripInventoryManager({
         .toLowerCase()
 
       if (!keyword) {
-        return inventory
+        return inventoryForView
       }
 
-      return inventory.filter(
+      return inventoryForView.filter(
         (item) => {
           const searchableText = [
             item.inventoryCode,
@@ -347,6 +458,7 @@ export default function TripInventoryManager({
             item.fromPort,
             item.toPort,
             item.travelDate,
+            item.departureTime,
             item.salesStatus,
           ]
             .filter(Boolean)
@@ -358,24 +470,37 @@ export default function TripInventoryManager({
           )
         }
       )
-    }, [inventory, search])
+    }, [inventoryForView, search])
 
-  const openCount = inventory.filter(
-    (item) =>
-      item.isActive &&
-      item.salesStatus === "OPEN"
-  ).length
+  const openCount =
+    upcomingInventory.filter(
+      (item) =>
+        item.isActive &&
+        item.salesStatus === "OPEN"
+    ).length
 
   const soldOutCount =
-    inventory.filter(
+    upcomingInventory.filter(
       (item) =>
-        item.salesStatus === "SOLD_OUT"
+        item.salesStatus ===
+        "SOLD_OUT"
     ).length
 
   const availableSeatTotal =
-    inventory.reduce(
-      (total, item) =>
-        total + item.availableSeats,
+    upcomingInventory.reduce(
+      (total, item) => {
+        if (
+          !item.isActive ||
+          item.salesStatus !== "OPEN"
+        ) {
+          return total
+        }
+
+        return (
+          total +
+          item.availableSeats
+        )
+      },
       0
     )
 
@@ -704,11 +829,11 @@ export default function TripInventoryManager({
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-slate-500">
-            Total inventory
+            Upcoming inventory
           </p>
 
           <p className="mt-2 text-3xl font-black">
-            {inventory.length}
+            {upcomingInventory.length}
           </p>
         </div>
 
@@ -1135,6 +1260,64 @@ export default function TripInventoryManager({
             className="w-full rounded-full border border-slate-300 px-5 py-3 outline-none focus:border-cyan-600 md:max-w-sm"
           />
         </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {(
+            [
+              {
+                value: "UPCOMING",
+                label:
+                  "Today & Upcoming",
+                count:
+                  upcomingInventory.length,
+              },
+              {
+                value: "PAST",
+                label:
+                  "Past Inventory",
+                count:
+                  pastInventory.length,
+              },
+              {
+                value: "ALL",
+                label:
+                  "All Inventory",
+                count:
+                  inventory.length,
+              },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() =>
+                setInventoryView(
+                  option.value
+                )
+              }
+              className={`rounded-full border px-4 py-2 text-xs font-black transition ${
+                inventoryView ===
+                option.value
+                  ? "border-slate-950 bg-slate-950 text-white"
+                  : "border-slate-300 bg-white text-slate-700 hover:border-cyan-600 hover:text-cyan-700"
+              }`}
+            >
+              {option.label}
+              {" ("}
+              {option.count}
+              {")"}
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-slate-500">
+          Inventory sebelum hari ini
+          dipindahkan ke Past Inventory.
+          Data tetap tersimpan untuk
+          riwayat booking dan pembayaran.
+          Perhitungan menggunakan tanggal
+          Bali/WITA.
+        </p>
 
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm">
