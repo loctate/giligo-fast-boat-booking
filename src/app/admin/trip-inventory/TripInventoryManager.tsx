@@ -200,6 +200,9 @@ function getStatusClass(
     case "OPEN":
       return "bg-emerald-100 text-emerald-700"
 
+    case "CLOSED":
+      return "bg-amber-100 text-amber-700"
+
     case "SOLD_OUT":
       return "bg-red-100 text-red-700"
 
@@ -209,6 +212,77 @@ function getStatusClass(
     default:
       return "bg-slate-200 text-slate-700"
   }
+}
+
+function getInventoryRowClass(
+  item: TripInventoryRow
+): string {
+  if (!item.isActive) {
+    return "bg-slate-100 opacity-80"
+  }
+
+  if (item.salesStatus === "CANCELLED") {
+    return "bg-rose-50"
+  }
+
+  if (item.salesStatus === "CLOSED") {
+    return "bg-amber-50"
+  }
+
+  if (
+    item.salesStatus === "SOLD_OUT" ||
+    item.availableSeats <= 0
+  ) {
+    return "bg-red-50"
+  }
+
+  if (item.availableSeats <= 5) {
+    return "bg-amber-50"
+  }
+
+  return "bg-slate-50"
+}
+
+function getAvailabilityClass(
+  item: TripInventoryRow
+): string {
+  if (!item.isActive) {
+    return "bg-slate-200 text-slate-700"
+  }
+
+  if (
+    item.salesStatus === "SOLD_OUT" ||
+    item.availableSeats <= 0
+  ) {
+    return "bg-red-100 text-red-700"
+  }
+
+  if (item.availableSeats <= 5) {
+    return "bg-amber-100 text-amber-800"
+  }
+
+  return "bg-emerald-100 text-emerald-700"
+}
+
+function getAvailabilityLabel(
+  item: TripInventoryRow
+): string {
+  if (!item.isActive) {
+    return "Inactive"
+  }
+
+  if (
+    item.salesStatus === "SOLD_OUT" ||
+    item.availableSeats <= 0
+  ) {
+    return "Sold out"
+  }
+
+  if (item.availableSeats <= 5) {
+    return "Low seats"
+  }
+
+  return "Available"
 }
 
 export default function TripInventoryManager({
@@ -304,6 +378,74 @@ export default function TripInventoryManager({
         total + item.availableSeats,
       0
     )
+
+  const isInventoryFormStarted = Boolean(
+    editingId ||
+      form.scheduleId ||
+      form.travelDate ||
+      form.seatCapacity ||
+      form.adultPrice
+  )
+
+  const seatCapacityValue = Number(
+    form.seatCapacity
+  )
+
+  const hasSeatCapacityInput =
+    form.seatCapacity.trim() !== ""
+
+  const formWarnings: string[] = []
+
+  if (
+    isInventoryFormStarted &&
+    !hasSeatCapacityInput
+  ) {
+    formWarnings.push(
+      "Seat capacity wajib diisi sesuai alokasi kursi dari vendor."
+    )
+  }
+
+  if (
+    hasSeatCapacityInput &&
+    Number.isInteger(seatCapacityValue)
+  ) {
+    if (
+      seatCapacityValue === 0 &&
+      form.salesStatus === "OPEN"
+    ) {
+      formWarnings.push(
+        "Kursi 0 tetapi sales status masih OPEN. Gunakan SOLD_OUT atau CLOSED agar jadwal tidak dijual."
+      )
+    }
+
+    if (
+      seatCapacityValue > 0 &&
+      form.salesStatus === "SOLD_OUT"
+    ) {
+      formWarnings.push(
+        "Status SOLD_OUT tetapi seat capacity masih lebih dari 0. Pastikan kursi memang sudah habis."
+      )
+    }
+
+    if (
+      selectedSchedule &&
+      seatCapacityValue >
+        selectedSchedule.vesselActiveCapacity
+    ) {
+      formWarnings.push(
+        `Seat capacity melebihi alokasi kapal (${selectedSchedule.vesselActiveCapacity} seats).`
+      )
+    }
+  }
+
+  if (
+    form.salesStatus === "OPEN" &&
+    !form.isActive
+  ) {
+    formWarnings.push(
+      "Sales status OPEN tidak akan tampil di pencarian jika Trip inventory is active tidak dicentang."
+    )
+  }
 
   function updateField<
     Key extends keyof InventoryForm,
@@ -628,6 +770,22 @@ export default function TripInventoryManager({
           </div>
         )}
 
+        {formWarnings.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-black">
+              Periksa sebelum simpan
+            </p>
+
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {formWarnings.map((warning) => (
+                <li key={warning}>
+                  {warning}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="grid gap-5 md:grid-cols-2"
@@ -671,6 +829,10 @@ export default function TripInventoryManager({
                 )
               )}
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Pilih jadwal dasar yang sesuai dengan vendor, rute, kapal, dan jam keberangkatan.
+            </p>
           </label>
 
           {selectedSchedule && (
@@ -716,6 +878,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Tanggal keberangkatan yang bisa dijual untuk customer.
+            </p>
           </label>
 
           <label className="block">
@@ -742,6 +908,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Jumlah kursi yang dialokasikan vendor untuk NusaGiliBoat pada tanggal ini.
+            </p>
           </label>
 
           <label className="block">
@@ -763,6 +933,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Harga jual per penumpang dewasa. Isi angka tanpa titik atau koma.
+            </p>
           </label>
 
           <label className="block">
@@ -784,6 +958,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Isi 0 jika vendor tidak membedakan harga anak.
+            </p>
           </label>
 
           <label className="block">
@@ -805,6 +983,10 @@ export default function TripInventoryManager({
               required
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Isi 0 jika bayi tidak dikenakan biaya tiket.
+            </p>
           </label>
 
           <label className="block">
@@ -827,6 +1009,10 @@ export default function TripInventoryManager({
               maxLength={3}
               className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 uppercase outline-none focus:border-cyan-600"
             />
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Gunakan IDR untuk penjualan lokal NusaGiliBoat.
+            </p>
           </label>
 
           <label className="block md:col-span-2">
@@ -856,6 +1042,10 @@ export default function TripInventoryManager({
                 Cancelled
               </option>
             </select>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              OPEN tampil di pencarian, CLOSED ditutup sementara, SOLD_OUT jika kursi habis.
+            </p>
           </label>
 
           <label className="block md:col-span-2">
@@ -981,7 +1171,9 @@ export default function TripInventoryManager({
                 (item) => (
                   <tr
                     key={item.$id}
-                    className="bg-slate-50"
+                    className={getInventoryRowClass(
+                      item
+                    )}
                   >
                     <td className="rounded-l-2xl px-4 py-4">
                       <p className="font-black">
@@ -1014,19 +1206,34 @@ export default function TripInventoryManager({
                     </td>
 
                     <td className="px-4 py-4">
-                      <p className="font-black">
-                        {item.availableSeats}{" "}
-                        available
-                      </p>
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-2xl font-black text-slate-950">
+                            {item.availableSeats}
+                          </p>
 
-                      <p className="mt-1 text-xs text-slate-500">
-                        Capacity{" "}
-                        {item.seatCapacity}
-                        {" | "}Booked{" "}
-                        {item.bookedSeats}
-                        {" | "}Held{" "}
-                        {item.heldSeats}
-                      </p>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-black ${getAvailabilityClass(
+                              item
+                            )}`}
+                          >
+                            {getAvailabilityLabel(item)}
+                          </span>
+                        </div>
+
+                        <p className="text-xs font-semibold text-slate-500">
+                          Available seats
+                        </p>
+
+                        <p className="text-xs text-slate-500">
+                          Capacity{" "}
+                          {item.seatCapacity}
+                          {" | "}Booked{" "}
+                          {item.bookedSeats}
+                          {" | "}Held{" "}
+                          {item.heldSeats}
+                        </p>
+                      </div>
                     </td>
 
                     <td className="px-4 py-4">
@@ -1052,11 +1259,31 @@ export default function TripInventoryManager({
                           {item.salesStatus}
                         </span>
 
-                        <p className="text-xs text-slate-500">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                            item.isActive
+                              ? "bg-cyan-100 text-cyan-700"
+                              : "bg-slate-200 text-slate-700"
+                          }`}
+                        >
                           {item.isActive
                             ? "Active"
                             : "Inactive"}
-                        </p>
+                        </span>
+
+                        {!item.isActive && (
+                          <p className="text-xs text-slate-500">
+                            Tidak tampil di pencarian customer.
+                          </p>
+                        )}
+
+                        {item.isActive &&
+                          item.salesStatus === "OPEN" &&
+                          item.availableSeats <= 0 && (
+                            <p className="text-xs font-bold text-red-700">
+                              Perlu dicek: OPEN tetapi kursi 0.
+                            </p>
+                          )}
                       </div>
                     </td>
 
@@ -1067,9 +1294,9 @@ export default function TripInventoryManager({
                           onClick={() =>
                             startEdit(item)
                           }
-                          className="rounded-full border border-slate-300 px-4 py-2 text-xs font-black hover:bg-white"
+                          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-cyan-500 hover:text-cyan-700"
                         >
-                          Edit
+                          Edit data
                         </button>
 
                         <button
@@ -1081,7 +1308,11 @@ export default function TripInventoryManager({
                           onClick={() =>
                             toggleStatus(item)
                           }
-                          className="rounded-full bg-slate-900 px-4 py-2 text-xs font-black text-white hover:bg-cyan-700 disabled:opacity-60"
+                          className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-60 ${
+                            item.isActive
+                              ? "bg-slate-900 text-white hover:bg-red-700"
+                              : "bg-emerald-600 text-white hover:bg-emerald-700"
+                          }`}
                         >
                           {updatingId ===
                           item.$id
