@@ -298,7 +298,75 @@ export default async function AdminPage() {
           </div>
         )}
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="mb-8 rounded-3xl border-2 border-amber-300 bg-amber-50 p-6 shadow-sm lg:p-8">
+            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
+              <div className="max-w-4xl">
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-800">
+                    Perhatian operasional admin
+                  </p>
+
+                  <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">
+                    WAJIB DIPERIKSA
+                  </span>
+                </div>
+
+                <h2 className="mt-3 text-2xl font-black text-slate-950">
+                  Jangan lupa memperbarui Trip Inventory
+                </h2>
+
+                <p className="mt-3 max-w-3xl leading-7 text-slate-700">
+                  Jadwal hanya akan muncul pada pencarian tiket
+                  apabila tanggal keberangkatan sudah dibuat di
+                  Trip Inventory, berstatus OPEN, aktif, dan masih
+                  mempunyai kursi. Pastikan tanggal minimal H+2
+                  dan tanggal-tanggal berikutnya selalu tersedia.
+                </p>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-amber-200 bg-white p-4">
+                    <p className="font-black text-slate-900">
+                      Trip Inventory
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Diperbarui secara rutin untuk mengisi tanggal,
+                      kapasitas kursi, harga, dan status penjualan.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="font-black text-slate-900">
+                      Trip Schedules
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Hanya diperbarui jika jam, rute, operator,
+                      kapal, atau pola jadwal mengalami perubahan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row lg:min-w-64 lg:flex-col">
+                <Link
+                  href="/admin/trip-inventory"
+                  className="inline-flex justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-cyan-700"
+                >
+                  Update Trip Inventory
+                </Link>
+
+                <Link
+                  href="/admin/trip-schedules"
+                  className="inline-flex justify-center rounded-xl border border-amber-500 bg-white px-5 py-3 text-sm font-black text-amber-900 transition hover:bg-amber-100"
+                >
+                  Periksa Trip Schedules
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
