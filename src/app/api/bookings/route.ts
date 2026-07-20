@@ -687,7 +687,7 @@ function createTripConfirmation(
   }
 }
 
-async function reserveTripSeats({
+async function holdTripSeats({
   trip,
   passengerCount,
   transactionId,
@@ -710,18 +710,18 @@ async function reserveTripSeats({
       rowId:
         trip.inventoryId,
 
-      column: "bookedSeats",
+      column: "heldSeats",
       value: passengerCount,
 
       max:
         trip.seatCapacity -
-        trip.heldSeats,
+        trip.bookedSeats,
 
       transactionId,
     })
   } catch (error) {
     console.error(
-      `${journeyLabel} inventory seat increment error:`,
+      `${journeyLabel} inventory held-seat increment error:`,
       error
     )
 
@@ -1273,7 +1273,7 @@ export async function POST(
         transactionId,
       })
 
-    await reserveTripSeats({
+    await holdTripSeats({
       trip:
         outboundTrip,
 
@@ -1285,7 +1285,7 @@ export async function POST(
     })
 
     if (returnTrip) {
-      await reserveTripSeats({
+      await holdTripSeats({
         trip:
           returnTrip,
 

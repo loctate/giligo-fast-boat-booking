@@ -58,6 +58,27 @@ type InventoryAdjustment = {
   salesStatus: string | null
 }
 
+type SeatPosition =
+  | "held"
+  | "booked"
+  | "released"
+
+type InventorySeatAction =
+  | "release-held"
+  | "release-booked"
+  | "add-held"
+  | "add-booked"
+  | "held-to-booked"
+  | "booked-to-held"
+
+type SeatAction =
+  | InventorySeatAction
+  | "none"
+
+type InventorySeatColumn =
+  | "bookedSeats"
+  | "heldSeats"
+
 class StatusUpdateError extends Error {
   status: number
 
@@ -187,6 +208,131 @@ function isAllowedTransition(
   ].includes(nextStatus)
 }
 
+function isAllowedStatusPair(
+  bookingStatus: BookingStatus,
+  paymentStatus: PaymentStatus
+): boolean {
+  if (bookingStatus === "Pending") {
+    /*
+     * Pending berarti kursi masih Held
+     * dan pembayaran belum selesai.
+     */
+    return paymentStatus === "Pending"
+  }
+
+  if (
+    bookingStatus === "Confirmed" ||
+    bookingStatus === "Completed"
+  ) {
+    /*
+     * Demo dipertahankan untuk booking
+     * lama. Refunded tetap diizinkan
+     * agar hasil webhook refund dapat
+     * ditinjau admin tanpa merusak data.
+     */
+    return (
+      paymentStatus === "Demo" ||
+      paymentStatus === "Paid" ||
+      paymentStatus === "Refunded"
+    )
+  }
+
+  /*
+   * Cancelled dapat masih Pending,
+   * sudah Paid tetapi belum refund,
+   * sudah Refunded, atau berasal dari
+   * flow Demo lama.
+   */
+  return bookingStatus === "Cancelled"
+}
+
+function getSeatPosition(
+  bookingStatus: BookingStatus
+): SeatPosition {
+  if (bookingStatus === "Pending") {
+    return "held"
+  }
+
+  if (bookingStatus === "Cancelled") {
+    return "released"
+  }
+
+  /*
+   * Confirmed dan Completed berada
+   * di bookedSeats.
+   */
+  return "booked"
+}
+
+function determineInventorySeatAction({
+  currentStatus,
+  nextStatus,
+}: {
+  currentStatus: BookingStatus
+  nextStatus: BookingStatus
+}): SeatAction {
+  const currentPosition =
+    getSeatPosition(
+      currentStatus
+    )
+
+  const nextPosition =
+    getSeatPosition(
+      nextStatus
+    )
+
+  if (
+    currentPosition ===
+    nextPosition
+  ) {
+    return "none"
+  }
+
+  if (
+    currentPosition === "held" &&
+    nextPosition === "booked"
+  ) {
+    return "held-to-booked"
+  }
+
+  if (
+    currentPosition === "held" &&
+    nextPosition === "released"
+  ) {
+    return "release-held"
+  }
+
+  if (
+    currentPosition === "booked" &&
+    nextPosition === "held"
+  ) {
+    return "booked-to-held"
+  }
+
+  if (
+    currentPosition === "booked" &&
+    nextPosition === "released"
+  ) {
+    return "release-booked"
+  }
+
+  if (
+    currentPosition === "released" &&
+    nextPosition === "held"
+  ) {
+    return "add-held"
+  }
+
+  if (
+    currentPosition === "released" &&
+    nextPosition === "booked"
+  ) {
+    return "add-booked"
+  }
+
+  return "none"
+}
+
 async function rollbackTransaction(
   transactionId: string
 ) {
@@ -244,9 +390,7 @@ async function adjustInventorySeats({
   passengerCount: number
   transactionId: string
   journey: JourneyLabel
-  action:
-    | "cancel"
-    | "reactivate"
+  action: InventorySeatAction
 }): Promise<InventoryAdjustment> {
   const inventory =
     await getTransactionRow(
@@ -293,7 +437,150 @@ async function adjustInventorySeats({
       inventory.salesStatus
     ).toUpperCase()
 
-  if (action === "cancel") {
+  let nextBookedSeats =
+    bookedSeats
+
+  let nextHeldSeats =
+    heldSeats
+
+  const currentAvailableSeats =
+    seatCapacity -
+    bookedSeats -
+    heldSeats
+
+  const addsNewReservation =
+    action === "add-held" ||
+    action === "add-booked"
+
+  if (addsNewReservation) {
+    if (
+      inventory.isActive !== true
+    ) {
+      throw new StatusUpdateError(
+        409,
+        `The ${journey} inventory is inactive and cannot accept this booking.`
+      )
+    }
+
+    if (
+      salesStatus === "CLOSED" ||
+      salesStatus === "CANCELLED"
+    ) {
+      throw new StatusUpdateError(
+        409,
+        `The ${journey} inventory is not open for this booking.`
+      )
+    }
+
+    if (
+      currentAvailableSeats <
+      passengerCount
+    ) {
+      throw new StatusUpdateError(
+        409,
+
+        currentAvailableSeats <= 0
+          ? `The ${journey} trip is sold out.`
+          : `Only ${currentAvailableSeats} seats remain in the ${journey} inventory.`
+      )
+    }
+  }
+
+  const decrementSeats =
+    async (
+      column: InventorySeatColumn
+    ) => {
+      try {
+        await tablesDB.decrementRowColumn({
+          databaseId:
+            appwriteConfig.databaseId,
+
+          tableId:
+            appwriteConfig
+              .tripInventoryTableId,
+
+          rowId:
+            inventoryId,
+
+          column,
+
+          value:
+            passengerCount,
+
+          min: 0,
+          transactionId,
+        })
+      } catch (error) {
+        console.error(
+          `${journey} ${column} decrement error:`,
+          error
+        )
+
+        throw new StatusUpdateError(
+          409,
+          `The ${journey} inventory changed while its seat allocation was being updated.`
+        )
+      }
+    }
+
+  const incrementSeats =
+    async (
+      column: InventorySeatColumn,
+      max: number
+    ) => {
+      try {
+        await tablesDB.incrementRowColumn({
+          databaseId:
+            appwriteConfig.databaseId,
+
+          tableId:
+            appwriteConfig
+              .tripInventoryTableId,
+
+          rowId:
+            inventoryId,
+
+          column,
+
+          value:
+            passengerCount,
+
+          max,
+          transactionId,
+        })
+      } catch (error) {
+        console.error(
+          `${journey} ${column} increment error:`,
+          error
+        )
+
+        throw new StatusUpdateError(
+          409,
+          `The ${journey} inventory changed while its seat allocation was being updated.`
+        )
+      }
+    }
+
+  if (action === "release-held") {
+    if (
+      heldSeats <
+      passengerCount
+    ) {
+      throw new StatusUpdateError(
+        409,
+        `The held-seat count for the ${journey} inventory is lower than this booking passenger count.`
+      )
+    }
+
+    await decrementSeats(
+      "heldSeats"
+    )
+
+    nextHeldSeats -=
+      passengerCount
+  } else if (
+    action === "release-booked"
+  ) {
     if (
       bookedSeats <
       passengerCount
@@ -304,186 +591,114 @@ async function adjustInventorySeats({
       )
     }
 
-    try {
-      await tablesDB.decrementRowColumn({
-        databaseId:
-          appwriteConfig.databaseId,
+    await decrementSeats(
+      "bookedSeats"
+    )
 
-        tableId:
-          appwriteConfig
-            .tripInventoryTableId,
+    nextBookedSeats -=
+      passengerCount
+  } else if (
+    action === "add-held"
+  ) {
+    await incrementSeats(
+      "heldSeats",
+      seatCapacity -
+        nextBookedSeats
+    )
 
-        rowId:
-          inventoryId,
+    nextHeldSeats +=
+      passengerCount
+  } else if (
+    action === "add-booked"
+  ) {
+    await incrementSeats(
+      "bookedSeats",
+      seatCapacity -
+        nextHeldSeats
+    )
 
-        column:
-          "bookedSeats",
-
-        value:
-          passengerCount,
-
-        min: 0,
-        transactionId,
-      })
-    } catch (error) {
-      console.error(
-        `${journey} cancellation seat adjustment error:`,
-        error
-      )
-
+    nextBookedSeats +=
+      passengerCount
+  } else if (
+    action === "held-to-booked"
+  ) {
+    if (
+      heldSeats <
+      passengerCount
+    ) {
       throw new StatusUpdateError(
         409,
-        `The ${journey} trip inventory changed while the cancellation was being processed.`
+        `The held-seat count for the ${journey} inventory is lower than this booking passenger count.`
       )
     }
 
-    const nextBookedSeats =
-      bookedSeats -
+    await decrementSeats(
+      "heldSeats"
+    )
+
+    nextHeldSeats -=
       passengerCount
 
-    const availableSeats =
+    await incrementSeats(
+      "bookedSeats",
       seatCapacity -
-      nextBookedSeats -
-      heldSeats
+        nextHeldSeats
+    )
 
-    let nextSalesStatus =
-      salesStatus
-
-    /*
-     * Pembatalan membuka kembali inventory
-     * yang sebelumnya SOLD_OUT apabila
-     * kursi sudah tersedia.
-     *
-     * Inventory CLOSED atau CANCELLED
-     * tidak dibuka secara otomatis.
-     */
+    nextBookedSeats +=
+      passengerCount
+  } else if (
+    action === "booked-to-held"
+  ) {
     if (
-      salesStatus === "SOLD_OUT" &&
-      availableSeats > 0
+      bookedSeats <
+      passengerCount
     ) {
-      await tablesDB.updateRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .tripInventoryTableId,
-
-        rowId:
-          inventoryId,
-
-        data: {
-          salesStatus:
-            "OPEN",
-        },
-
-        transactionId,
-      })
-
-      nextSalesStatus = "OPEN"
+      throw new StatusUpdateError(
+        409,
+        `The booked-seat count for the ${journey} inventory is lower than this booking passenger count.`
+      )
     }
 
-    return {
-      journey,
-      inventoryId,
-      adjusted: true,
-      availableSeats,
-      salesStatus:
-        nextSalesStatus,
-    }
-  }
-
-  /*
-   * Reactivation
-   */
-  if (
-    inventory.isActive !== true
-  ) {
-    throw new StatusUpdateError(
-      409,
-      `The ${journey} inventory is inactive and cannot accept this booking.`
-    )
-  }
-
-  if (
-    salesStatus === "CLOSED" ||
-    salesStatus === "CANCELLED"
-  ) {
-    throw new StatusUpdateError(
-      409,
-      `The ${journey} inventory is not open for booking reactivation.`
-    )
-  }
-
-  const currentAvailableSeats =
-    seatCapacity -
-    bookedSeats -
-    heldSeats
-
-  if (
-    currentAvailableSeats <
-    passengerCount
-  ) {
-    throw new StatusUpdateError(
-      409,
-
-      currentAvailableSeats <= 0
-        ? `The ${journey} trip is sold out.`
-        : `Only ${currentAvailableSeats} seats remain in the ${journey} inventory.`
-    )
-  }
-
-  try {
-    await tablesDB.incrementRowColumn({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId:
-        appwriteConfig
-          .tripInventoryTableId,
-
-      rowId:
-        inventoryId,
-
-      column:
-        "bookedSeats",
-
-      value:
-        passengerCount,
-
-      max:
-        seatCapacity -
-        heldSeats,
-
-      transactionId,
-    })
-  } catch (error) {
-    console.error(
-      `${journey} reactivation seat adjustment error:`,
-      error
+    await decrementSeats(
+      "bookedSeats"
     )
 
-    throw new StatusUpdateError(
-      409,
-      `The ${journey} trip inventory changed while the booking was being reactivated.`
-    )
-  }
+    nextBookedSeats -=
+      passengerCount
 
-  const nextBookedSeats =
-    bookedSeats +
-    passengerCount
+    await incrementSeats(
+      "heldSeats",
+      seatCapacity -
+        nextBookedSeats
+    )
+
+    nextHeldSeats +=
+      passengerCount
+  }
 
   const availableSeats =
     seatCapacity -
     nextBookedSeats -
-    heldSeats
+    nextHeldSeats
+
+  if (availableSeats < 0) {
+    throw new StatusUpdateError(
+      409,
+      `The ${journey} inventory would exceed its seat capacity.`
+    )
+  }
 
   let nextSalesStatus =
     salesStatus
 
+  /*
+   * CLOSED dan CANCELLED tidak diubah
+   * secara otomatis.
+   */
   if (
     availableSeats <= 0 &&
-    salesStatus !== "SOLD_OUT"
+    salesStatus === "OPEN"
   ) {
     await tablesDB.updateRow({
       databaseId:
@@ -510,11 +725,6 @@ async function adjustInventorySeats({
     availableSeats > 0 &&
     salesStatus === "SOLD_OUT"
   ) {
-    /*
-     * Penanganan defensif apabila status
-     * SOLD_OUT tidak sesuai dengan jumlah
-     * kursi aktual.
-     */
     await tablesDB.updateRow({
       databaseId:
         appwriteConfig.databaseId,
@@ -534,7 +744,8 @@ async function adjustInventorySeats({
       transactionId,
     })
 
-    nextSalesStatus = "OPEN"
+    nextSalesStatus =
+      "OPEN"
   }
 
   return {
@@ -542,6 +753,7 @@ async function adjustInventorySeats({
     inventoryId,
     adjusted: true,
     availableSeats,
+
     salesStatus:
       nextSalesStatus,
   }
@@ -681,21 +893,29 @@ export async function PATCH(
       )
     }
 
-    const isCancelling =
-      currentBookingStatus !==
-        "Cancelled" &&
-      nextBookingStatus ===
-        "Cancelled"
+    if (
+      !isAllowedStatusPair(
+        nextBookingStatus,
+        nextPaymentStatus
+      )
+    ) {
+      throw new StatusUpdateError(
+        409,
+        "The selected booking and payment statuses are not compatible. Pending bookings must use Pending payment status. Confirmed or Completed bookings must use Demo, Paid, or Refunded."
+      )
+    }
 
-    const isReactivating =
-      currentBookingStatus ===
-        "Cancelled" &&
-      nextBookingStatus !==
-        "Cancelled"
+    const seatAction =
+      determineInventorySeatAction({
+        currentStatus:
+          currentBookingStatus,
+
+        nextStatus:
+          nextBookingStatus,
+      })
 
     const needsSeatAdjustment =
-      isCancelling ||
-      isReactivating
+      seatAction !== "none"
 
     const passengerCount =
       toInteger(
@@ -755,14 +975,9 @@ export async function PATCH(
       InventoryAdjustment[] = []
 
     if (
-      needsSeatAdjustment &&
+      seatAction !== "none" &&
       passengerCount !== null
     ) {
-      const action =
-        isCancelling
-          ? "cancel"
-          : "reactivate"
-
       /*
        * Booking lama yang tidak memiliki
        * inventory ID masih boleh diperbarui
@@ -783,7 +998,8 @@ export async function PATCH(
             journey:
               "outbound",
 
-            action,
+            action:
+              seatAction,
           })
 
         inventoryAdjustments.push(
@@ -813,7 +1029,8 @@ export async function PATCH(
             journey:
               "return",
 
-            action,
+            action:
+              seatAction,
           })
 
         inventoryAdjustments.push(

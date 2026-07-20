@@ -14,6 +14,57 @@ type UpdateResponse = {
   error?: string
 }
 
+function isAllowedStatusPair(
+  bookingStatus: string,
+  paymentStatus: string
+): boolean {
+  if (bookingStatus === "Pending") {
+    return paymentStatus === "Pending"
+  }
+
+  if (
+    bookingStatus === "Confirmed" ||
+    bookingStatus === "Completed"
+  ) {
+    return (
+      paymentStatus === "Demo" ||
+      paymentStatus === "Paid" ||
+      paymentStatus === "Refunded"
+    )
+  }
+
+  return (
+    bookingStatus === "Cancelled" &&
+    (
+      paymentStatus === "Demo" ||
+      paymentStatus === "Pending" ||
+      paymentStatus === "Paid" ||
+      paymentStatus === "Refunded"
+    )
+  )
+}
+
+function getStatusPairMessage(
+  bookingStatus: string
+): string {
+  if (bookingStatus === "Pending") {
+    return "Pending bookings must use Pending payment status because their seats are still held."
+  }
+
+  if (
+    bookingStatus === "Confirmed" ||
+    bookingStatus === "Completed"
+  ) {
+    return "Confirmed or Completed bookings must use Demo, Paid, or Refunded payment status."
+  }
+
+  if (bookingStatus === "Cancelled") {
+    return ""
+  }
+
+  return "Select a valid booking and payment status combination."
+}
+
 export default function StatusEditor({
   rowId,
   initialBookingStatus,
@@ -36,8 +87,27 @@ export default function StatusEditor({
   const [isError, setIsError] =
     useState(false)
 
+  const statusPairIsValid =
+    isAllowedStatusPair(
+      bookingStatus,
+      paymentStatus
+    )
+
+  const statusPairMessage =
+    getStatusPairMessage(
+      bookingStatus
+    )
+
   async function handleSave() {
     if (isSaving) {
+      return
+    }
+
+    if (!statusPairIsValid) {
+      setIsError(true)
+      setMessage(
+        statusPairMessage
+      )
       return
     }
 
@@ -168,7 +238,25 @@ export default function StatusEditor({
           </select>
         </label>
 
-        {message && (
+        <div className="rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-900">
+        <p className="font-bold">
+          Seat lifecycle
+        </p>
+
+        <p className="mt-1 leading-6">
+          Pending uses held seats.
+          Confirmed and Completed use booked seats.
+          Cancelled releases the seats.
+        </p>
+      </div>
+
+      {!statusPairIsValid && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+          {statusPairMessage}
+        </div>
+      )}
+
+      {message && (
           <div
             className={
               "rounded-xl border p-4 text-sm font-semibold " +
@@ -184,7 +272,7 @@ export default function StatusEditor({
         <button
           type="button"
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !statusPairIsValid}
           className="w-full rounded-xl bg-cyan-600 px-5 py-3.5 font-black text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
           {isSaving

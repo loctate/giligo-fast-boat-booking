@@ -40,6 +40,29 @@ type PaymentUpdate = {
   midtransFraudStatus?: string
 }
 
+type SeatAction =
+  | "none"
+  | "confirm"
+  | "release"
+
+type JourneyLabel =
+  | "outbound"
+  | "return"
+
+type InventoryAdjustment = {
+  journey: JourneyLabel
+  inventoryId: string
+  inventoryCode: string
+  action: Exclude<
+    SeatAction,
+    "none"
+  >
+  bookedSeats: number
+  heldSeats: number
+  availableSeats: number
+  salesStatus: string
+}
+
 class WebhookError extends Error {
   status: number
 
@@ -67,6 +90,15 @@ const FINAL_LOCAL_PAYMENT_STATUSES =
     "paid",
     "refunded",
   ])
+
+const TERMINAL_RELEASE_STATUSES =
+  new Set([
+    "deny",
+    "cancel",
+    "expire",
+    "failure",
+  ])
+
 
 function noStoreJson(
   body: unknown,
@@ -122,6 +154,379 @@ function toStoredInteger(
   return Number.isSafeInteger(amount)
     ? amount
     : null
+}
+
+function getErrorCode(
+  error: unknown
+): number | null {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+  ) {
+    const code = Number(
+      (
+        error as {
+          code?: unknown
+        }
+      ).code
+    )
+
+    return Number.isFinite(code)
+      ? code
+      : null
+  }
+
+  return null
+}
+
+async function rollbackTransaction(
+  transactionId: string
+) {
+  try {
+    await tablesDB.updateTransaction({
+      transactionId,
+      rollback: true,
+    })
+  } catch (rollbackError) {
+    console.error(
+      "Midtrans webhook transaction rollback error:",
+      rollbackError
+    )
+  }
+}
+
+async function getTransactionRow(
+  tableId: string,
+  rowId: string,
+  transactionId: string,
+  notFoundMessage: string
+): Promise<BookingRow> {
+  try {
+    const row =
+      await tablesDB.getRow({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId,
+        rowId,
+        transactionId,
+      })
+
+    return row as BookingRow
+  } catch (error) {
+    if (getErrorCode(error) === 404) {
+      throw new WebhookError(
+        404,
+        notFoundMessage
+      )
+    }
+
+    throw error
+  }
+}
+
+function determineSeatAction({
+  booking,
+  update,
+  transactionStatus,
+}: {
+  booking: BookingRow
+  update: PaymentUpdate
+  transactionStatus: string
+}): SeatAction {
+  const currentBookingStatus =
+    normalizeStatus(
+      booking.bookingStatus
+    ) || "pending"
+
+  const currentPaymentStatus =
+    normalizeStatus(
+      booking.paymentStatus
+    ) || "pending"
+
+  /*
+   * Pada flow baru, Pending/Pending
+   * berarti kursi booking masih Held.
+   */
+  const bookingStillHoldsSeats =
+    currentBookingStatus ===
+      "pending" &&
+    currentPaymentStatus ===
+      "pending"
+
+  if (!bookingStillHoldsSeats) {
+    return "none"
+  }
+
+  const nextBookingStatus =
+    normalizeStatus(
+      update.bookingStatus
+    )
+
+  const nextPaymentStatus =
+    normalizeStatus(
+      update.paymentStatus
+    )
+
+  if (
+    nextBookingStatus ===
+      "confirmed" &&
+    nextPaymentStatus ===
+      "paid"
+  ) {
+    return "confirm"
+  }
+
+  if (
+    TERMINAL_RELEASE_STATUSES.has(
+      transactionStatus
+    )
+  ) {
+    return "release"
+  }
+
+  return "none"
+}
+
+async function adjustHeldInventory({
+  inventoryId,
+  passengerCount,
+  transactionId,
+  journey,
+  action,
+}: {
+  inventoryId: string
+  passengerCount: number
+  transactionId: string
+  journey: JourneyLabel
+  action: Exclude<
+    SeatAction,
+    "none"
+  >
+}): Promise<InventoryAdjustment> {
+  const inventory =
+    await getTransactionRow(
+      appwriteConfig
+        .tripInventoryTableId,
+
+      inventoryId,
+      transactionId,
+
+      `The ${journey} trip inventory linked to this booking could not be found.`
+    )
+
+  const seatCapacity =
+    toStoredInteger(
+      inventory.seatCapacity
+    )
+
+  const bookedSeats =
+    toStoredInteger(
+      inventory.bookedSeats
+    )
+
+  const heldSeats =
+    toStoredInteger(
+      inventory.heldSeats
+    )
+
+  if (
+    seatCapacity === null ||
+    bookedSeats === null ||
+    heldSeats === null ||
+    seatCapacity < 0 ||
+    bookedSeats < 0 ||
+    heldSeats < 0
+  ) {
+    throw new WebhookError(
+      409,
+      `The ${journey} trip inventory has invalid seat data.`
+    )
+  }
+
+  if (heldSeats < passengerCount) {
+    throw new WebhookError(
+      409,
+      `The held-seat count for the ${journey} trip is lower than this booking passenger count.`
+    )
+  }
+
+  try {
+    await tablesDB.decrementRowColumn({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      column:
+        "heldSeats",
+
+      value:
+        passengerCount,
+
+      min: 0,
+      transactionId,
+    })
+  } catch (error) {
+    console.error(
+      `${journey} held-seat decrement error:`,
+      error
+    )
+
+    throw new WebhookError(
+      409,
+      `The ${journey} held seats changed while the payment notification was being processed.`
+    )
+  }
+
+  const nextHeldSeats =
+    heldSeats - passengerCount
+
+  let nextBookedSeats =
+    bookedSeats
+
+  if (action === "confirm") {
+    try {
+      await tablesDB.incrementRowColumn({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId:
+          appwriteConfig
+            .tripInventoryTableId,
+
+        rowId:
+          inventoryId,
+
+        column:
+          "bookedSeats",
+
+        value:
+          passengerCount,
+
+        max:
+          seatCapacity -
+          nextHeldSeats,
+
+        transactionId,
+      })
+    } catch (error) {
+      console.error(
+        `${journey} booked-seat increment error:`,
+        error
+      )
+
+      throw new WebhookError(
+        409,
+        `The ${journey} booked seats changed while the payment notification was being processed.`
+      )
+    }
+
+    nextBookedSeats +=
+      passengerCount
+  }
+
+  const availableSeats =
+    seatCapacity -
+    nextBookedSeats -
+    nextHeldSeats
+
+  if (availableSeats < 0) {
+    throw new WebhookError(
+      409,
+      `The ${journey} inventory would exceed its seat capacity.`
+    )
+  }
+
+  const currentSalesStatus =
+    cleanText(
+      inventory.salesStatus
+    ).toUpperCase()
+
+  let nextSalesStatus =
+    currentSalesStatus
+
+  if (
+    availableSeats <= 0 &&
+    currentSalesStatus === "OPEN"
+  ) {
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      data: {
+        salesStatus:
+          "SOLD_OUT",
+      },
+
+      transactionId,
+    })
+
+    nextSalesStatus =
+      "SOLD_OUT"
+  } else if (
+    action === "release" &&
+    availableSeats > 0 &&
+    currentSalesStatus ===
+      "SOLD_OUT"
+  ) {
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
+
+      tableId:
+        appwriteConfig
+          .tripInventoryTableId,
+
+      rowId:
+        inventoryId,
+
+      data: {
+        salesStatus:
+          "OPEN",
+      },
+
+      transactionId,
+    })
+
+    nextSalesStatus =
+      "OPEN"
+  }
+
+  return {
+    journey,
+    inventoryId,
+
+    inventoryCode:
+      cleanText(
+        inventory.inventoryCode
+      ),
+
+    action,
+    bookedSeats:
+      nextBookedSeats,
+
+    heldSeats:
+      nextHeldSeats,
+
+    availableSeats,
+
+    salesStatus:
+      nextSalesStatus,
+  }
 }
 
 function createSignature(
@@ -276,7 +681,8 @@ function createPaymentUpdate({
     currentPaymentStatus
 
   if (paymentSucceeded) {
-    nextPaymentStatus = "Paid"
+    nextPaymentStatus =
+      "Paid"
 
     /*
      * Booking yang telah dibatalkan atau
@@ -292,6 +698,34 @@ function createPaymentUpdate({
       nextBookingStatus =
         "Confirmed"
     }
+  } else if (
+    TERMINAL_RELEASE_STATUSES.has(
+      transactionStatus
+    )
+  ) {
+    /*
+     * Status gagal terminal hanya
+     * membatalkan booking yang masih
+     * berada pada lifecycle Held.
+     */
+    if (
+      normalizedBookingStatus ===
+        "pending" &&
+      normalizedPaymentStatus ===
+        "pending"
+    ) {
+      nextBookingStatus =
+        "Cancelled"
+    }
+
+    if (
+      !FINAL_LOCAL_PAYMENT_STATUSES.has(
+        normalizedPaymentStatus
+      )
+    ) {
+      nextPaymentStatus =
+        "Pending"
+    }
   } else if (paymentWasRefunded) {
     nextPaymentStatus =
       "Refunded"
@@ -301,8 +735,7 @@ function createPaymentUpdate({
     )
   ) {
     /*
-     * Pending, deny, cancel, expire,
-     * failure, authorize, atau fraud
+     * Pending, authorize, atau fraud
      * challenge tetap belum dibayar.
      */
     nextPaymentStatus =
@@ -358,6 +791,10 @@ function updateContainsChanges(
 export async function POST(
   request: Request
 ) {
+  let appwriteTransactionId:
+    | string
+    | null = null
+
   try {
     let notification:
       WebhookPayload
@@ -676,7 +1113,7 @@ export async function POST(
           .fraud_status
       )
 
-    const transactionId =
+    const midtransTransactionId =
       cleanText(
         authoritativeStatus
           .transaction_id
@@ -688,81 +1125,340 @@ export async function POST(
           .payment_type
       )
 
+    const appwriteTransaction =
+      await tablesDB.createTransaction({
+        ttl: 60,
+      })
+
+    appwriteTransactionId =
+      cleanText(
+        appwriteTransaction.$id
+      )
+
+    if (!appwriteTransactionId) {
+      throw new WebhookError(
+        500,
+        "The webhook transaction could not be created."
+      )
+    }
+
+    /*
+     * Booking dibaca ulang di dalam
+     * transaction agar dua webhook
+     * bersamaan tidak memindahkan
+     * kursi dua kali.
+     */
+    const transactionalBooking =
+      await getTransactionRow(
+        appwriteConfig
+          .bookingsTableId,
+
+        bookingRowId,
+        appwriteTransactionId,
+
+        "The linked booking could not be found."
+      )
+
+    const transactionalActiveOrderId =
+      cleanText(
+        transactionalBooking
+          .midtransOrderId
+      )
+
+    if (!transactionalActiveOrderId) {
+      await rollbackTransaction(
+        appwriteTransactionId
+      )
+
+      appwriteTransactionId =
+        null
+
+      return noStoreJson({
+        success: true,
+        ignored: true,
+
+        reason:
+          "The booking has no active Midtrans order.",
+      })
+    }
+
+    const transactionalOrderIsActive =
+      transactionalActiveOrderId ===
+      orderId
+
+    if (
+      !transactionalOrderIsActive &&
+      !authoritativeHasMoneyMovement
+    ) {
+      await rollbackTransaction(
+        appwriteTransactionId
+      )
+
+      appwriteTransactionId =
+        null
+
+      return noStoreJson({
+        success: true,
+        ignored: true,
+
+        reason:
+          "The inactive Midtrans order is not successful or refunded.",
+
+        orderId,
+        transactionStatus,
+      })
+    }
+
+    const transactionalStoredTotal =
+      toStoredInteger(
+        transactionalBooking
+          .totalPrice
+      )
+
+    if (
+      transactionalStoredTotal ===
+        null ||
+      transactionalStoredTotal <= 0 ||
+      transactionalStoredTotal !==
+        verifiedTotal
+    ) {
+      throw new WebhookError(
+        409,
+        "The booking total changed while the payment notification was being processed."
+      )
+    }
+
     const update =
       createPaymentUpdate({
-        booking,
-        orderId,
+        booking:
+          transactionalBooking,
 
+        orderId,
         transactionStatus,
 
         statusCode:
           verifiedStatusCode,
 
         fraudStatus,
-        transactionId,
+
+        transactionId:
+          midtransTransactionId,
+
         paymentType,
       })
 
-    if (
-      !updateContainsChanges(
-        booking,
+    const seatAction =
+      determineSeatAction({
+        booking:
+          transactionalBooking,
+
+        update,
+        transactionStatus,
+      })
+
+    const inventoryAdjustments:
+      InventoryAdjustment[] = []
+
+    if (seatAction !== "none") {
+      const passengerCount =
+        toStoredInteger(
+          transactionalBooking
+            .passengerCount
+        )
+
+      if (
+        passengerCount === null ||
+        passengerCount < 1
+      ) {
+        throw new WebhookError(
+          409,
+          "The booking has an invalid passenger count."
+        )
+      }
+
+      const outboundInventoryId =
+        cleanText(
+          transactionalBooking
+            .tripInventoryId
+        ) ||
+        cleanText(
+          transactionalBooking
+            .tripId
+        )
+
+      const returnInventoryId =
+        cleanText(
+          transactionalBooking
+            .returnTripInventoryId
+        )
+
+      const tripType =
+        normalizeStatus(
+          transactionalBooking
+            .tripType
+        )
+
+      if (!outboundInventoryId) {
+        throw new WebhookError(
+          409,
+          "The booking has no linked outbound inventory."
+        )
+      }
+
+      if (
+        tripType === "round-trip" &&
+        !returnInventoryId
+      ) {
+        throw new WebhookError(
+          409,
+          "The round-trip booking has no linked return inventory."
+        )
+      }
+
+      if (
+        returnInventoryId &&
+        returnInventoryId ===
+          outboundInventoryId
+      ) {
+        throw new WebhookError(
+          409,
+          "Outbound and return inventory IDs cannot be identical."
+        )
+      }
+
+      const outboundAdjustment =
+        await adjustHeldInventory({
+          inventoryId:
+            outboundInventoryId,
+
+          passengerCount,
+
+          transactionId:
+            appwriteTransactionId,
+
+          journey:
+            "outbound",
+
+          action:
+            seatAction,
+        })
+
+      inventoryAdjustments.push(
+        outboundAdjustment
+      )
+
+      if (returnInventoryId) {
+        const returnAdjustment =
+          await adjustHeldInventory({
+            inventoryId:
+              returnInventoryId,
+
+            passengerCount,
+
+            transactionId:
+              appwriteTransactionId,
+
+            journey:
+              "return",
+
+            action:
+              seatAction,
+          })
+
+        inventoryAdjustments.push(
+          returnAdjustment
+        )
+      }
+    }
+
+    const bookingNeedsUpdate =
+      updateContainsChanges(
+        transactionalBooking,
         update
       )
+
+    if (
+      !bookingNeedsUpdate &&
+      seatAction === "none"
     ) {
+      await rollbackTransaction(
+        appwriteTransactionId
+      )
+
+      appwriteTransactionId =
+        null
+
       return noStoreJson({
         success: true,
         idempotent: true,
+
         orderId,
         transactionStatus,
+
         bookingStatus:
           update.bookingStatus,
+
         paymentStatus:
           update.paymentStatus,
+
+        seatAction,
+        inventoryAdjustments,
       })
     }
 
-    try {
-      await tablesDB.updateRow({
-        databaseId:
-          appwriteConfig.databaseId,
+    await tablesDB.updateRow({
+      databaseId:
+        appwriteConfig.databaseId,
 
-        tableId:
-          appwriteConfig
-            .bookingsTableId,
+      tableId:
+        appwriteConfig
+          .bookingsTableId,
 
-        rowId:
-          bookingRowId,
+      rowId:
+        bookingRowId,
 
-        data:
-          update,
-      })
-    } catch (error) {
-      console.error(
-        "Midtrans webhook Appwrite update failed:",
-        {
-          bookingRowId,
-          orderId,
-          transactionStatus,
-          error,
-        }
-      )
+      data:
+        update,
 
-      throw new WebhookError(
-        503,
-        "The booking payment status could not be updated."
-      )
-    }
+      transactionId:
+        appwriteTransactionId,
+    })
+
+    await tablesDB.updateTransaction({
+      transactionId:
+        appwriteTransactionId,
+
+      commit: true,
+    })
+
+    appwriteTransactionId =
+      null
 
     return noStoreJson({
       success: true,
       orderId,
       transactionStatus,
+
       bookingStatus:
         update.bookingStatus,
+
       paymentStatus:
         update.paymentStatus,
+
+      seatAction,
+      inventoryAdjustments,
     })
+
   } catch (error) {
+    if (appwriteTransactionId) {
+      await rollbackTransaction(
+        appwriteTransactionId
+      )
+
+      appwriteTransactionId =
+        null
+    }
+
     if (
       error instanceof
       WebhookError
@@ -774,6 +1470,22 @@ export async function POST(
             error.message,
         },
         error.status
+      )
+    }
+
+    const errorCode =
+      getErrorCode(error)
+
+    if (errorCode === 409) {
+      return noStoreJson(
+        {
+          success: false,
+
+          error:
+            "The booking or linked inventory changed while the payment notification was processed. Midtrans may retry this notification.",
+        },
+
+        503
       )
     }
 
