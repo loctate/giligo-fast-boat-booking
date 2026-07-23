@@ -11,6 +11,11 @@ import {
   midtransSnap,
 } from "@/lib/midtrans-server"
 
+import {
+  createMidtransSnapExpiry,
+  getSeatHoldExpiryTimestamp,
+} from "@/lib/seat-hold"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -342,6 +347,41 @@ export async function POST(
       )
     }
 
+    const seatHoldExpiresAt =
+      cleanText(
+        booking.seatHoldExpiresAt
+      )
+
+    let seatHoldExpiryTimestamp:
+      number
+
+    try {
+      seatHoldExpiryTimestamp =
+        getSeatHoldExpiryTimestamp(
+          seatHoldExpiresAt
+        )
+    } catch {
+      throw new PaymentError(
+        500,
+        "The stored seat-hold expiry is invalid."
+      )
+    }
+
+    if (
+      seatHoldExpiryTimestamp <=
+        Date.now()
+    ) {
+      throw new PaymentError(
+        409,
+        "This booking seat hold has expired."
+      )
+    }
+
+    const midtransExpiry =
+      createMidtransSnapExpiry(
+        seatHoldExpiresAt
+      )
+
     const totalPrice =
       toInteger(
         booking.totalPrice
@@ -399,6 +439,9 @@ export async function POST(
             gross_amount:
               totalPrice,
           },
+
+          expiry:
+            midtransExpiry,
 
           item_details: [
             {

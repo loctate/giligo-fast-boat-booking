@@ -11,6 +11,10 @@ import {
   validateCustomerTravelDate,
 } from "@/lib/bali-date"
 
+import {
+  createSeatHoldExpiresAt,
+} from "@/lib/seat-hold"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -1128,6 +1132,9 @@ export async function POST(
     const paymentStatus =
       "Pending"
 
+    const seatHoldExpiresAt =
+      createSeatHoldExpiresAt()
+
     const rowData: Record<
       string,
       unknown
@@ -1135,6 +1142,7 @@ export async function POST(
       bookingCode,
       bookingStatus,
       paymentStatus,
+      seatHoldExpiresAt,
 
       tripType,
 
@@ -1323,6 +1331,7 @@ export async function POST(
 
           bookingStatus,
           paymentStatus,
+          seatHoldExpiresAt,
 
           tripType,
 

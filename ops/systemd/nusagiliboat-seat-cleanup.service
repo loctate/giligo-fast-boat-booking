@@ -1,0 +1,33 @@
+[Unit]
+Description=NusaGiliBoat expired held-seat cleanup
+Documentation=https://nusagiliboat.com
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/nusagiliboat/seat-cleanup.env
+
+[Service]
+Type=oneshot
+DynamicUser=yes
+
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/etc/nusagiliboat/seat-cleanup.env
+
+ExecStart=/usr/local/lib/nusagiliboat/run-expired-seat-cleanup.sh
+
+TimeoutStartSec=90s
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+StandardOutput=journal
+StandardError=journal

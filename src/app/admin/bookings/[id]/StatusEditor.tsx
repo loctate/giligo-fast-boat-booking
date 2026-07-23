@@ -98,6 +98,10 @@ export default function StatusEditor({
       bookingStatus
     )
 
+  const cancelledPaidNeedsReview =
+    bookingStatus === "Cancelled" &&
+    paymentStatus === "Paid"
+
   async function handleSave() {
     if (isSaving) {
       return
@@ -237,6 +241,26 @@ export default function StatusEditor({
             </option>
           </select>
         </label>
+
+        {cancelledPaidNeedsReview && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900"
+          >
+            <p className="font-black">
+              Action required: payment received after cancellation
+            </p>
+
+            <p className="mt-2 leading-6">
+              The seats have already been released.
+              This booking is not confirmed, and its seats are not reserved.
+            </p>
+
+            <p className="mt-2 font-semibold leading-6">
+              Process a refund, or reactivate the booking only after checking seat availability.
+            </p>
+          </div>
+        )}
 
         <div className="rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-900">
         <p className="font-bold">
