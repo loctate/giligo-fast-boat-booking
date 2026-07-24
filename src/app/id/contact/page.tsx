@@ -5,414 +5,262 @@ import type {
 import Link from "next/link"
 
 import PublicInfoPage from "@/components/PublicInfoPage"
-
 import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
 
 export const metadata: Metadata = createPublicPageMetadata({
   locale: "id",
   path: "/contact",
   title: "Hubungi Kami | Nusa Gili Boat",
-  description: "Hubungi tim Nusa Gili Boat untuk bantuan booking tiket fast boat, informasi jadwal, perubahan perjalanan, pembayaran, pembatalan, refund, dan e-ticket.",
+  description: "Hubungi Nusa Gili Boat untuk bantuan booking fast boat, jadwal, data penumpang, pembayaran manual QRIS, payment link kartu melalui PayPal, konfirmasi, perubahan, dan pembatalan.",
 })
 
-const supportTopics = [
-  {
-    title: "Pemesanan tiket fast boat",
-    description:
-      "Bantuan mencari perjalanan, memilih operator, membuat booking one-way atau round-trip, dan memeriksa ketersediaan kursi.",
-  },
-  {
-    title: "Informasi jadwal dan rute",
-    description:
-      "Informasi mengenai jadwal perjalanan, rute, pelabuhan keberangkatan, tujuan, operator, dan kapal.",
-  },
-  {
-    title: "Perubahan booking",
-    description:
-      "Permintaan perubahan nama penumpang, tanggal perjalanan, jadwal, rute, atau data booking sesuai ketentuan operator.",
-  },
-  {
-    title: "Pembatalan dan refund",
-    description:
-      "Bantuan terkait pembatalan booking, kelayakan refund, dokumen pendukung, dan status pengembalian dana.",
-  },
-  {
-    title: "Pembayaran",
-    description:
-      "Bantuan untuk pembayaran tertunda, transaksi gagal, pembayaran ganda, atau status pembayaran yang belum diperbarui.",
-  },
-  {
-    title: "Check-in dan perjalanan",
-    description:
-      "Informasi titik check-in, waktu kedatangan, dokumen perjalanan, e-ticket, dan persyaratan sebelum keberangkatan.",
-  },
-]
+const businessEmail =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ||
+  "nusagiliboat@gmail.com"
 
-const requiredInformation = [
-  "Nama lengkap pemesan.",
-  "Kode booking atau Booking ID, apabila sudah tersedia.",
-  "Alamat email yang digunakan saat booking.",
-  "Nomor telepon atau WhatsApp yang dapat dihubungi.",
-  "Tanggal dan rute perjalanan.",
-  "Nama operator atau kapal, apabila tersedia.",
-  "Penjelasan singkat mengenai pertanyaan atau kendala.",
-  "Bukti pembayaran atau dokumen pendukung apabila relevan.",
-]
+const businessWhatsapp = String(
+  process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ??
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+    process.env.NEXT_PUBLIC_WHATSAPP ??
+    "6282180126117"
+).replace(/\D/g, "")
+
+const businessWhatsappUrl =
+  `https://wa.me/${businessWhatsapp}`
+
+function formatWhatsappNumber(
+  value: string
+): string {
+  if (
+    value.startsWith("62") &&
+    value.length >= 12
+  ) {
+    const localNumber = value.slice(2)
+
+    return [
+      "+62",
+      localNumber.slice(0, 3),
+      localNumber.slice(3, 7),
+      localNumber.slice(7),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  }
+
+  return value ? `+${value}` : "Belum dikonfigurasi"
+}
 
 export default function ContactPage() {
   return (
     <PublicInfoPage
       locale="id"
       eyebrow="Layanan Pelanggan"
-      title="Kami siap membantu perjalanan Anda"
-      description="Hubungi tim Nusa Gili Boat untuk pertanyaan mengenai booking tiket, jadwal keberangkatan, perubahan perjalanan, pembayaran, pembatalan, refund, e-ticket, dan informasi perjalanan lainnya."
+      title="Hubungi Kami"
+      description="Hubungi Nusa Gili Boat untuk bantuan pencarian fast boat, booking, data penumpang, pembayaran manual, konfirmasi, perubahan jadwal, pembatalan, dan refund."
+      lastUpdated="24 Juli 2026"
     >
+      <section className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
+        <h2 className="text-xl font-black text-cyan-950">
+          Layanan resmi Nusa Gili Boat
+        </h2>
+
+        <p className="mt-3 leading-7 text-cyan-900">
+          Untuk booking yang sudah dibuat, sertakan kode
+          booking, nama penumpang, rute, dan tanggal
+          perjalanan agar admin dapat memeriksa permintaan
+          dengan lebih cepat.
+        </p>
+      </section>
+
       <section className="grid gap-5 md:grid-cols-2">
-        <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Email
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-700">
+            Email bisnis
           </p>
 
-          <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Kirim pertanyaan melalui email
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Dukungan melalui email
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Gunakan email resmi Nusa Gili Boat untuk
-            pertanyaan umum, booking, pembayaran,
-            perubahan perjalanan, pembatalan, refund,
-            dan pelindungan data pribadi.
+            Gunakan email untuk pertanyaan umum, dokumen
+            booking, permintaan yang terperinci, dan
+            kebutuhan yang tidak memerlukan jawaban
+            segera.
           </p>
 
           <a
-            href="mailto:nusagiliboat@gmail.com"
-            className="mt-5 inline-flex break-all rounded-full bg-sky-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-sky-800"
+            href={`mailto:${businessEmail}`}
+            className="mt-5 inline-flex break-all font-bold text-cyan-700 transition hover:text-cyan-900"
           >
-            nusagiliboat@gmail.com
+            {businessEmail}
           </a>
         </article>
 
-        <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
             WhatsApp
           </p>
 
-          <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Hubungi layanan pelanggan
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Bantuan booking dan pembayaran
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
             Gunakan WhatsApp untuk bantuan booking,
-            informasi keberangkatan, perubahan jadwal,
-            atau perjalanan yang akan berlangsung dalam
-            waktu dekat.
+            permintaan instruksi pembayaran QRIS,
+            permintaan payment link kartu melalui PayPal,
+            dan pertanyaan perjalanan yang mendesak.
           </p>
 
           <a
-            href="https://wa.me/6282180126117"
+            href={businessWhatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-5 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+            className="mt-5 inline-flex font-bold text-emerald-700 transition hover:text-emerald-900"
           >
-            +62 821 8012 6117
+            {formatWhatsappNumber(businessWhatsapp)}
           </a>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-700">
+            Lokasi operasional
+          </p>
+
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Jakarta, Indonesia
+          </h2>
+
+          <address className="mt-3 not-italic leading-7 text-slate-600">
+            Tomang, Grogol Petamburan
+            <br />
+            Jakarta Barat, DKI Jakarta
+            <br />
+            Indonesia
+          </address>
+
+          <p className="mt-4 text-sm leading-6 text-slate-500">
+            Nusa Gili Boat merupakan layanan pemesanan
+            online. Lokasi operasional ini bukan toko
+            fisik atau loket tiket yang menerima kunjungan
+            pelanggan secara langsung.
+          </p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-violet-700">
+            Jam layanan pelanggan
+          </p>
+
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Setiap hari
+          </h2>
+
+          <p className="mt-3 text-lg font-bold text-slate-800">
+            08.00–20.00 WIB
+          </p>
+
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Pesan yang diterima di luar jam layanan dapat
+            dijawab pada periode layanan berikutnya.
+            Informasi operasional mendesak tetap bergantung
+            pada pembaruan yang kami terima dari operator
+            fast boat.
+          </p>
         </article>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 p-6 sm:p-8">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Jam operasional
-            </p>
-
-            <h2 className="mt-3 text-2xl font-bold text-slate-950">
-              Senin–Minggu
-            </h2>
-
-            <p className="mt-3 text-3xl font-black text-slate-950">
-              08.00–20.00 WITA
-            </p>
-
-            <p className="mt-3 text-sm leading-7 text-slate-500">
-              WITA adalah Waktu Indonesia Tengah atau
-              UTC+8.
-            </p>
-          </div>
-
-          <div className="space-y-3 leading-7 text-slate-600">
-            <p>
-              Kami berupaya memberikan respons secepat
-              mungkin selama jam operasional.
-            </p>
-
-            <p>
-              Pesan yang diterima di luar jam layanan
-              akan ditinjau pada periode operasional
-              berikutnya.
-            </p>
-
-            <p>
-              Waktu respons dapat berbeda tergantung
-              jumlah permintaan, tingkat urgensi, dan
-              kebutuhan konfirmasi kepada operator.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-5">
+      <section className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Layanan bantuan
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            Hal yang dapat kami bantu
+          <h2 className="text-xl font-black text-slate-950">
+            Informasi yang perlu disertakan
           </h2>
+
+          <p className="mt-3 leading-7 text-slate-600">
+            Informasi yang lengkap membantu admin
+            menemukan dan memeriksa booking Anda.
+          </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {supportTopics.map((topic) => (
-            <article
-              key={topic.title}
-              className="rounded-2xl border border-slate-200 p-5"
+        <ul className="grid gap-3 text-sm leading-6 text-slate-700 sm:grid-cols-2">
+          {[
+            "Kode booking apabila sudah tersedia.",
+            "Nama pelanggan dan penumpang.",
+            "Email dan nomor WhatsApp pelanggan.",
+            "Lokasi keberangkatan dan tujuan.",
+            "Tanggal dan jadwal perjalanan.",
+            "Metode atau status pembayaran.",
+            "Penjelasan bantuan yang dibutuhkan.",
+            "Bukti pembayaran hanya apabila diminta admin.",
+          ].map((item) => (
+            <li
+              key={item}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3"
             >
-              <h3 className="font-semibold text-slate-950">
-                {topic.title}
-              </h3>
-
-              <p className="mt-3 leading-7 text-slate-600">
-                {topic.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Informasi yang perlu disertakan
-        </h2>
-
-        <p className="leading-8 text-slate-600">
-          Agar permintaan dapat diperiksa dengan lebih
-          cepat dan tepat, sertakan informasi yang
-          relevan berikut:
-        </p>
-
-        <ul className="list-disc space-y-3 pl-6 leading-7 text-slate-600">
-          {requiredInformation.map((item) => (
-            <li key={item}>
               {item}
             </li>
           ))}
         </ul>
-
-        <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <h3 className="font-semibold text-amber-950">
-            Lindungi informasi pembayaran Anda
-          </h3>
-
-          <p className="mt-2 leading-7 text-amber-900">
-            Jangan mengirimkan PIN, kata sandi
-            perbankan, nomor kartu lengkap, CVV, atau
-            kode OTP melalui email, WhatsApp, maupun
-            saluran layanan pelanggan lainnya.
-          </p>
-        </aside>
       </section>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Perjalanan dalam waktu dekat
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+        <h2 className="text-xl font-black text-amber-950">
+          Keamanan pembayaran dan akun
         </h2>
 
-        <p className="leading-8 text-slate-600">
-          Untuk perjalanan yang akan berangkat dalam
-          waktu dekat, cantumkan kata
-          <strong className="font-semibold text-slate-950">
-            {" URGENT "}
-          </strong>
-          dan kode booking pada awal pesan atau subjek
-          email.
-        </p>
-
-        <p className="leading-8 text-slate-600">
-          Apabila Anda sudah berada di pelabuhan,
-          ikuti juga arahan petugas pelabuhan dan
-          operator fast boat yang tercantum pada
-          konfirmasi perjalanan atau e-ticket.
-        </p>
-
-        <p className="leading-8 text-slate-600">
-          Nusa Gili Boat bukan layanan darurat. Dalam
-          kondisi yang mengancam keselamatan, segera
-          hubungi petugas pelabuhan, operator kapal,
-          atau layanan darurat setempat.
+        <p className="mt-3 leading-7 text-amber-900">
+          Jangan pernah mengirim PIN, OTP, CVV, kata
+          sandi perbankan, nomor kartu lengkap, atau
+          kredensial finansial rahasia melalui WhatsApp,
+          email, maupun formulir kontak. Informasi QRIS
+          dan payment link PayPal harus diberikan melalui
+          saluran resmi Nusa Gili Boat.
         </p>
       </section>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Periksa booking Anda
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-xl font-black text-slate-950">
+          Informasi yang dapat membantu
         </h2>
 
-        <p className="leading-8 text-slate-600">
-          Detail booking dapat diperiksa kembali
-          menggunakan kode booking dan alamat email
-          yang digunakan saat pemesanan.
+        <p className="mt-3 leading-7 text-slate-600">
+          Pelajari jawaban dan kebijakan berikut sebelum
+          menghubungi layanan pelanggan. Halaman tersebut
+          menjelaskan proses booking, pembayaran,
+          pembatalan, refund, dan pengelolaan data pribadi.
         </p>
 
-        <Link
-          href="/"
-          className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-        >
-          Periksa booking
-        </Link>
-      </section>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/id/faq"
+            className="rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-cyan-800"
+          >
+            Pertanyaan yang Sering Diajukan
+          </Link>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Kebijakan layanan
-        </h2>
-
-        <p className="leading-8 text-slate-600">
-          Sebelum mengajukan perubahan, pembatalan,
-          refund, atau permintaan terkait data pribadi,
-          silakan membaca kebijakan yang relevan.
-        </p>
-
-        <div className="flex flex-wrap gap-3">
           <Link
             href="/id/terms-and-conditions"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
             Syarat dan Ketentuan
           </Link>
 
           <Link
             href="/id/refund-and-cancellation-policy"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
-            Refund dan Pembatalan
+            Kebijakan Refund
           </Link>
 
           <Link
             href="/id/privacy-policy"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
             Kebijakan Privasi
           </Link>
         </div>
       </section>
-
-      <section className="rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
-          Informasi kontak resmi
-        </p>
-
-        <h2 className="mt-3 text-2xl font-bold tracking-tight">
-          Nusa Gili Boat
-        </h2>
-
-        <dl className="mt-6 grid gap-5 text-slate-300 sm:grid-cols-2">
-          <div>
-            <dt className="font-semibold text-white">
-              Email
-            </dt>
-
-            <dd className="mt-1">
-              <a
-                href="mailto:nusagiliboat@gmail.com"
-                className="transition hover:text-cyan-300"
-              >
-                nusagiliboat@gmail.com
-              </a>
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              WhatsApp
-            </dt>
-
-            <dd className="mt-1">
-              <a
-                href="https://wa.me/6282180126117"
-                target="_blank"
-                rel="noreferrer"
-                className="transition hover:text-cyan-300"
-              >
-                +62 821 8012 6117
-              </a>
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              Website
-            </dt>
-
-            <dd className="mt-1">
-              www.nusagiliboat.com
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              Jam operasional
-            </dt>
-
-            <dd className="mt-1">
-              Setiap hari, 08.00–20.00 WITA
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="rounded-3xl border border-slate-200 p-6 sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Lokasi Bisnis dan Wilayah Layanan
-        </p>
-
-        <div className="mt-5 grid gap-6 md:grid-cols-2">
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">
-              Operasional bisnis dan layanan pelanggan
-            </h2>
-
-            <p className="mt-3 text-lg font-semibold text-slate-700">
-              Jakarta, Indonesia
-            </p>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Administrasi bisnis dan layanan pelanggan
-              dikelola secara online dari Jakarta
-              melalui WhatsApp dan email.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">
-              Wilayah layanan fast boat
-            </h2>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Bali, Nusa Penida, Nusa Lembongan,
-              Nusa Ceningan, Kepulauan Gili, dan
-              Lombok.
-            </p>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Layanan transportasi dijalankan oleh
-              operator fast boat yang dipilih dalam
-              booking pelanggan.
-            </p>
-          </div>
-        </div>
-      </section>
-
     </PublicInfoPage>
   )
 }

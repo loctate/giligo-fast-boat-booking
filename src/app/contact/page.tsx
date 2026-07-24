@@ -5,412 +5,261 @@ import type {
 import Link from "next/link"
 
 import PublicInfoPage from "@/components/PublicInfoPage"
-
 import { createPublicPageMetadata } from "@/lib/publicPageMetadata"
 
 export const metadata: Metadata = createPublicPageMetadata({
   locale: "en",
   path: "/contact",
   title: "Contact Us | Nusa Gili Boat",
-  description: "Contact the Nusa Gili Boat team for help with fast boat bookings, schedules, travel changes, payments, cancellations, refunds, and e-tickets.",
+  description: "Contact Nusa Gili Boat for fast boat booking assistance, schedules, passenger details, manual QRIS payments, PayPal card payment links, confirmation, changes, and cancellations.",
 })
 
-const supportTopics = [
-  {
-    title: "Fast boat ticket bookings",
-    description:
-      "Assistance with finding journeys, selecting an operator, making one-way or round-trip bookings, and checking seat availability.",
-  },
-  {
-    title: "Schedule and route information",
-    description:
-      "Information about travel schedules, routes, departure ports, destinations, operators, and vessels.",
-  },
-  {
-    title: "Booking changes",
-    description:
-      "Requests to change passenger names, travel dates, schedules, routes, or booking details, subject to operator terms.",
-  },
-  {
-    title: "Cancellations and refunds",
-    description:
-      "Assistance with booking cancellations, refund eligibility, supporting documents, and refund status.",
-  },
-  {
-    title: "Payments",
-    description:
-      "Assistance with pending payments, failed transactions, duplicate payments, or payment statuses that have not been updated.",
-  },
-  {
-    title: "Check-in and travel",
-    description:
-      "Information about check-in locations, arrival times, travel documents, e-tickets, and pre-departure requirements.",
-  },
-]
+const businessEmail =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ||
+  "nusagiliboat@gmail.com"
 
-const requiredInformation = [
-  "Full name of the person who made the booking.",
-  "Booking code or Booking ID, if available.",
-  "Email address used when making the booking.",
-  "A telephone or WhatsApp number where you can be reached.",
-  "Travel date and route.",
-  "Operator or vessel name, if available.",
-  "A brief explanation of your question or issue.",
-  "Proof of payment or supporting documents, where relevant.",
-]
+const businessWhatsapp = String(
+  process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ??
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+    process.env.NEXT_PUBLIC_WHATSAPP ??
+    "6282180126117"
+).replace(/\D/g, "")
+
+const businessWhatsappUrl =
+  `https://wa.me/${businessWhatsapp}`
+
+function formatWhatsappNumber(
+  value: string
+): string {
+  if (
+    value.startsWith("62") &&
+    value.length >= 12
+  ) {
+    const localNumber = value.slice(2)
+
+    return [
+      "+62",
+      localNumber.slice(0, 3),
+      localNumber.slice(3, 7),
+      localNumber.slice(7),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  }
+
+  return value ? `+${value}` : "Not configured"
+}
 
 export default function ContactPage() {
   return (
     <PublicInfoPage
       locale="en"
       eyebrow="Customer Support"
-      title="We are here to help with your journey"
-      description="Contact the Nusa Gili Boat team with questions about ticket bookings, departure schedules, travel changes, payments, cancellations, refunds, e-tickets, and other travel information."
+      title="Contact Us"
+      description="Contact Nusa Gili Boat for assistance with fast boat searches, bookings, passenger information, manual payments, confirmation, schedule updates, changes, cancellations, and refunds."
+      lastUpdated="July 24, 2026"
     >
+      <section className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
+        <h2 className="text-xl font-black text-cyan-950">
+          Official Nusa Gili Boat support
+        </h2>
+
+        <p className="mt-3 leading-7 text-cyan-900">
+          For an existing reservation, include your
+          booking code, passenger name, route, and travel
+          date so our admin can review the request more
+          efficiently.
+        </p>
+      </section>
+
       <section className="grid gap-5 md:grid-cols-2">
-        <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Email
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-700">
+            Business email
           </p>
 
-          <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Send us your enquiry by email
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Email support
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use the official Nusa Gili Boat email
-            address for general enquiries, bookings,
-            payments, travel changes, cancellations,
-            refunds, and personal data protection
-            requests.
+            Use email for general enquiries, booking
+            documents, detailed requests, and matters that
+            do not require an immediate response.
           </p>
 
           <a
-            href="mailto:nusagiliboat@gmail.com"
-            className="mt-5 inline-flex break-all rounded-full bg-sky-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-sky-800"
+            href={`mailto:${businessEmail}`}
+            className="mt-5 inline-flex break-all font-bold text-cyan-700 transition hover:text-cyan-900"
           >
-            nusagiliboat@gmail.com
+            {businessEmail}
           </a>
         </article>
 
-        <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
             WhatsApp
           </p>
 
-          <h2 className="mt-3 text-xl font-bold text-slate-950">
-            Contact customer support
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Booking and payment assistance
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use WhatsApp for booking assistance,
-            departure information, schedule changes,
-            or journeys taking place soon.
+            Use WhatsApp for booking assistance, QRIS
+            payment instructions, PayPal card payment-link
+            requests, and time-sensitive travel questions.
           </p>
 
           <a
-            href="https://wa.me/6282180126117"
+            href={businessWhatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-5 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+            className="mt-5 inline-flex font-bold text-emerald-700 transition hover:text-emerald-900"
           >
-            +62 821 8012 6117
+            {formatWhatsappNumber(businessWhatsapp)}
           </a>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-700">
+            Operating location
+          </p>
+
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Jakarta, Indonesia
+          </h2>
+
+          <address className="mt-3 not-italic leading-7 text-slate-600">
+            Tomang, Grogol Petamburan
+            <br />
+            Jakarta Barat, DKI Jakarta
+            <br />
+            Indonesia
+          </address>
+
+          <p className="mt-4 text-sm leading-6 text-slate-500">
+            Nusa Gili Boat is an online booking service.
+            This operating location is not a public
+            walk-in ticket counter or physical retail
+            store.
+          </p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-violet-700">
+            Customer-service hours
+          </p>
+
+          <h2 className="mt-3 text-xl font-black text-slate-950">
+            Every day
+          </h2>
+
+          <p className="mt-3 text-lg font-bold text-slate-800">
+            08:00–20:00 WIB
+          </p>
+
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Messages received outside operating hours may
+            be answered on the following service period.
+            Urgent operational updates remain subject to
+            information received from the fast boat
+            operator.
+          </p>
         </article>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 p-6 sm:p-8">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Operating hours
-            </p>
-
-            <h2 className="mt-3 text-2xl font-bold text-slate-950">
-              Monday–Sunday
-            </h2>
-
-            <p className="mt-3 text-3xl font-black text-slate-950">
-              08:00–20:00 WITA
-            </p>
-
-            <p className="mt-3 text-sm leading-7 text-slate-500">
-              WITA is Central Indonesia Time, or UTC+8.
-            </p>
-          </div>
-
-          <div className="space-y-3 leading-7 text-slate-600">
-            <p>
-              We aim to respond as quickly as possible
-              during our operating hours.
-            </p>
-
-            <p>
-              Messages received outside operating hours
-              will be reviewed during the next service
-              period.
-            </p>
-
-            <p>
-              Response times may vary depending on the
-              number of requests, urgency, and whether
-              confirmation from an operator is required.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-5">
+      <section className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-            Support Services
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-            How we can help
+          <h2 className="text-xl font-black text-slate-950">
+            Information to include when contacting us
           </h2>
+
+          <p className="mt-3 leading-7 text-slate-600">
+            Providing complete information helps the admin
+            locate and review your booking.
+          </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {supportTopics.map((topic) => (
-            <article
-              key={topic.title}
-              className="rounded-2xl border border-slate-200 p-5"
+        <ul className="grid gap-3 text-sm leading-6 text-slate-700 sm:grid-cols-2">
+          {[
+            "Booking code, when already available.",
+            "Customer and passenger name.",
+            "Customer email and WhatsApp number.",
+            "Departure point and destination.",
+            "Travel date and departure schedule.",
+            "Selected payment method or payment status.",
+            "Clear description of the assistance required.",
+            "Payment proof only when requested by the admin.",
+          ].map((item) => (
+            <li
+              key={item}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3"
             >
-              <h3 className="font-semibold text-slate-950">
-                {topic.title}
-              </h3>
-
-              <p className="mt-3 leading-7 text-slate-600">
-                {topic.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Information to include
-        </h2>
-
-        <p className="leading-8 text-slate-600">
-          To help us review your request quickly and
-          accurately, please provide the following
-          relevant information:
-        </p>
-
-        <ul className="list-disc space-y-3 pl-6 leading-7 text-slate-600">
-          {requiredInformation.map((item) => (
-            <li key={item}>
               {item}
             </li>
           ))}
         </ul>
-
-        <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <h3 className="font-semibold text-amber-950">
-            Protect your payment information
-          </h3>
-
-          <p className="mt-2 leading-7 text-amber-900">
-            Do not send your PIN, banking password,
-            complete card number, CVV, or OTP code by
-            email, WhatsApp, or any other customer
-            support channel.
-          </p>
-        </aside>
       </section>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Travel taking place soon
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+        <h2 className="text-xl font-black text-amber-950">
+          Payment and account security
         </h2>
 
-        <p className="leading-8 text-slate-600">
-          For a journey departing soon, include the word
-          <strong className="font-semibold text-slate-950">
-            {" URGENT "}
-          </strong>
-          and your booking code at the beginning of your
-          message or email subject.
-        </p>
-
-        <p className="leading-8 text-slate-600">
-          When you are already at the port, also follow
-          the instructions provided by port staff and
-          the fast boat operator listed in your travel
-          confirmation or e-ticket.
-        </p>
-
-        <p className="leading-8 text-slate-600">
-          Nusa Gili Boat is not an emergency service.
-          In a situation that threatens your safety,
-          immediately contact port staff, the vessel
-          operator, or local emergency services.
+        <p className="mt-3 leading-7 text-amber-900">
+          Never send your PIN, OTP, CVV, banking
+          password, complete card number, or other
+          confidential financial credentials through
+          WhatsApp, email, or a contact form. QRIS
+          information and PayPal payment links must be
+          provided through the official Nusa Gili Boat
+          support channel.
         </p>
       </section>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Check your booking
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-xl font-black text-slate-950">
+          Helpful information
         </h2>
 
-        <p className="leading-8 text-slate-600">
-          You can retrieve your booking details using
-          the booking code and email address provided
-          when the booking was made.
+        <p className="mt-3 leading-7 text-slate-600">
+          Review the answers and policies below before
+          contacting support. They explain the booking,
+          payment, cancellation, refund, and personal-data
+          procedures.
         </p>
 
-        <Link
-          href="/"
-          className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-        >
-          Check booking
-        </Link>
-      </section>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/faq"
+            className="rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-cyan-800"
+          >
+            Frequently Asked Questions
+          </Link>
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-          Service policies
-        </h2>
-
-        <p className="leading-8 text-slate-600">
-          Before requesting a change, cancellation,
-          refund, or action relating to personal data,
-          please read the relevant policy.
-        </p>
-
-        <div className="flex flex-wrap gap-3">
           <Link
             href="/terms-and-conditions"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
             Terms and Conditions
           </Link>
 
           <Link
             href="/refund-and-cancellation-policy"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
-            Refunds and Cancellations
+            Refund Policy
           </Link>
 
           <Link
             href="/privacy-policy"
-            className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
           >
             Privacy Policy
           </Link>
         </div>
       </section>
-
-      <section className="rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
-          Official contact information
-        </p>
-
-        <h2 className="mt-3 text-2xl font-bold tracking-tight">
-          Nusa Gili Boat
-        </h2>
-
-        <dl className="mt-6 grid gap-5 text-slate-300 sm:grid-cols-2">
-          <div>
-            <dt className="font-semibold text-white">
-              Email
-            </dt>
-
-            <dd className="mt-1">
-              <a
-                href="mailto:nusagiliboat@gmail.com"
-                className="transition hover:text-cyan-300"
-              >
-                nusagiliboat@gmail.com
-              </a>
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              WhatsApp
-            </dt>
-
-            <dd className="mt-1">
-              <a
-                href="https://wa.me/6282180126117"
-                target="_blank"
-                rel="noreferrer"
-                className="transition hover:text-cyan-300"
-              >
-                +62 821 8012 6117
-              </a>
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              Website
-            </dt>
-
-            <dd className="mt-1">
-              www.nusagiliboat.com
-            </dd>
-          </div>
-
-          <div>
-            <dt className="font-semibold text-white">
-              Operating hours
-            </dt>
-
-            <dd className="mt-1">
-              Daily, 08:00–20:00 WITA
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="rounded-3xl border border-slate-200 p-6 sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Business Location and Service Area
-        </p>
-
-        <div className="mt-5 grid gap-6 md:grid-cols-2">
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">
-              Business and customer support operations
-            </h2>
-
-            <p className="mt-3 text-lg font-semibold text-slate-700">
-              Jakarta, Indonesia
-            </p>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Business administration and customer
-              support are managed online from Jakarta
-              through WhatsApp and email.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">
-              Fast boat service area
-            </h2>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Bali, Nusa Penida, Nusa Lembongan,
-              Nusa Ceningan, the Gili Islands, and
-              Lombok.
-            </p>
-
-            <p className="mt-3 leading-7 text-slate-600">
-              Transportation services are provided by
-              the fast boat operator selected in the
-              customer&apos;s booking.
-            </p>
-          </div>
-        </div>
-      </section>
-
     </PublicInfoPage>
   )
 }

@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-
 type PaymentActionsProps = {
   bookingCode: string
   bookingStatus: string
@@ -14,38 +12,103 @@ type PaymentActionsProps = {
   totalLabel: string
 }
 
-type SnapTokenApiResponse = {
-  success?: boolean
-  redirectUrl?: string
-  error?: string
-}
+type ManualPaymentMethod =
+  | "qris"
+  | "paypal-card"
 
-const FINAL_PAYMENT_STATUSES =
-  new Set([
-    "paid",
-    "settlement",
-    "settled",
-    "capture",
-    "captured",
-    "success",
-    "completed",
-    "refunded",
-    "chargeback",
-  ])
+const FINAL_PAYMENT_STATUSES = new Set([
+  "paid",
+  "settlement",
+  "settled",
+  "capture",
+  "captured",
+  "success",
+  "completed",
+  "refunded",
+  "chargeback",
+])
 
-const BLOCKED_BOOKING_STATUSES =
-  new Set([
-    "cancelled",
-    "canceled",
-    "expired",
-  ])
+const BLOCKED_BOOKING_STATUSES = new Set([
+  "cancelled",
+  "canceled",
+  "expired",
+])
 
 function normalizeStatus(
   value: string
 ): string {
-  return value
-    .trim()
-    .toLowerCase()
+  return value.trim().toLowerCase()
+}
+
+function getSupportWhatsapp(): string {
+  return String(
+    process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ??
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+      process.env.NEXT_PUBLIC_WHATSAPP ??
+      ""
+  ).replace(/\D/g, "")
+}
+
+function getPaymentRequestMessage({
+  method,
+  bookingCode,
+  customerFullName,
+  customerEmail,
+  routeFrom,
+  routeTo,
+  departureLabel,
+  paymentStatus,
+  totalLabel,
+}: {
+  method: ManualPaymentMethod
+  bookingCode: string
+  customerFullName: string
+  customerEmail: string
+  routeFrom: string
+  routeTo: string
+  departureLabel: string
+  paymentStatus: string
+  totalLabel: string
+}): string {
+  const methodLines =
+    method === "qris"
+      ? [
+          "Selected payment method: QRIS",
+          "Please send the official QRIS payment instructions for this booking.",
+        ]
+      : [
+          "Selected payment method: Credit or Debit Card via PayPal",
+          "Please send a secure PayPal payment link for this booking.",
+        ]
+
+  return [
+    "Hello Nusa Gili Boat Support,",
+    "",
+    ...methodLines,
+    "",
+    `Booking code: ${bookingCode}`,
+    `Passenger: ${customerFullName}`,
+    `Email: ${customerEmail}`,
+    `Route: ${routeFrom} to ${routeTo}`,
+    `Departure: ${departureLabel}`,
+    `Payment status: ${paymentStatus}`,
+    `Total: ${totalLabel}`,
+    "",
+    "I understand that my booking will be confirmed after the payment has been verified by the admin.",
+  ].join("\n")
+}
+
+function createWhatsappUrl(
+  supportWhatsapp: string,
+  message: string
+): string {
+  if (!supportWhatsapp) {
+    return ""
+  }
+
+  return `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(
+    message
+  )}`
 }
 
 export default function PaymentActions({
@@ -59,189 +122,144 @@ export default function PaymentActions({
   departureLabel,
   totalLabel,
 }: PaymentActionsProps) {
-  const [
-    isStartingPayment,
-    setIsStartingPayment,
-  ] = useState(false)
-
-  const [
-    paymentError,
-    setPaymentError,
-  ] = useState("")
-
   const paymentIsAvailable =
     !BLOCKED_BOOKING_STATUSES.has(
-      normalizeStatus(
-        bookingStatus
-      )
+      normalizeStatus(bookingStatus)
     ) &&
     !FINAL_PAYMENT_STATUSES.has(
-      normalizeStatus(
-        paymentStatus
-      )
+      normalizeStatus(paymentStatus)
     )
 
   const supportWhatsapp =
-    String(
-      process.env
-        .NEXT_PUBLIC_SUPPORT_WHATSAPP ??
-        ""
-    ).replace(/\D/g, "")
+    getSupportWhatsapp()
 
-  const manualPaymentLines = [
-    "Hello Nusa Gili Boat Support,",
-    "",
-    "I need assistance with manual payment.",
-    `Booking code: ${bookingCode}`,
-    `Passenger: ${customerFullName}`,
-    `Email: ${customerEmail}`,
-    `Route: ${routeFrom} to ${routeTo}`,
-    `Departure: ${departureLabel}`,
-    `Payment status: ${paymentStatus}`,
-    `Total: ${totalLabel}`,
-  ]
+  const qrisWhatsappUrl =
+    createWhatsappUrl(
+      supportWhatsapp,
+      getPaymentRequestMessage({
+        method: "qris",
+        bookingCode,
+        customerFullName,
+        customerEmail,
+        routeFrom,
+        routeTo,
+        departureLabel,
+        paymentStatus,
+        totalLabel,
+      })
+    )
 
-  const manualPaymentUrl =
-    supportWhatsapp
-      ? `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(
-          manualPaymentLines.join("\n")
-        )}`
-      : ""
-
-  async function handleMidtransPayment() {
-    if (isStartingPayment) {
-      return
-    }
-
-    setIsStartingPayment(true)
-    setPaymentError("")
-
-    try {
-      const response =
-        await fetch(
-          "/api/payments/midtrans/snap-token",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Accept:
-                "application/json",
-            },
-
-            body: JSON.stringify({
-              bookingCode,
-              email:
-                customerEmail,
-            }),
-          }
-        )
-
-      const responseText =
-        await response.text()
-
-      let result:
-        SnapTokenApiResponse
-
-      try {
-        result = JSON.parse(
-          responseText
-        ) as SnapTokenApiResponse
-      } catch {
-        throw new Error(
-          "The payment service returned an invalid response."
-        )
-      }
-
-      if (
-        !response.ok ||
-        !result.success ||
-        !result.redirectUrl
-      ) {
-        throw new Error(
-          result.error ||
-            "The payment page could not be opened."
-        )
-      }
-
-      window.location.assign(
-        result.redirectUrl
-      )
-    } catch (error) {
-      console.error(
-        "Midtrans payment error:",
-        error
-      )
-
-      setPaymentError(
-        error instanceof Error
-          ? error.message
-          : "The payment service is temporarily unavailable."
-      )
-
-      setIsStartingPayment(false)
-    }
-  }
+  const paypalWhatsappUrl =
+    createWhatsappUrl(
+      supportWhatsapp,
+      getPaymentRequestMessage({
+        method: "paypal-card",
+        bookingCode,
+        customerFullName,
+        customerEmail,
+        routeFrom,
+        routeTo,
+        departureLabel,
+        paymentStatus,
+        totalLabel,
+      })
+    )
 
   if (!paymentIsAvailable) {
     return (
-      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-600">
-        Online payment is no longer
-        available for this booking.
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-semibold text-slate-700">
+          Payment is no longer available for this booking.
+        </p>
+
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          The booking may already be paid, completed,
+          cancelled, or expired.
+        </p>
+      </div>
+    )
+  }
+
+  if (!supportWhatsapp) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <p className="text-sm font-bold text-amber-900">
+          Payment assistance is temporarily unavailable.
+        </p>
+
+        <p className="mt-1 text-sm leading-6 text-amber-800">
+          Please contact Nusa Gili Boat through the Contact
+          Us page for further assistance.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="mt-5 space-y-3">
-      <button
-        type="button"
-        onClick={
-          handleMidtransPayment
-        }
-        disabled={
-          isStartingPayment
-        }
-        className="w-full rounded-xl bg-cyan-600 px-5 py-3.5 font-black text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-      >
-        {isStartingPayment
-          ? "Opening Secure Payment..."
-          : "Pay Securely with Midtrans"}
-      </button>
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+        <p className="text-sm font-black text-sky-950">
+          Select your preferred payment method
+        </p>
 
-      {manualPaymentUrl ? (
-        <a
-          href={
-            manualPaymentUrl
-          }
-          target="_blank"
-          rel="noreferrer"
-          className="block w-full rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3.5 text-center font-black text-emerald-700 transition hover:bg-emerald-100"
-        >
-          Manual Payment Assistance
-        </a>
-      ) : (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm font-bold text-amber-700">
-          Manual payment support is
-          not configured.
+        <p className="mt-1 text-sm leading-6 text-sky-800">
+          Payment instructions will be sent manually by
+          Nusa Gili Boat support through WhatsApp.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-base font-black text-slate-950">
+            QRIS
+          </p>
+
+          <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">
+            Request the official QRIS code from our admin.
+            Your booking will be confirmed after the
+            payment has been verified.
+          </p>
+
+          <a
+            href={qrisWhatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+          >
+            Pay with QRIS
+          </a>
         </div>
-      )}
 
-      <p className="text-center text-xs leading-5 text-slate-500">
-        Online payments are processed
-        securely by Midtrans. Manual
-        assistance remains available
-        when online payment cannot be
-        completed.
-      </p>
+        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-base font-black text-slate-950">
+            Credit or Debit Card
+          </p>
 
-      {paymentError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-          {paymentError}
+          <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">
+            Request a secure PayPal payment link from our
+            admin. The payment link will be sent through
+            WhatsApp.
+          </p>
+
+          <a
+            href={paypalWhatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-sky-600 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-sky-700"
+          >
+            Pay by Credit Card via PayPal
+          </a>
         </div>
-      )}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <p className="text-xs leading-5 text-slate-600">
+          Payment confirmation is performed manually by
+          the admin. Never send your PIN, OTP, CVV,
+          banking password, or complete card details
+          through WhatsApp.
+        </p>
+      </div>
     </div>
   )
 }

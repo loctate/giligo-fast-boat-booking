@@ -66,7 +66,7 @@ export default function RefundAndCancellationPolicyPage() {
       eyebrow="Informasi Booking"
       title="Kebijakan Refund dan Pembatalan"
       description="Kebijakan ini menjelaskan ketentuan pembatalan, perubahan perjalanan, no-show, pembatalan oleh operator, dan pengembalian dana untuk booking yang dibuat melalui Nusa Gili Boat."
-      lastUpdated="30 Juni 2026"
+      lastUpdated="24 Juli 2026"
     >
       <PolicySection
         number={1}
@@ -630,7 +630,7 @@ export default function RefundAndCancellationPolicyPage() {
             "Biaya administrasi atau layanan yang telah diinformasikan.",
             "Premi asuransi yang telah aktif.",
             "Biaya layanan pihak ketiga yang telah digunakan atau tidak dapat dibatalkan.",
-            "Biaya payment gateway apabila penyedia pembayaran menetapkannya sebagai tidak dapat dikembalikan.",
+            "Biaya pemrosesan pembayaran pihak ketiga yang benar-benar telah ditagihkan dan dinyatakan tidak dapat dikembalikan oleh PayPal, penerbit kartu, bank, atau layanan pembayaran terkait.",
           ]}
         />
 
@@ -675,24 +675,31 @@ export default function RefundAndCancellationPolicyPage() {
         title="Metode pengembalian dana"
       >
         <p className="leading-8 text-slate-600">
-          Refund akan dikembalikan melalui metode
-          pembayaran semula apabila metode tersebut
-          mendukung proses refund.
+          Apabila didukung, refund yang telah disetujui
+          pada umumnya akan dikembalikan melalui metode
+          pembayaran semula yang digunakan untuk
+          booking.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Bergantung pada metode pembayaran, refund
-          dapat diproses melalui payment gateway,
-          pengembalian limit kartu, dompet elektronik,
-          rekening bank, atau metode lain yang
-          disepakati.
+          Untuk pembayaran QRIS, refund dapat memerlukan
+          rekening bank terverifikasi atau tujuan
+          transfer lain yang disepakati dengan
+          pelanggan.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          Untuk pembayaran kartu melalui payment link
+          PayPal, refund dapat diproses melalui PayPal,
+          penerbit kartu, atau metode lain yang
+          disepakati sesuai prosedur terkait.
         </p>
 
         <p className="leading-8 text-slate-600">
           Apabila refund ke metode semula tidak tersedia,
-          kami dapat meminta data rekening atau informasi
-          lain yang diperlukan setelah melakukan
-          verifikasi identitas pelanggan.
+          kami dapat meminta data rekening atau
+          informasi lain yang diperlukan setelah
+          melakukan verifikasi identitas pelanggan.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -718,23 +725,25 @@ export default function RefundAndCancellationPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Setelah refund disetujui dan diajukan ke
-          penyedia pembayaran, dana umumnya memerlukan
-          sekitar 7 sampai 30 hari kerja untuk diterima.
+          Setelah refund disetujui dan diajukan melalui
+          metode pengembalian dana yang berlaku, dana
+          umumnya memerlukan sekitar 7 sampai 30 hari
+          kerja untuk diterima.
         </p>
 
         <p className="leading-8 text-slate-600">
           Waktu tersebut merupakan perkiraan dan dapat
-          berbeda bergantung pada bank, payment gateway,
-          penerbit kartu, dompet elektronik, jaringan
-          pembayaran, hari libur, serta proses konversi
-          mata uang.
+          berbeda bergantung pada bank penerima,
+          penerbit kartu, PayPal, jaringan pembayaran,
+          hari libur, konversi mata uang, dan verifikasi
+          tambahan yang diperlukan untuk refund.
         </p>
 
         <p className="leading-8 text-slate-600">
           Kami akan memberikan informasi status refund
-          berdasarkan data yang tersedia dari operator
-          dan penyedia pembayaran.
+          berdasarkan tanggapan operator, pemeriksaan
+          admin, serta catatan pembayaran atau
+          perbankan yang tersedia.
         </p>
       </PolicySection>
 
@@ -808,9 +817,9 @@ export default function RefundAndCancellationPolicyPage() {
 
         <p className="leading-8 text-slate-600">
           Pelanggan juga bertanggung jawab memastikan
-          rekening, kartu, dompet elektronik, atau
-          metode pembayaran yang digunakan berada
-          dalam kewenangannya.
+          rekening bank, kartu, akun PayPal, atau metode
+          pembayaran lain yang digunakan berada dalam
+          kewenangannya.
         </p>
       </PolicySection>
 
@@ -961,11 +970,25 @@ export default function RefundAndCancellationPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
+                Lokasi operasional
+              </dt>
+
+              <dd className="mt-1">
+                Tomang, Grogol Petamburan
+                <br />
+                Jakarta Barat, DKI Jakarta
+                <br />
+                Indonesia
+              </dd>
+            </div>
+
+            <div>
+              <dt className="font-semibold text-slate-950">
                 Jam layanan
               </dt>
 
               <dd className="mt-1">
-                Setiap hari, pukul 08.00–20.00 WITA
+                Setiap hari, pukul 08.00–20.00 WIB
               </dd>
             </div>
           </dl>

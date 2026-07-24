@@ -66,7 +66,7 @@ export default function TermsAndConditionsPage() {
       eyebrow="Informasi Hukum"
       title="Syarat dan Ketentuan"
       description="Syarat dan Ketentuan ini mengatur penggunaan situs, pencarian perjalanan, pemesanan tiket, pembayaran, perubahan, pembatalan, dan layanan fast boat yang dipesan melalui Nusa Gili Boat."
-      lastUpdated="30 Juni 2026"
+      lastUpdated="24 Juli 2026"
     >
       <PolicySection
         number={1}
@@ -290,18 +290,20 @@ export default function TermsAndConditionsPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pembayaran online dapat diproses oleh penyedia
-          payment gateway, bank, virtual account,
-          dompet elektronik, QRIS, kartu pembayaran,
-          atau penyedia pembayaran lainnya.
+          Metode pembayaran manual yang tersedia saat ini
+          adalah QRIS serta kartu kredit atau debit
+          melalui payment link PayPal. Pelanggan memilih
+          metode pembayaran pada halaman booking dan
+          mengirimkan permintaan yang telah disiapkan
+          kepada admin Nusa Gili Boat melalui WhatsApp.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Status resmi yang diterima dari penyedia
-          pembayaran akan menjadi dasar penentuan
-          apakah transaksi berhasil, tertunda,
-          kedaluwarsa, dibatalkan, ditolak, atau telah
-          dikembalikan.
+          Pembayaran tetap berstatus Pending sampai admin
+          Nusa Gili Boat menerima dan memverifikasi
+          pembayaran. Status pembayaran dan status
+          booking akan diperbarui setelah verifikasi
+          manual.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -323,10 +325,10 @@ export default function TermsAndConditionsPage() {
         title="Konfirmasi booking dan e-ticket"
       >
         <p className="leading-8 text-slate-600">
-          Booking dinyatakan terkonfirmasi setelah
-          pembayaran berhasil diterima dan status
-          booking telah diperbarui menjadi dikonfirmasi
-          oleh sistem atau tim Nusa Gili Boat.
+          Booking hanya dinyatakan terkonfirmasi setelah
+          pembayaran diterima, diverifikasi secara manual
+          oleh admin Nusa Gili Boat, dan status booking
+          diperbarui menjadi Confirmed.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -881,10 +883,11 @@ export default function TermsAndConditionsPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Waktu penyelesaian refund dapat berbeda
-          bergantung pada verifikasi operator, payment
-          gateway, bank, dompet elektronik, dan metode
-          pembayaran.
+          Waktu penyelesaian refund dapat berbeda bergantung
+          pada verifikasi operator, pemeriksaan admin,
+          metode pembayaran semula, bank penerima,
+          penerbit kartu, dan proses PayPal apabila
+          berlaku.
         </p>
 
         <Link
@@ -976,7 +979,11 @@ export default function TermsAndConditionsPage() {
           Pertanyaan mengenai Syarat dan Ketentuan,
           booking, pembayaran, e-ticket, perubahan
           perjalanan, atau keluhan dapat disampaikan
-          melalui halaman kontak.
+          melalui halaman kontak. Lokasi operasional
+          publik kami berada di Tomang, Grogol
+          Petamburan, Jakarta Barat, DKI Jakarta,
+          Indonesia. Lokasi tersebut bukan loket tiket
+          yang menerima kunjungan pelanggan.
         </p>
 
         <Link

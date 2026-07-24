@@ -30,6 +30,11 @@ const navigationItems = [
     id: "Hubungi Kami",
   },
   {
+    href: "/faq",
+    en: "FAQ",
+    id: "FAQ",
+  },
+  {
     href: "/terms-and-conditions",
     en: "Terms",
     id: "Syarat & Ketentuan",
@@ -55,7 +60,7 @@ const translations = {
     footerDescription:
       "Nusa Gili Boat helps travelers search for and book fast boat journeys between Bali, Lombok, the Gili Islands, and Nusa Penida more easily.",
     footerOperations:
-      "Business operations and customer support are managed from Jakarta, Indonesia.",
+      "Business operations and customer support are managed from Tomang, Grogol Petamburan, Jakarta Barat, DKI Jakarta, Indonesia.",
     copyright: "© 2026 Nusa Gili Boat. All rights reserved.",
     footerTagline:
       "Fast boat booking for Bali and the Gili Islands.",
@@ -68,7 +73,7 @@ const translations = {
     footerDescription:
       "Nusa Gili Boat membantu pelanggan mencari dan memesan perjalanan fast boat antara Bali, Lombok, Kepulauan Gili, dan Nusa Penida dengan lebih mudah dan terstruktur.",
     footerOperations:
-      "Operasional bisnis dan layanan pelanggan dikelola dari Jakarta, Indonesia.",
+      "Operasional bisnis dan layanan pelanggan dikelola dari Tomang, Grogol Petamburan, Jakarta Barat, DKI Jakarta, Indonesia.",
     copyright: "© 2026 Nusa Gili Boat. Seluruh hak dilindungi.",
     footerTagline:
       "Pemesanan fast boat untuk Bali dan Kepulauan Gili.",

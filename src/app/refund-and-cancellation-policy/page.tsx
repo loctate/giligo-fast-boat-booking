@@ -66,7 +66,7 @@ export default function RefundAndCancellationPolicyPage() {
       eyebrow="Booking Information"
       title="Refund and Cancellation Policy"
       description="This policy explains the terms that apply to cancellations, travel changes, no-shows, operator cancellations, and refunds for bookings made through Nusa Gili Boat."
-      lastUpdated="June 30, 2026"
+      lastUpdated="July 24, 2026"
     >
       <PolicySection
         number={1}
@@ -629,7 +629,7 @@ export default function RefundAndCancellationPolicyPage() {
             "Disclosed administrative or service charges.",
             "Insurance premiums for active coverage.",
             "Charges for third-party services that have been used or cannot be cancelled.",
-            "Payment gateway charges classified by the payment provider as non-refundable.",
+            "Third-party payment processing fees actually charged and classified as non-refundable by PayPal, a card issuer, a bank, or another applicable payment service.",
           ]}
         />
 
@@ -673,16 +673,23 @@ export default function RefundAndCancellationPolicyPage() {
         title="Refund method"
       >
         <p className="leading-8 text-slate-600">
-          A refund will be returned through the
-          original payment method where that method
-          supports refunds.
+          Where supported, an approved refund will
+          normally be returned through the original
+          payment method used for the booking.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Depending on the payment method, a refund may
-          be processed through the payment gateway, a
-          card limit reversal, electronic wallet, bank
-          account, or another agreed method.
+          For a QRIS payment, the refund may require a
+          verified bank account or another transfer
+          destination agreed with the customer.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          For a card payment completed through a PayPal
+          payment link, the refund may be processed
+          through PayPal, the card issuer, or another
+          agreed method, subject to the relevant
+          procedures.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -694,8 +701,8 @@ export default function RefundAndCancellationPolicyPage() {
 
         <p className="leading-8 text-slate-600">
           The account holder or recipient account name
-          may be required to match the customer or
-          payer name to help prevent fraud.
+          may be required to match the customer or payer
+          name to help prevent fraud.
         </p>
       </PolicySection>
 
@@ -716,24 +723,25 @@ export default function RefundAndCancellationPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          After a refund has been approved and
-          submitted to the payment provider, the funds
-          generally take approximately 7 to 30 business
-          days to be received.
+          After a refund has been approved and submitted
+          through the applicable refund method, the
+          funds generally take approximately 7 to 30
+          business days to be received.
         </p>
 
         <p className="leading-8 text-slate-600">
           This timeframe is an estimate and may vary
-          depending on the bank, payment gateway, card
-          issuer, electronic wallet, payment network,
-          public holidays, and currency conversion
-          process.
+          depending on the receiving bank, card issuer,
+          PayPal, payment network, public holidays,
+          currency conversion, and additional
+          verification required for the refund.
         </p>
 
         <p className="leading-8 text-slate-600">
           We will provide refund status information
-          based on data available from the operator and
-          payment provider.
+          based on the operator response, admin review,
+          and the payment or banking records available
+          to us.
         </p>
       </PolicySection>
 
@@ -808,10 +816,10 @@ export default function RefundAndCancellationPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          The customer is also responsible for
-          ensuring that the bank account, card,
-          electronic wallet, or other payment method
-          used is under their authority.
+          The customer is also responsible for ensuring
+          that the bank account, card, PayPal account,
+          or other payment method used is under their
+          authority.
         </p>
       </PolicySection>
 
@@ -961,11 +969,25 @@ export default function RefundAndCancellationPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
+                Operating location
+              </dt>
+
+              <dd className="mt-1">
+                Tomang, Grogol Petamburan
+                <br />
+                Jakarta Barat, DKI Jakarta
+                <br />
+                Indonesia
+              </dd>
+            </div>
+
+            <div>
+              <dt className="font-semibold text-slate-950">
                 Service hours
               </dt>
 
               <dd className="mt-1">
-                Daily, 08:00–20:00 WITA
+                Daily, 08:00–20:00 WIB
               </dd>
             </div>
           </dl>

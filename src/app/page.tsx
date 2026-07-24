@@ -522,6 +522,13 @@ export default function Home() {
               </a>
 
               <a
+                href="/faq"
+                className="transition hover:text-cyan-300"
+              >
+                Frequently Asked Questions
+              </a>
+
+              <a
                 href="/terms-and-conditions"
                 className="transition hover:text-cyan-300"
               >
@@ -569,8 +576,12 @@ export default function Home() {
                   Location
                 </p>
 
-                <p className="mt-1 font-semibold text-slate-200">
-                  Bali, Indonesia
+                <p className="mt-1 font-semibold leading-6 text-slate-200">
+                  Tomang, Grogol Petamburan
+                  <br />
+                  Jakarta Barat, DKI Jakarta
+                  <br />
+                  Indonesia
                 </p>
               </div>
 

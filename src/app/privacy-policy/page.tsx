@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
       eyebrow="Personal Data Protection"
       title="Privacy Policy"
       description="This Privacy Policy explains how Nusa Gili Boat obtains, collects, uses, stores, shares, and protects personal data when you use our website and booking services."
-      lastUpdated="June 30, 2026"
+      lastUpdated="July 24, 2026"
     >
       <PolicySection
         number={1}
@@ -249,7 +249,7 @@ export default function PrivacyPolicyPage() {
             "Directly from customers when they search for a journey, make a booking, or contact us.",
             "From a person making a booking on behalf of another passenger.",
             "From the fast boat operator responsible for the journey.",
-            "From a payment gateway, bank, or payment method provider.",
+            "From PayPal, a card issuer, a bank, a QRIS payment recipient, or another payment or refund service involved in a transaction.",
             "From technical systems, server logs, cookies, and security tools.",
             "From service providers that support our website and booking operations.",
           ]}
@@ -363,41 +363,48 @@ export default function PrivacyPolicyPage() {
         title="Payment processing"
       >
         <p className="leading-8 text-slate-600">
-          Online payments may be processed through
-          Midtrans or another payment provider
-          displayed on the payment page.
+          The current payment flow is handled manually.
+          Customers may request official QRIS payment
+          instructions or a PayPal payment link through
+          the Nusa Gili Boat WhatsApp support channel.
         </p>
 
         <p className="leading-8 text-slate-600">
-          A payment provider may collect and process
-          the data required to verify, authorize,
-          complete, cancel, or refund a transaction.
+          For a QRIS payment, Nusa Gili Boat may receive
+          payment proof, a transaction reference, payer
+          information, the payment amount, payment time,
+          and other information required to verify the
+          payment manually.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          For a card payment made through a PayPal
+          payment link, PayPal, the card issuer, and
+          related financial service providers may
+          collect and process the information required
+          to authorize, complete, cancel, dispute, or
+          refund the transaction.
         </p>
 
         <p className="leading-8 text-slate-600">
           Nusa Gili Boat may receive transaction
-          information such as the order ID,
+          information such as a reference number,
           transaction ID, payment method, payment
-          amount, transaction status, payment time,
-          and refund status.
+          amount, transaction status, payment time, and
+          refund status. Payment and booking
+          confirmation are reviewed manually by the
+          admin before the booking is marked Confirmed.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat does not intend to store
-          complete payment card numbers, CVV codes,
-          PINs, banking passwords, or OTP codes. That
-          sensitive information is processed through
-          the relevant payment provider&apos;s system.
+          Nusa Gili Boat does not ask customers to send
+          or intend to store complete card numbers, CVV
+          codes, PINs, banking passwords, or OTP codes
+          through WhatsApp, email, or a customer support
+          form. Card credentials entered on PayPal are
+          processed through PayPal and the relevant
+          financial service providers.
         </p>
-
-        <a
-          href="https://midtrans.com/id/pemberitahuan-privasi"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
-        >
-          Read the Midtrans Privacy Notice
-        </a>
       </PolicySection>
 
       <PolicySection
@@ -416,7 +423,7 @@ export default function PrivacyPolicyPage() {
             "Security, monitoring, and fraud prevention providers.",
             "Analytics and website performance measurement providers.",
             "Accounting, audit, tax, or professional service providers.",
-            "Banks, payment gateways, and payment service providers.",
+            "Banks, PayPal, card issuers, QRIS payment recipients, and other payment or refund service providers.",
             "Government agencies, regulators, courts, or law enforcement authorities where required.",
             "Other parties acting on the user's instructions or with the user's consent.",
           ]}
@@ -770,12 +777,23 @@ export default function PrivacyPolicyPage() {
       >
         <p className="leading-8 text-slate-600">
           Our systems may automatically check seat
-          availability, input validity, payment status,
-          and suspicious activity.
+          availability, input validity, booking status,
+          session activity, and indicators of suspicious
+          or abusive use.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Payment providers may also use automated
+          Under the current manual QRIS and PayPal-link
+          payment flow, Nusa Gili Boat does not mark a
+          booking Confirmed solely through an automated
+          payment decision. Payment evidence and the
+          applicable transaction status are reviewed by
+          the admin.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          PayPal, card issuers, banks, and other
+          financial service providers may use automated
           systems to assess risk, authorize
           transactions, and prevent fraud according to
           their own policies.
@@ -910,11 +928,25 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
+                Operating location
+              </dt>
+
+              <dd className="mt-1">
+                Tomang, Grogol Petamburan
+                <br />
+                Jakarta Barat, DKI Jakarta
+                <br />
+                Indonesia
+              </dd>
+            </div>
+
+            <div>
+              <dt className="font-semibold text-slate-950">
                 Service hours
               </dt>
 
               <dd className="mt-1">
-                Daily, 08:00–20:00 WITA
+                Daily, 08:00–20:00 WIB
               </dd>
             </div>
           </dl>

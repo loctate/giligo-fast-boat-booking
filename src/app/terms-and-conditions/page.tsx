@@ -66,7 +66,7 @@ export default function TermsAndConditionsPage() {
       eyebrow="Legal Information"
       title="Terms and Conditions"
       description="These Terms and Conditions govern the use of our website, trip searches, ticket bookings, payments, changes, cancellations, and fast boat services booked through Nusa Gili Boat."
-      lastUpdated="June 30, 2026"
+      lastUpdated="July 24, 2026"
     >
       <PolicySection
         number={1}
@@ -290,18 +290,19 @@ export default function TermsAndConditionsPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Online payments may be processed by a payment
-          gateway provider, bank, virtual account,
-          electronic wallet, QRIS, payment card
-          provider, or another payment service
-          provider.
+          The current manual payment options are QRIS and
+          credit or debit card payment through a PayPal
+          payment link. The customer selects a payment
+          method on the booking page and sends the
+          prepared request to the Nusa Gili Boat admin
+          through WhatsApp.
         </p>
 
         <p className="leading-8 text-slate-600">
-          The official status received from the payment
-          provider will be used to determine whether a
-          transaction is successful, pending, expired,
-          cancelled, rejected, or refunded.
+          Payment remains pending until the Nusa Gili Boat
+          admin receives and verifies the payment. The
+          payment status and booking status will be
+          updated after manual verification.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -323,10 +324,10 @@ export default function TermsAndConditionsPage() {
         title="Booking confirmation and e-tickets"
       >
         <p className="leading-8 text-slate-600">
-          A booking is confirmed after successful
-          payment has been received and the booking
-          status has been updated to confirmed by the
-          system or the Nusa Gili Boat team.
+          A booking is confirmed only after payment has been
+          received, manually verified by the Nusa Gili
+          Boat admin, and the booking status has been
+          updated to Confirmed.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -886,8 +887,10 @@ export default function TermsAndConditionsPage() {
 
         <p className="leading-8 text-slate-600">
           Refund processing times may vary depending on
-          operator verification, the payment gateway,
-          bank, electronic wallet, and payment method.
+          operator verification, admin review, the
+          original payment method, the receiving bank,
+          the card issuer, and PayPal processing where
+          applicable.
         </p>
 
         <Link
@@ -979,10 +982,13 @@ export default function TermsAndConditionsPage() {
         title="Contact us"
       >
         <p className="leading-8 text-slate-600">
-          Questions regarding these Terms and
-          Conditions, bookings, payments, e-tickets,
-          travel changes, or complaints may be
-          submitted through our contact page.
+          Questions regarding these Terms and Conditions,
+          bookings, payments, e-tickets, travel changes,
+          or complaints may be submitted through our
+          contact page. Our public operating location is
+          Tomang, Grogol Petamburan, Jakarta Barat, DKI
+          Jakarta, Indonesia. This location is not a
+          public walk-in ticket counter.
         </p>
 
         <Link

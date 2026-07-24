@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
       eyebrow="Pelindungan Data Pribadi"
       title="Kebijakan Privasi"
       description="Kebijakan Privasi ini menjelaskan bagaimana Nusa Gili Boat memperoleh, mengumpulkan, menggunakan, menyimpan, membagikan, dan melindungi data pribadi ketika Anda menggunakan situs dan layanan pemesanan kami."
-      lastUpdated="30 Juni 2026"
+      lastUpdated="24 Juli 2026"
     >
       <PolicySection
         number={1}
@@ -251,7 +251,7 @@ export default function PrivacyPolicyPage() {
             "Secara langsung dari pelanggan ketika mencari perjalanan, membuat booking, atau menghubungi kami.",
             "Dari orang yang membuat booking atas nama penumpang lain.",
             "Dari operator fast boat yang menangani perjalanan.",
-            "Dari payment gateway, bank, atau penyedia metode pembayaran.",
+            "Dari PayPal, penerbit kartu, bank, penerima pembayaran QRIS, atau layanan pembayaran dan refund lain yang terlibat dalam transaksi.",
             "Dari sistem teknis, log server, cookie, dan alat keamanan.",
             "Dari penyedia layanan yang membantu operasional situs dan booking.",
           ]}
@@ -366,42 +366,52 @@ export default function PrivacyPolicyPage() {
         title="Pemrosesan pembayaran"
       >
         <p className="leading-8 text-slate-600">
-          Pembayaran online dapat diproses melalui
-          Midtrans atau penyedia pembayaran lain yang
-          ditampilkan pada halaman pembayaran.
+          Proses pembayaran saat ini ditangani secara
+          manual. Pelanggan dapat meminta instruksi
+          pembayaran QRIS resmi atau payment link
+          PayPal melalui saluran layanan WhatsApp Nusa
+          Gili Boat.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penyedia pembayaran dapat mengumpulkan dan
-          memproses data yang dibutuhkan untuk
-          memverifikasi, mengotorisasi, menyelesaikan,
-          membatalkan, atau mengembalikan transaksi.
+          Untuk pembayaran QRIS, Nusa Gili Boat dapat
+          menerima bukti pembayaran, referensi
+          transaksi, informasi pembayar, jumlah
+          pembayaran, waktu pembayaran, dan informasi
+          lain yang diperlukan untuk melakukan
+          verifikasi pembayaran secara manual.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          Untuk pembayaran kartu melalui payment link
+          PayPal, PayPal, penerbit kartu, serta penyedia
+          jasa keuangan terkait dapat mengumpulkan dan
+          memproses informasi yang diperlukan untuk
+          mengotorisasi, menyelesaikan, membatalkan,
+          menyengketakan, atau mengembalikan transaksi.
         </p>
 
         <p className="leading-8 text-slate-600">
           Nusa Gili Boat dapat menerima informasi
-          transaksi seperti order ID, ID transaksi,
-          metode pembayaran, jumlah pembayaran, status
-          transaksi, waktu pembayaran, dan status
-          refund.
+          transaksi seperti nomor referensi, ID
+          transaksi, metode pembayaran, jumlah
+          pembayaran, status transaksi, waktu
+          pembayaran, dan status refund. Konfirmasi
+          pembayaran dan booking diperiksa secara
+          manual oleh admin sebelum booking ditandai
+          Confirmed.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Nusa Gili Boat tidak bermaksud menyimpan
-          nomor kartu pembayaran secara lengkap, CVV,
-          PIN, kata sandi perbankan, maupun kode OTP.
-          Informasi sensitif tersebut diproses melalui
-          sistem penyedia pembayaran terkait.
+          Nusa Gili Boat tidak meminta pelanggan
+          mengirimkan dan tidak bermaksud menyimpan
+          nomor kartu lengkap, CVV, PIN, kata sandi
+          perbankan, atau kode OTP melalui WhatsApp,
+          email, maupun formulir layanan pelanggan.
+          Data kartu yang dimasukkan pada PayPal
+          diproses melalui PayPal dan penyedia jasa
+          keuangan terkait.
         </p>
-
-        <a
-          href="https://midtrans.com/id/pemberitahuan-privasi"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex font-semibold text-sky-700 transition hover:text-sky-900"
-        >
-          Baca Pemberitahuan Privasi Midtrans
-        </a>
       </PolicySection>
 
       <PolicySection
@@ -420,7 +430,7 @@ export default function PrivacyPolicyPage() {
             "Penyedia layanan keamanan, pemantauan, dan pencegahan penipuan.",
             "Penyedia analytics dan pengukuran kinerja situs.",
             "Penyedia layanan akuntansi, audit, pajak, atau bantuan profesional.",
-            "Bank, payment gateway, dan penyedia jasa pembayaran.",
+            "Bank, PayPal, penerbit kartu, penerima pembayaran QRIS, serta penyedia layanan pembayaran atau refund lainnya.",
             "Instansi pemerintah, regulator, pengadilan, atau aparat penegak hukum apabila diwajibkan.",
             "Pihak lain berdasarkan instruksi atau persetujuan pengguna.",
           ]}
@@ -775,15 +785,26 @@ export default function PrivacyPolicyPage() {
         <p className="leading-8 text-slate-600">
           Sistem dapat melakukan pemeriksaan otomatis
           terhadap ketersediaan kursi, validitas input,
-          status pembayaran, dan aktivitas yang
-          mencurigakan.
+          status booking, aktivitas sesi, dan indikator
+          penggunaan yang mencurigakan atau
+          menyalahgunakan layanan.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Penyedia pembayaran juga dapat menggunakan
-          sistem otomatis untuk menilai risiko,
-          mengotorisasi transaksi, dan mencegah
-          penipuan berdasarkan kebijakan mereka.
+          Dalam flow pembayaran manual QRIS dan payment
+          link PayPal yang berlaku saat ini, Nusa Gili
+          Boat tidak menandai booking sebagai Confirmed
+          hanya berdasarkan keputusan pembayaran
+          otomatis. Bukti pembayaran dan status
+          transaksi yang berlaku diperiksa oleh admin.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          PayPal, penerbit kartu, bank, dan penyedia jasa
+          keuangan lainnya dapat menggunakan sistem
+          otomatis untuk menilai risiko, mengotorisasi
+          transaksi, dan mencegah penipuan sesuai
+          kebijakan masing-masing.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -915,11 +936,25 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <dt className="font-semibold text-slate-950">
+                Lokasi operasional
+              </dt>
+
+              <dd className="mt-1">
+                Tomang, Grogol Petamburan
+                <br />
+                Jakarta Barat, DKI Jakarta
+                <br />
+                Indonesia
+              </dd>
+            </div>
+
+            <div>
+              <dt className="font-semibold text-slate-950">
                 Jam layanan
               </dt>
 
               <dd className="mt-1">
-                Setiap hari, pukul 08.00–20.00 WITA
+                Setiap hari, pukul 08.00–20.00 WIB
               </dd>
             </div>
           </dl>
