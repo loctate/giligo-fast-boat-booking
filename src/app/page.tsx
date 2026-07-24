@@ -56,8 +56,8 @@ const bookingSteps = [
   },
   {
     number: "03",
-    title: "Receive your ticket",
-    text: "Get your booking confirmation and electronic ticket for check-in.",
+    title: "Complete payment verification",
+    text: "Request QRIS or a PayPal payment link through WhatsApp. Your booking is confirmed after admin verification.",
   },
 ]
 
@@ -183,7 +183,7 @@ export default function Home() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-400 text-xs text-emerald-950">
                   ✓
                 </span>
-                Instant confirmation
+                Admin-verified confirmation
               </div>
             </div>
           </div>

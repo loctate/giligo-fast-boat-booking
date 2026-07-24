@@ -140,7 +140,7 @@ export default function CheckoutForm({
       router.push(`/booking/${bookingCode}`)
     } catch {
       setErrorMessage(
-        "The demo booking could not be saved. Please try again."
+        "The booking could not be saved. Please try again."
       )
 
       setIsSubmitting(false)
@@ -403,7 +403,7 @@ export default function CheckoutForm({
 
               <span className="text-xs leading-5 text-slate-600">
                 I confirm that the passenger information is correct
-                and agree to the demo booking terms.
+                and agree to the booking terms.
               </span>
             </label>
 
@@ -420,7 +420,7 @@ export default function CheckoutForm({
             >
               {isSubmitting
                 ? "Creating Booking..."
-                : "Complete Demo Booking"}
+                : "Complete Booking"}
             </button>
 
             <p className="text-center text-xs leading-5 text-slate-400">

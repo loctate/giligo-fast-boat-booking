@@ -149,7 +149,7 @@ export default function SearchForm() {
       </button>
 
       <p className="mt-4 text-center text-xs text-slate-400">
-        Demo booking — no payment will be processed
+        Payment is completed manually after booking
       </p>
     </form>
   )
