@@ -1,6 +1,6 @@
 {
   "name": "@nusagiliboat/ipaymu-bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node src/server.mjs",
-    "check": "node --check src/server.mjs"
+    "check": "node --check src/config.mjs && node --check src/request-signature.mjs && node --check src/callback-signature.mjs && node --check src/server.mjs && node --check test/config.test.mjs && node --check test/server-guards.test.mjs && node --check test/signatures.test.mjs && node --test",
+    "test": "node --test"
   }
 }
