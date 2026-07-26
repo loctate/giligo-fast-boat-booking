@@ -11,6 +11,10 @@ import {
   loadConfig,
 } from "./config.mjs";
 
+import {
+  handleTransactionCommand,
+} from "./transaction-command.mjs";
+
 function sendJson(
   response,
   statusCode,
@@ -32,8 +36,76 @@ function sendJson(
   response.end(body);
 }
 
+const MAX_REQUEST_BODY_BYTES =
+  64 * 1024;
+
+function readRequestBody(request) {
+  return new Promise(
+    (resolve, reject) => {
+      const chunks = [];
+      let size = 0;
+      let tooLarge = false;
+
+      request.on("data", (chunk) => {
+        const buffer =
+          Buffer.isBuffer(chunk)
+            ? chunk
+            : Buffer.from(chunk);
+
+        size += buffer.length;
+
+        if (
+          size
+            > MAX_REQUEST_BODY_BYTES
+        ) {
+          tooLarge = true;
+          chunks.length = 0;
+          return;
+        }
+
+        if (!tooLarge) {
+          chunks.push(buffer);
+        }
+      });
+
+      request.on("end", () => {
+        if (tooLarge) {
+          const error = new Error(
+            "Request body exceeds 64 KiB.",
+          );
+
+          error.code =
+            "BODY_TOO_LARGE";
+
+          reject(error);
+          return;
+        }
+
+        resolve(
+          Buffer.concat(chunks)
+            .toString("utf8"),
+        );
+      });
+
+      request.on("aborted", () => {
+        const error = new Error(
+          "Request body was aborted.",
+        );
+
+        error.code =
+          "REQUEST_ABORTED";
+
+        reject(error);
+      });
+
+      request.on("error", reject);
+    },
+  );
+}
+
 export function createBridgeServer(
   config = loadConfig(),
+  dependencies = {},
 ) {
   const prefix = config.prefix;
 
@@ -91,17 +163,61 @@ export function createBridgeServer(
         if (!readiness.ready) {
           sendJson(response, 503, {
             ok: false,
-            code: "IPAYMU_BRIDGE_DISABLED",
+            code:
+              "IPAYMU_BRIDGE_DISABLED",
           });
 
           return;
         }
 
-        sendJson(response, 501, {
-          ok: false,
-          code:
-            "TRANSACTION_CREATION_NOT_CONNECTED",
-        });
+        void (async () => {
+          try {
+            const rawBody =
+              await readRequestBody(
+                request,
+              );
+
+            const result =
+              await handleTransactionCommand({
+                config,
+                headers:
+                  request.headers,
+                rawBody,
+                createPaymentImpl:
+                  dependencies
+                    .createPaymentImpl,
+              });
+
+            sendJson(
+              response,
+              result.statusCode,
+              result.body,
+            );
+          } catch (error) {
+            if (response.writableEnded) {
+              return;
+            }
+
+            if (
+              error?.code
+                === "BODY_TOO_LARGE"
+            ) {
+              sendJson(response, 413, {
+                ok: false,
+                code:
+                  "PAYLOAD_TOO_LARGE",
+              });
+
+              return;
+            }
+
+            sendJson(response, 400, {
+              ok: false,
+              code:
+                "INVALID_HTTP_REQUEST",
+            });
+          }
+        })();
 
         return;
       }

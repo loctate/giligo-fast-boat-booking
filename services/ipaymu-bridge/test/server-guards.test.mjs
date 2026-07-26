@@ -144,6 +144,16 @@ test(
       `${service.baseUrl}/ipaymu-bridge/transactions`,
       {
         method: "POST",
+
+        headers: {
+          authorization:
+            "Bearer test-internal-token",
+
+          "content-type":
+            "application/json",
+        },
+
+        body: "{}",
       },
     );
 
