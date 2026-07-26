@@ -12,6 +12,10 @@ import {
 } from "./config.mjs";
 
 import {
+  handleCallbackCommand,
+} from "./callback-command.mjs";
+
+import {
   createRuntimeDependencies,
 } from "./runtime-dependencies.mjs";
 
@@ -243,11 +247,68 @@ export function createBridgeServer(
           return;
         }
 
-        sendJson(response, 501, {
-          ok: false,
-          code:
-            "CALLBACK_PROCESSING_NOT_CONNECTED",
-        });
+        if (
+          typeof dependencies
+            .processCallbackImpl
+            !== "function"
+        ) {
+          sendJson(response, 501, {
+            ok: false,
+            code:
+              "CALLBACK_PROCESSING_NOT_CONNECTED",
+          });
+
+          return;
+        }
+
+        void (async () => {
+          try {
+            const rawBody =
+              await readRequestBody(
+                request,
+              );
+
+            const result =
+              await handleCallbackCommand({
+                config,
+                headers:
+                  request.headers,
+                rawBody,
+                processCallbackImpl:
+                  dependencies
+                    .processCallbackImpl,
+              });
+
+            sendJson(
+              response,
+              result.statusCode,
+              result.body,
+            );
+          } catch (error) {
+            if (response.writableEnded) {
+              return;
+            }
+
+            if (
+              error?.code
+                === "BODY_TOO_LARGE"
+            ) {
+              sendJson(response, 413, {
+                ok: false,
+                code:
+                  "PAYLOAD_TOO_LARGE",
+              });
+
+              return;
+            }
+
+            sendJson(response, 400, {
+              ok: false,
+              code:
+                "INVALID_HTTP_REQUEST",
+            });
+          }
+        })();
 
         return;
       }
