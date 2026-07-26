@@ -125,6 +125,32 @@ export function loadConfig(env = process.env) {
     internalToken: String(
       env.IPAYMU_BRIDGE_INTERNAL_TOKEN || "",
     ).trim(),
+
+    appwrite: {
+      endpoint: String(
+        env.APPWRITE_ENDPOINT || "",
+      ).trim(),
+
+      projectId: String(
+        env.APPWRITE_PROJECT_ID || "",
+      ).trim(),
+
+      apiKey: String(
+        env.APPWRITE_API_KEY || "",
+      ).trim(),
+
+      databaseId: String(
+        env.APPWRITE_DATABASE_ID || "",
+      ).trim(),
+
+      bookingsTableId: String(
+        env.APPWRITE_BOOKINGS_TABLE_ID || "",
+      ).trim(),
+
+      tripInventoryTableId: String(
+        env.APPWRITE_TRIP_INVENTORY_TABLE_ID || "",
+      ).trim(),
+    },
   };
 }
 
@@ -149,6 +175,45 @@ export function getReadiness(config) {
     if (!config.internalToken) {
       missing.push(
         "IPAYMU_BRIDGE_INTERNAL_TOKEN",
+      );
+    }
+
+    if (!config.appwrite?.endpoint) {
+      missing.push(
+        "APPWRITE_ENDPOINT",
+      );
+    }
+
+    if (!config.appwrite?.projectId) {
+      missing.push(
+        "APPWRITE_PROJECT_ID",
+      );
+    }
+
+    if (!config.appwrite?.apiKey) {
+      missing.push(
+        "APPWRITE_API_KEY",
+      );
+    }
+
+    if (!config.appwrite?.databaseId) {
+      missing.push(
+        "APPWRITE_DATABASE_ID",
+      );
+    }
+
+    if (!config.appwrite?.bookingsTableId) {
+      missing.push(
+        "APPWRITE_BOOKINGS_TABLE_ID",
+      );
+    }
+
+    if (
+      !config.appwrite
+        ?.tripInventoryTableId
+    ) {
+      missing.push(
+        "APPWRITE_TRIP_INVENTORY_TABLE_ID",
       );
     }
   }

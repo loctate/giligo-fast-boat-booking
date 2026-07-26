@@ -33,6 +33,24 @@ function readyConfig() {
 
     IPAYMU_BRIDGE_INTERNAL_TOKEN:
       "test-internal-token",
+
+    APPWRITE_ENDPOINT:
+      "https://appwrite.example.invalid/v1",
+
+    APPWRITE_PROJECT_ID:
+      "project-test",
+
+    APPWRITE_API_KEY:
+      "appwrite-api-key-test",
+
+    APPWRITE_DATABASE_ID:
+      "database-test",
+
+    APPWRITE_BOOKINGS_TABLE_ID:
+      "bookings-test",
+
+    APPWRITE_TRIP_INVENTORY_TABLE_ID:
+      "inventory-test",
   });
 }
 
