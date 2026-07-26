@@ -12,6 +12,10 @@ import {
 } from "./config.mjs";
 
 import {
+  createRuntimeDependencies,
+} from "./runtime-dependencies.mjs";
+
+import {
   handleTransactionCommand,
 } from "./transaction-command.mjs";
 
@@ -256,10 +260,36 @@ export function createBridgeServer(
   );
 }
 
+export function createRuntimeBridgeServer({
+  config = loadConfig(),
+  fetchImpl = globalThis.fetch,
+  nowFactory,
+  timeoutMs = 10000,
+} = {}) {
+  const dependencies =
+    createRuntimeDependencies({
+      config,
+      fetchImpl,
+      nowFactory,
+      timeoutMs,
+    });
+
+  return {
+    config,
+
+    server:
+      createBridgeServer(
+        config,
+        dependencies,
+      ),
+  };
+}
+
 function startServer() {
-  const config = loadConfig();
-  const server =
-    createBridgeServer(config);
+  const {
+    config,
+    server,
+  } = createRuntimeBridgeServer();
 
   server.listen(
     config.port,
