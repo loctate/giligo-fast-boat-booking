@@ -1,3 +1,8 @@
+import {
+  SERVICE_NAME,
+  SERVICE_VERSION,
+} from "./service-metadata.mjs";
+
 const TRUE_VALUES = new Set([
   "1",
   "true",
@@ -81,8 +86,8 @@ export function loadConfig(env = process.env) {
   }
 
   return {
-    serviceName: "nusagiliboat-ipaymu-bridge",
-    serviceVersion: "0.2.0",
+    serviceName: SERVICE_NAME,
+    serviceVersion: SERVICE_VERSION,
 
     host: String(
       env.HOST || "0.0.0.0",
