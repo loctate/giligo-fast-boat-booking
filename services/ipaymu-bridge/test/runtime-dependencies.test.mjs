@@ -113,7 +113,7 @@ test(
 
     assert.equal(
       SERVICE_VERSION,
-      "0.16.0",
+      "0.17.0",
     );
 
     assert.equal(

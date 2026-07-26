@@ -1,4 +1,22 @@
 import {
+  Client,
+  Query,
+  TablesDB,
+} from "node-appwrite";
+
+import {
+  createAppwriteCallbackAdapter,
+} from "./appwrite-callback-adapter.mjs";
+
+import {
+  createAppwriteRuntimeDependency,
+} from "./appwrite-runtime-dependency.mjs";
+
+import {
+  createCallbackProcessor,
+} from "./callback-processor.mjs";
+
+import {
   getReadiness,
 } from "./config.mjs";
 
@@ -25,6 +43,10 @@ export function createRuntimeDependencies({
   fetchImpl,
   nowFactory,
   timeoutMs = 10000,
+  ClientCtor = Client,
+  TablesDBCtor = TablesDB,
+  QueryApi = Query,
+  transactionTtl = 60,
 } = {}) {
   const runtimeConfig =
     requireConfig(config);
@@ -36,12 +58,33 @@ export function createRuntimeDependencies({
     return {};
   }
 
+  const appwriteRuntime =
+    createAppwriteRuntimeDependency({
+      config:
+        runtimeConfig,
+
+      ClientCtor,
+      TablesDBCtor,
+      QueryApi,
+    });
+
+  const callbackAdapter =
+    createAppwriteCallbackAdapter({
+      ...appwriteRuntime,
+      transactionTtl,
+    });
+
   return {
     createPaymentImpl:
       createPaymentDependency({
         fetchImpl,
         nowFactory,
         timeoutMs,
+      }),
+
+    processCallbackImpl:
+      createCallbackProcessor({
+        ...callbackAdapter,
       }),
   };
 }

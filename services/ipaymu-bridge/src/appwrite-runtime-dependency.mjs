@@ -25,6 +25,26 @@ function requireObject(
   return value;
 }
 
+function requireApi(
+  value,
+  label,
+) {
+  if (
+    value === null
+    || (
+      typeof value !== "object"
+      && typeof value !== "function"
+    )
+    || Array.isArray(value)
+  ) {
+    throw new TypeError(
+      `${label} must be an object or function.`,
+    );
+  }
+
+  return value;
+}
+
 function requireText(
   value,
   label,
@@ -150,7 +170,7 @@ createAppwriteRuntimeDependency({
     "TablesDBCtor",
   );
 
-  requireObject(
+  requireApi(
     QueryApi,
     "QueryApi",
   );

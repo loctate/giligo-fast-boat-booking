@@ -1,6 +1,6 @@
 {
   "name": "@nusagiliboat/ipaymu-bridge",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,7 +8,10 @@
   },
   "scripts": {
     "start": "node src/server.mjs",
-    "check": "node --check src/service-metadata.mjs && node --check src/config.mjs && node --check src/request-signature.mjs && node --check src/callback-signature.mjs && node --check src/callback-command.mjs && node --check src/callback-processor.mjs && node --check src/appwrite-callback-adapter.mjs && node --check src/appwrite-runtime-dependency.mjs && node --check src/redirect-payment-request.mjs && node --check src/redirect-payment-response.mjs && node --check src/redirect-payment-client.mjs && node --check src/payment-dependency.mjs && node --check src/runtime-dependencies.mjs && node --check src/transaction-command.mjs && node --check src/server.mjs && node --check test/config.test.mjs && node --check test/redirect-payment-request.test.mjs && node --check test/redirect-payment-response.test.mjs && node --check test/redirect-payment-client.test.mjs && node --check test/transaction-command.test.mjs && node --check test/transaction-server.test.mjs && node --check test/payment-dependency.test.mjs && node --check test/runtime-dependencies.test.mjs && node --check test/runtime-server.test.mjs && node --check test/server-guards.test.mjs && node --check test/callback-command.test.mjs && node --check test/callback-processor.test.mjs && node --check test/appwrite-callback-adapter.test.mjs && node --check test/appwrite-runtime-dependency.test.mjs && node --check test/callback-server.test.mjs && node --check test/signatures.test.mjs && node --test",
+    "check": "node --check src/service-metadata.mjs && node --check src/config.mjs && node --check src/request-signature.mjs && node --check src/callback-signature.mjs && node --check src/callback-command.mjs && node --check src/callback-processor.mjs && node --check src/appwrite-callback-adapter.mjs && node --check src/appwrite-runtime-dependency.mjs && node --check src/redirect-payment-request.mjs && node --check src/redirect-payment-response.mjs && node --check src/redirect-payment-client.mjs && node --check src/payment-dependency.mjs && node --check src/runtime-dependencies.mjs && node --check src/transaction-command.mjs && node --check src/server.mjs && node --check test/config.test.mjs && node --check test/redirect-payment-request.test.mjs && node --check test/redirect-payment-response.test.mjs && node --check test/redirect-payment-client.test.mjs && node --check test/transaction-command.test.mjs && node --check test/transaction-server.test.mjs && node --check test/payment-dependency.test.mjs && node --check test/runtime-dependencies.test.mjs && node --check test/runtime-server.test.mjs && node --check test/runtime-callback-wiring.test.mjs && node --check test/server-guards.test.mjs && node --check test/callback-command.test.mjs && node --check test/callback-processor.test.mjs && node --check test/appwrite-callback-adapter.test.mjs && node --check test/appwrite-runtime-dependency.test.mjs && node --check test/callback-server.test.mjs && node --check test/signatures.test.mjs && node --test",
     "test": "node --test"
+  },
+  "dependencies": {
+    "node-appwrite": "23.1.0"
   }
 }

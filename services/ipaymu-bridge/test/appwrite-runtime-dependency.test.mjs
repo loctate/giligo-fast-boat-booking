@@ -412,3 +412,50 @@ test(
     );
   },
 );
+
+test(
+  "accepts callable Query API export",
+  () => {
+    const sdk =
+      createSdkMocks();
+
+    function CallableQueryApi() {}
+
+    CallableQueryApi.equal =
+      sdk.QueryApi.equal;
+
+    CallableQueryApi.limit =
+      sdk.QueryApi.limit;
+
+    const dependency =
+      createAppwriteRuntimeDependency({
+        config:
+          readyConfig(),
+
+        ClientCtor:
+          sdk.ClientCtor,
+
+        TablesDBCtor:
+          sdk.TablesDBCtor,
+
+        QueryApi:
+          CallableQueryApi,
+      });
+
+    assert.deepEqual(
+      dependency.queryLimitImpl(2),
+      {
+        type:
+          "limit",
+
+        limit:
+          2,
+      },
+    );
+
+    assert.deepEqual(
+      sdk.calls.databaseMethods,
+      [],
+    );
+  },
+);

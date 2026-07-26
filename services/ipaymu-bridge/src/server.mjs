@@ -326,6 +326,10 @@ export function createRuntimeBridgeServer({
   fetchImpl = globalThis.fetch,
   nowFactory,
   timeoutMs = 10000,
+  ClientCtor,
+  TablesDBCtor,
+  QueryApi,
+  transactionTtl = 60,
 } = {}) {
   const dependencies =
     createRuntimeDependencies({
@@ -333,6 +337,10 @@ export function createRuntimeBridgeServer({
       fetchImpl,
       nowFactory,
       timeoutMs,
+      ClientCtor,
+      TablesDBCtor,
+      QueryApi,
+      transactionTtl,
     });
 
   return {
