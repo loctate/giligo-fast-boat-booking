@@ -1,3 +1,17 @@
+export class IpaymuResponseError extends Error {
+  constructor({
+    status,
+    message,
+    providerData = null,
+  }) {
+    super(message);
+
+    this.name = "IpaymuResponseError";
+    this.status = status;
+    this.providerData = providerData;
+  }
+}
+
 function requireObject(value, name) {
   if (
     value === null
@@ -6,6 +20,16 @@ function requireObject(value, name) {
   ) {
     throw new TypeError(
       `${name} must be an object.`,
+    );
+  }
+
+  return value;
+}
+
+function requireStatus(value) {
+  if (!Number.isSafeInteger(value)) {
+    throw new TypeError(
+      "Status must be an integer.",
     );
   }
 
@@ -25,20 +49,12 @@ function requireText(value, name) {
   return value.trim();
 }
 
-function requireInteger(value, name) {
-  const parsed = Number(value);
-
-  if (!Number.isSafeInteger(parsed)) {
-    throw new TypeError(
-      `${name} must be an integer.`,
-    );
-  }
-
-  return parsed;
-}
-
 function requireHttpsUrl(value, name) {
-  const text = requireText(value, name);
+  const text = requireText(
+    value,
+    name,
+  );
+
   let parsed;
 
   try {
@@ -58,50 +74,29 @@ function requireHttpsUrl(value, name) {
   return parsed.toString();
 }
 
-export class IpaymuResponseError extends Error {
-  constructor({
-    status,
-    message,
-  }) {
-    super(message);
-
-    this.name = "IpaymuResponseError";
-    this.status = status;
-  }
-}
-
 export function parseRedirectPaymentResponse(
   rawResponse,
 ) {
   const envelope = requireObject(
     rawResponse,
-    "response",
+    "Response",
   );
 
-  const status = requireInteger(
+  const status = requireStatus(
     envelope.Status,
-    "Status",
   );
-
-  if (typeof envelope.Success !== "boolean") {
-    throw new TypeError(
-      "Success must be a boolean.",
-    );
-  }
 
   const message = requireText(
-    envelope.Message,
+    String(envelope.Message ?? ""),
     "Message",
   );
 
-  if (
-    envelope.Success !== true
-    || status < 200
-    || status >= 300
-  ) {
+  if (status !== 200) {
     throw new IpaymuResponseError({
       status,
       message,
+      providerData:
+        envelope.Data ?? null,
     });
   }
 
@@ -110,14 +105,9 @@ export function parseRedirectPaymentResponse(
     "Data",
   );
 
-  const transactionId = requireText(
-    String(data.TransactionId ?? ""),
-    "Data.TransactionId",
-  );
-
-  const referenceId = requireText(
-    String(data.ReferenceId ?? ""),
-    "Data.ReferenceId",
+  const sessionId = requireText(
+    String(data.SessionID ?? ""),
+    "Data.SessionID",
   );
 
   const paymentUrl = requireHttpsUrl(
@@ -127,45 +117,8 @@ export function parseRedirectPaymentResponse(
 
   return {
     status,
-    success: true,
     message,
-    transactionId,
-    referenceId,
+    sessionId,
     paymentUrl,
-
-    paymentMethod:
-      data.Via === undefined
-        ? null
-        : String(data.Via),
-
-    paymentChannel:
-      data.Channel === undefined
-        ? null
-        : String(data.Channel),
-
-    paymentNumber:
-      data.PaymentNo === undefined
-        ? null
-        : String(data.PaymentNo),
-
-    paymentName:
-      data.PaymentName === undefined
-        ? null
-        : String(data.PaymentName),
-
-    total:
-      data.Total === undefined
-        ? null
-        : Number(data.Total),
-
-    fee:
-      data.Fee === undefined
-        ? null
-        : Number(data.Fee),
-
-    expired:
-      data.Expired === undefined
-        ? null
-        : String(data.Expired),
   };
 }

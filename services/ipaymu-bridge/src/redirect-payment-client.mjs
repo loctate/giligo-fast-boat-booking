@@ -194,10 +194,18 @@ export async function createRedirectPayment({
     const rawResponse =
       await readJsonResponse(response);
 
-    return parseApiResponse(
-      rawResponse,
-      response.status,
-    );
+    const payment =
+      parseApiResponse(
+        rawResponse,
+        response.status,
+      );
+
+    return {
+      ...payment,
+
+      referenceId:
+        String(payload.referenceId),
+    };
   } finally {
     clearTimeout(timer);
   }

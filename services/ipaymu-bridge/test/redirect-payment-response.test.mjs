@@ -6,22 +6,15 @@ import {
   parseRedirectPaymentResponse,
 } from "../src/redirect-payment-response.mjs";
 
-const successResponse = {
+const successEnvelope = {
   Status: 200,
-  Success: true,
   Message: "Success",
+
   Data: {
-    TransactionId: 12345,
-    ReferenceId: "NGB-TEST-001",
-    Via: "va",
-    Channel: "bca",
-    PaymentNo: "1234567890",
-    PaymentName: "BCA Virtual Account",
-    Total: 900000,
-    Fee: 0,
-    Expired: "2026-07-27 13:00:00",
+    SessionID: 12345,
+
     Url:
-      "https://sandbox.ipaymu.com/payment/12345",
+      "https://sandbox.ipaymu.com/payment/test-session",
   },
 };
 
@@ -30,52 +23,60 @@ test(
   () => {
     const result =
       parseRedirectPaymentResponse(
-        successResponse,
+        successEnvelope,
       );
 
-    assert.equal(result.status, 200);
-    assert.equal(result.success, true);
+    assert.equal(
+      result.status,
+      200,
+    );
 
     assert.equal(
-      result.transactionId,
+      result.message,
+      "Success",
+    );
+
+    assert.equal(
+      result.sessionId,
       "12345",
     );
 
     assert.equal(
-      result.referenceId,
-      "NGB-TEST-001",
+      result.paymentUrl,
+      "https://sandbox.ipaymu.com/payment/test-session",
     );
 
     assert.equal(
-      result.paymentUrl,
-      "https://sandbox.ipaymu.com/payment/12345",
+      Object.hasOwn(
+        result,
+        "referenceId",
+      ),
+      false,
     );
-
-    assert.equal(result.total, 900000);
-    assert.equal(result.fee, 0);
   },
 );
 
 test(
-  "rejects unsuccessful API response",
+  "rejects unsuccessful provider status",
   () => {
     assert.throws(
-      () => parseRedirectPaymentResponse({
-        Status: 400,
-        Success: false,
-        Message: "Invalid request",
-        Data: null,
-      }),
+      () =>
+        parseRedirectPaymentResponse({
+          Status: 401,
+          Message:
+            "Unauthorized signature",
+          Data: null,
+        }),
       (error) => {
         assert.equal(
-          error instanceof IpaymuResponseError,
+          error instanceof
+            IpaymuResponseError,
           true,
         );
 
-        assert.equal(error.status, 400);
         assert.equal(
-          error.message,
-          "Invalid request",
+          error.status,
+          401,
         );
 
         return true;
@@ -85,17 +86,39 @@ test(
 );
 
 test(
+  "rejects missing SessionID",
+  () => {
+    assert.throws(
+      () =>
+        parseRedirectPaymentResponse({
+          Status: 200,
+          Message: "Success",
+
+          Data: {
+            Url:
+              "https://sandbox.ipaymu.com/payment/test",
+          },
+        }),
+      /Data\.SessionID/,
+    );
+  },
+);
+
+test(
   "rejects missing payment URL",
   () => {
     assert.throws(
-      () => parseRedirectPaymentResponse({
-        ...successResponse,
-        Data: {
-          ...successResponse.Data,
-          Url: "",
-        },
-      }),
-      /Data.Url/,
+      () =>
+        parseRedirectPaymentResponse({
+          Status: 200,
+          Message: "Success",
+
+          Data: {
+            SessionID:
+              "SESSION-001",
+          },
+        }),
+      /Data\.Url/,
     );
   },
 );
@@ -104,15 +127,20 @@ test(
   "rejects non-HTTPS payment URL",
   () => {
     assert.throws(
-      () => parseRedirectPaymentResponse({
-        ...successResponse,
-        Data: {
-          ...successResponse.Data,
-          Url:
-            "http://example.invalid/payment",
-        },
-      }),
-      /must use HTTPS/,
+      () =>
+        parseRedirectPaymentResponse({
+          Status: 200,
+          Message: "Success",
+
+          Data: {
+            SessionID:
+              "SESSION-001",
+
+            Url:
+              "http://example.invalid/payment",
+          },
+        }),
+      /HTTPS/,
     );
   },
 );
@@ -121,18 +149,31 @@ test(
   "rejects malformed response envelope",
   () => {
     assert.throws(
-      () => parseRedirectPaymentResponse(null),
-      /response must be an object/,
+      () =>
+        parseRedirectPaymentResponse(
+          null,
+        ),
+      /Response must be an object/,
     );
 
     assert.throws(
-      () => parseRedirectPaymentResponse({
-        Status: "invalid",
-        Success: true,
-        Message: "Success",
-        Data: {},
-      }),
+      () =>
+        parseRedirectPaymentResponse({
+          Status: "200",
+          Message: "Success",
+          Data: {},
+        }),
       /Status must be an integer/,
+    );
+
+    assert.throws(
+      () =>
+        parseRedirectPaymentResponse({
+          Status: 200,
+          Message: "",
+          Data: {},
+        }),
+      /Message/,
     );
   },
 );

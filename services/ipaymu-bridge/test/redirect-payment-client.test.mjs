@@ -49,21 +49,14 @@ const payload = {
 
 const successEnvelope = {
   Status: 200,
-  Success: true,
   Message: "Success",
 
   Data: {
-    TransactionId:
-      "IPAYMU-TEST-001",
-
-    ReferenceId:
-      "NGB-TEST-001",
+    SessionID:
+      "IPAYMU-SESSION-001",
 
     Url:
       "https://sandbox.ipaymu.com/payment/test-001",
-
-    Total: 900000,
-    Fee: 0,
   },
 };
 
@@ -148,8 +141,8 @@ test(
     );
 
     assert.equal(
-      result.transactionId,
-      "IPAYMU-TEST-001",
+      result.sessionId,
+      "IPAYMU-SESSION-001",
     );
 
     assert.equal(
@@ -165,7 +158,6 @@ test(
     const fakeFetch = async () =>
       jsonResponse(401, {
         Status: 401,
-        Success: false,
         Message:
           "unauthorized signature",
         Data: null,

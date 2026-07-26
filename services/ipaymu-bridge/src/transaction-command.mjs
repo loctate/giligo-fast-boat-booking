@@ -196,23 +196,14 @@ export async function handleTransactionCommand({
       code: "PAYMENT_SESSION_CREATED",
 
       payment: {
-        transactionId:
-          payment.transactionId,
+        sessionId:
+          payment.sessionId,
 
         referenceId:
           payment.referenceId,
 
         paymentUrl:
           payment.paymentUrl,
-
-        expired:
-          payment.expired ?? null,
-
-        total:
-          payment.total ?? null,
-
-        fee:
-          payment.fee ?? null,
       },
     });
   } catch (error) {

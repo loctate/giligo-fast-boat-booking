@@ -93,21 +93,14 @@ test(
               200,
               {
                 Status: 200,
-                Success: true,
                 Message: "Success",
 
                 Data: {
-                  TransactionId:
-                    "IPAYMU-TEST-001",
-
-                  ReferenceId:
-                    "NGB-TEST-001",
+                  SessionID:
+                    "IPAYMU-SESSION-001",
 
                   Url:
                     "https://sandbox.example.invalid/payment/test-001",
-
-                  Total: 900000,
-                  Fee: 0,
                 },
               },
             );
@@ -149,8 +142,8 @@ test(
     );
 
     assert.equal(
-      payment.transactionId,
-      "IPAYMU-TEST-001",
+      payment.sessionId,
+      "IPAYMU-SESSION-001",
     );
 
     assert.equal(

@@ -48,8 +48,8 @@ function request(overrides = {}) {
 
     createPaymentImpl:
       async () => ({
-        transactionId:
-          "IPAYMU-001",
+        sessionId:
+          "IPAYMU-SESSION-001",
 
         referenceId:
           "NGB-TEST-001",
@@ -156,8 +156,8 @@ test(
     assert.equal(result.statusCode, 201);
 
     assert.equal(
-      result.body.payment.transactionId,
-      "IPAYMU-001",
+      result.body.payment.sessionId,
+      "IPAYMU-SESSION-001",
     );
 
     const serialized =

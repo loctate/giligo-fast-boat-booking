@@ -89,8 +89,8 @@ test(
             received.push(payload);
 
             return {
-              transactionId:
-                "IPAYMU-TEST-001",
+              sessionId:
+                "IPAYMU-SESSION-001",
 
               referenceId:
                 payload.referenceId,
@@ -144,8 +144,8 @@ test(
     );
 
     assert.equal(
-      body.payment.transactionId,
-      "IPAYMU-TEST-001",
+      body.payment.sessionId,
+      "IPAYMU-SESSION-001",
     );
 
     assert.equal(
@@ -219,7 +219,7 @@ test(
       await startServer({
         createPaymentImpl:
           async () => ({
-            transactionId: "unused",
+            sessionId: "unused",
           }),
       });
 
