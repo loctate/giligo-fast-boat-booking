@@ -9,6 +9,11 @@ RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
 
 COPY src ./src
 
+# Source archives may be extracted under a restrictive umask.
+# Keep files root-owned but readable by the non-root runtime user.
+RUN chmod a+r package.json package-lock.json \
+  && chmod -R a+rX src
+
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=8080
