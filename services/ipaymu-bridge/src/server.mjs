@@ -23,6 +23,10 @@ import {
   handleTransactionCommand,
 } from "./transaction-command.mjs";
 
+import {
+  logSafeTransportDiagnostic,
+} from "./safe-transport-observability.mjs";
+
 function sendJson(
   response,
   statusCode,
@@ -194,6 +198,10 @@ export function createBridgeServer(
                 createPaymentImpl:
                   dependencies
                     .createPaymentImpl,
+
+                transportDiagnosticLogger:
+                  dependencies
+                    .transportDiagnosticLogger,
               });
 
             sendJson(
@@ -330,6 +338,8 @@ export function createRuntimeBridgeServer({
   TablesDBCtor,
   QueryApi,
   transactionTtl = 60,
+  transportDiagnosticLogger =
+    logSafeTransportDiagnostic,
 } = {}) {
   const dependencies =
     createRuntimeDependencies({
@@ -349,7 +359,10 @@ export function createRuntimeBridgeServer({
     server:
       createBridgeServer(
         config,
-        dependencies,
+        {
+          ...dependencies,
+          transportDiagnosticLogger,
+        },
       ),
   };
 }

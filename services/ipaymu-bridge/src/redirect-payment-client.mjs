@@ -7,12 +7,18 @@ import {
   parseRedirectPaymentResponse,
 } from "./redirect-payment-response.mjs";
 
+import {
+  inferIpaymuTransportStage,
+} from "./safe-transport-observability.mjs";
+
 export class IpaymuTransportError extends Error {
   constructor({
     code,
     message,
     status = null,
     cause,
+    stage =
+      inferIpaymuTransportStage(code),
   }) {
     super(message, {
       cause,
@@ -21,6 +27,7 @@ export class IpaymuTransportError extends Error {
     this.name = "IpaymuTransportError";
     this.code = code;
     this.status = status;
+    this.stage = stage;
   }
 }
 

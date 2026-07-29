@@ -221,6 +221,11 @@ test(
           502,
         );
 
+        assert.equal(
+          error.stage,
+          "parse_json",
+        );
+
         return true;
       },
     );
@@ -253,6 +258,11 @@ test(
         assert.equal(
           error.code,
           "NETWORK_ERROR",
+        );
+
+        assert.equal(
+          error.stage,
+          "fetch",
         );
 
         return true;
@@ -299,6 +309,11 @@ test(
         assert.equal(
           error.code,
           "TIMEOUT",
+        );
+
+        assert.equal(
+          error.stage,
+          "fetch",
         );
 
         return true;

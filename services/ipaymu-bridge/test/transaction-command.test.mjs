@@ -260,3 +260,146 @@ test(
     assert.equal(result.statusCode, 501);
   },
 );
+
+test(
+  "emits safe transport diagnostics without changing public response",
+  async () => {
+    const events = [];
+
+    const cause =
+      Object.assign(
+        new Error(
+          "private socket reset with test-api-key",
+        ),
+        {
+          code: "ECONNRESET",
+        },
+      );
+
+    const result =
+      await handleTransactionCommand(
+        request({
+          createPaymentImpl:
+            async () => {
+              throw new IpaymuTransportError({
+                code:
+                  "NETWORK_ERROR",
+                message:
+                  "private provider transport message",
+                cause,
+              });
+            },
+
+          transportDiagnosticLogger:
+            (diagnostic) => {
+              events.push(diagnostic);
+            },
+        }),
+      );
+
+    assert.deepEqual(
+      result,
+      {
+        statusCode: 502,
+        body: {
+          ok: false,
+          code:
+            "IPAYMU_TRANSPORT_ERROR",
+        },
+      },
+    );
+
+    assert.equal(events.length, 1);
+
+    assert.deepEqual(
+      events[0],
+      {
+        event:
+          "ipaymu_transport_failure",
+        stage: "fetch",
+        transportCode:
+          "NETWORK_ERROR",
+        httpStatus: null,
+        errorName:
+          "IpaymuTransportError",
+        causeName: "Error",
+        causeCode: "ECONNRESET",
+        aborted: false,
+        requestMethod: "POST",
+        providerHost:
+          "example.invalid",
+        providerPath:
+          "/api/v2/payment",
+      },
+    );
+
+    const serialized =
+      JSON.stringify(events[0]);
+
+    for (const forbidden of [
+      "private socket reset",
+      "private provider",
+      "test-api-key",
+      "test-internal-token",
+      "NGB-TEST-001",
+      "buyerEmail",
+      "paymentUrl",
+      "sessionId",
+      "referenceId",
+    ]) {
+      assert.equal(
+        serialized.includes(forbidden),
+        false,
+      );
+    }
+  },
+);
+
+test(
+  "suppresses diagnostic logger failure and preserves error response",
+  async () => {
+    const result =
+      await handleTransactionCommand(
+        request({
+          createPaymentImpl:
+            async () => {
+              throw new IpaymuTransportError({
+                code:
+                  "NETWORK_ERROR",
+                message:
+                  "private failure",
+                cause:
+                  Object.assign(
+                    new Error(
+                      "private reset",
+                    ),
+                    {
+                      code:
+                        "ECONNRESET",
+                    },
+                  ),
+              });
+            },
+
+          transportDiagnosticLogger:
+            () => {
+              throw new Error(
+                "diagnostic logger failed",
+              );
+            },
+        }),
+      );
+
+    assert.deepEqual(
+      result,
+      {
+        statusCode: 502,
+        body: {
+          ok: false,
+          code:
+            "IPAYMU_TRANSPORT_ERROR",
+        },
+      },
+    );
+  },
+);

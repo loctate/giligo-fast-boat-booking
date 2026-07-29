@@ -14,6 +14,11 @@ import {
   IpaymuTransportError,
 } from "./redirect-payment-client.mjs";
 
+import {
+  buildSafeTransportDiagnostic,
+  emitSafeTransportDiagnostic,
+} from "./safe-transport-observability.mjs";
+
 const MAX_BODY_BYTES = 64 * 1024;
 
 function response(statusCode, body) {
@@ -135,6 +140,7 @@ export async function handleTransactionCommand({
   headers = {},
   rawBody = "",
   createPaymentImpl,
+  transportDiagnosticLogger,
 }) {
   const readiness = getReadiness(config);
 
@@ -238,6 +244,19 @@ export async function handleTransactionCommand({
       error instanceof
         IpaymuTransportError
     ) {
+      const diagnostic =
+        buildSafeTransportDiagnostic({
+          error,
+          providerApiBaseUrl:
+            config.apiBaseUrl,
+        });
+
+      emitSafeTransportDiagnostic({
+        logger:
+          transportDiagnosticLogger,
+        diagnostic,
+      });
+
       return response(
         error.code === "TIMEOUT"
           ? 504
