@@ -26,6 +26,11 @@ import {
 import {
   logSafeTransportDiagnostic,
 } from "./safe-transport-observability.mjs";
+import {
+  createRequestCorrelationId,
+  logSafeAuthRejectionDiagnostic,
+} from "./safe-auth-rejection-observability.mjs";
+
 
 function sendJson(
   response,
@@ -127,6 +132,13 @@ export function createBridgeServer(
         request.url || "/",
         "http://localhost",
       );
+      const requestId =
+        createRequestCorrelationId();
+
+      response.setHeader(
+        "X-Request-ID",
+        requestId,
+      );
 
       if (
         request.method === "GET"
@@ -203,6 +215,20 @@ export function createBridgeServer(
                   dependencies
                     .transportDiagnosticLogger,
               });
+
+            if (
+              result.statusCode === 401
+              && result.body?.code
+                === "UNAUTHORIZED"
+            ) {
+              logSafeAuthRejectionDiagnostic({
+                requestId,
+                route: "transactions",
+                statusCode:
+                  result.statusCode,
+                code: result.body.code,
+              });
+            }
 
             sendJson(
               response,
@@ -286,6 +312,20 @@ export function createBridgeServer(
                   dependencies
                     .processCallbackImpl,
               });
+
+            if (
+              result.statusCode === 401
+              && result.body?.code
+                === "INVALID_CALLBACK_SIGNATURE"
+            ) {
+              logSafeAuthRejectionDiagnostic({
+                requestId,
+                route: "callback",
+                statusCode:
+                  result.statusCode,
+                code: result.body.code,
+              });
+            }
 
             sendJson(
               response,
