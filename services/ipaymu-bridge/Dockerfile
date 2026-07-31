@@ -27,6 +27,6 @@ USER node
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:8080/ipaymu-bridge/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "const port=process.env.PORT||'8080';const prefix=process.env.IPAYMU_BRIDGE_PREFIX||'/ipaymu-bridge';fetch('http://127.0.0.1:'+port+prefix+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "src/server.mjs"]
