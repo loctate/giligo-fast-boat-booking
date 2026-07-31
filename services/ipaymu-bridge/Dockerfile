@@ -9,9 +9,11 @@ RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
 
 COPY src ./src
 
-# Source archives may be extracted under a restrictive umask.
-# Keep files root-owned but readable by the non-root runtime user.
-RUN chmod a+r package.json package-lock.json \
+# Normalize copied runtime files regardless of archive or extraction umask.
+# Keep files root-owned, readable by the non-root runtime user,
+# and non-writable by group or others.
+RUN chmod 0644 package.json package-lock.json \
+  && chmod -R go-w src \
   && chmod -R a+rX src
 
 ENV NODE_ENV=production
