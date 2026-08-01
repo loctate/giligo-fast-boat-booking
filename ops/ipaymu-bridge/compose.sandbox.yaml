@@ -1,0 +1,67 @@
+name: nusagiliboat-pay
+
+services:
+  ipaymu-bridge:
+    image: "nusagiliboat/ipaymu-bridge:${IPAYMU_BRIDGE_IMAGE_TAG:?IPAYMU_BRIDGE_IMAGE_TAG is required}"
+
+    build:
+      context: "${IPAYMU_BRIDGE_BUILD_CONTEXT:-../../services/ipaymu-bridge}"
+      labels:
+        org.opencontainers.image.revision: "${IPAYMU_BRIDGE_REVISION:?IPAYMU_BRIDGE_REVISION is required}"
+        com.nusagiliboat.component: "ipaymu-bridge"
+        com.nusagiliboat.environment: "sandbox"
+        com.nusagiliboat.validation: "controlled-upgrade-candidate"
+
+    container_name: nusagiliboat-ipaymu-bridge
+    restart: unless-stopped
+    init: true
+
+    env_file:
+      - "${IPAYMU_BRIDGE_ENV_FILE:?IPAYMU_BRIDGE_ENV_FILE is required}"
+
+    environment:
+      NODE_ENV: "production"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      IPAYMU_ENABLED: "true"
+      IPAYMU_ENVIRONMENT: "sandbox"
+
+    expose:
+      - "8080"
+
+    networks:
+      - gateway
+
+    labels:
+      org.opencontainers.image.revision: "${IPAYMU_BRIDGE_REVISION:?IPAYMU_BRIDGE_REVISION is required}"
+      com.nusagiliboat.component: "ipaymu-bridge"
+      com.nusagiliboat.environment: "sandbox"
+      com.nusagiliboat.validation: "controlled-upgrade-candidate"
+      traefik.enable: "false"
+
+    read_only: true
+
+    tmpfs:
+      - "/tmp:rw,noexec,nosuid,size=16m"
+
+    security_opt:
+      - "no-new-privileges:true"
+
+    cap_drop:
+      - ALL
+
+    pids_limit: 128
+    mem_limit: "256m"
+    cpus: 0.50
+    stop_grace_period: 20s
+
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  gateway:
+    name: gateway
+    external: true
