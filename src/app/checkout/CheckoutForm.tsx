@@ -694,38 +694,62 @@ export default function CheckoutForm({
               Notes or special requests
             </h2>
 
-            <div className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
-              <label className="block text-sm font-black text-slate-800">
-                Payment Verification Code
-
-                <input
-                  type="password"
-                  name="verificationCode"
-                  maxLength={200}
-                  autoComplete="off"
-                  placeholder="Enter verification code if provided"
-                  className="mt-2 w-full rounded-xl border border-cyan-200 bg-white px-4 py-3.5 font-medium outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                />
-              </label>
-
-              <p className="mt-2 text-xs leading-5 text-slate-600">
-                Optional. Use this field only if Nusa Gili Boat has provided you with a payment verification code.
-              </p>
-            </div>
-
-            <label className="mt-5 block">
-              <span className="sr-only">
+            <label className="mt-6 block">
+              <span className="mb-2 block text-sm font-black text-slate-700">
                 Notes or special requests
+                <span className="ml-1 font-medium text-slate-400">
+                  (optional)
+                </span>
               </span>
 
               <textarea
                 name="notes"
                 maxLength={2000}
                 rows={5}
-                placeholder="Optional notes, luggage information, accessibility requests, or other important details."
+                placeholder="Luggage information, accessibility requests, or other important details."
                 className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3.5 font-medium outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
               />
             </label>
+
+            <details className="group mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-100">
+                <div>
+                  <p className="text-sm font-black text-slate-800">
+                    Have a payment verification code?
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Open this section only if Nusa Gili Boat provided you with a code.
+                  </p>
+                </div>
+
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-cyan-700 shadow-sm transition group-open:rotate-180"
+                >
+                  ↓
+                </span>
+              </summary>
+
+              <div className="border-t border-slate-200 bg-cyan-50/70 p-5">
+                <label className="block text-sm font-black text-slate-800">
+                  Payment verification code
+
+                  <input
+                    type="password"
+                    name="verificationCode"
+                    maxLength={200}
+                    autoComplete="off"
+                    placeholder="Enter the code provided to you"
+                    className="mt-2 w-full rounded-xl border border-cyan-200 bg-white px-4 py-3.5 font-medium outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                  />
+                </label>
+
+                <p className="mt-3 text-xs leading-5 text-slate-600">
+                  Optional. This code is used only for authorized payment verification and does not affect standard bookings when left blank.
+                </p>
+              </div>
+            </details>
           </section>
         </div>
 
@@ -812,21 +836,29 @@ export default function CheckoutForm({
                     </div>
                   )}
 
-                <div className="mt-4 flex items-end justify-between gap-4 border-t border-slate-100 pt-4">
-                  <span className="font-bold">
-                    Total
-                  </span>
+                <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-4">
+                  <div className="flex items-end justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-cyan-700">
+                        Total payment
+                      </p>
 
-                  <span className="text-2xl font-black text-cyan-700">
-                    {formatCurrency(
-                      totalPrice,
-                      currency
-                    )}
-                  </span>
+                      <p className="mt-1 text-xs leading-5 text-cyan-800">
+                        Final amount for this booking
+                      </p>
+                    </div>
+
+                    <span className="text-2xl font-black text-cyan-700">
+                      {formatCurrency(
+                        totalPrice,
+                        currency
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-4">
+              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <input
                   type="checkbox"
                   required
@@ -881,13 +913,13 @@ export default function CheckoutForm({
                   : isRoundTrip &&
                       !roundTripSubmissionEnabled
                     ? "Round Trip Coming Next"
-                    : "Complete Booking"}
+                    : "Reserve This Trip →"}
               </button>
 
-              <p className="text-center text-xs leading-5 text-slate-400">
-                Payment is not processed at this
-                stage. Your booking will remain
-                pending until payment is confirmed.
+              <p className="text-center text-xs leading-5 text-slate-500">
+                Your booking request will be received first.
+                Available payment instructions will be shown
+                after the booking is created.
               </p>
             </div>
           </div>

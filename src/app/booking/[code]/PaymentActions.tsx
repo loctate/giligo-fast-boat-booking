@@ -310,7 +310,7 @@ export default function PaymentActions({
       <div className="space-y-4">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-sm font-black uppercase tracking-wider text-amber-700">
-            Manual payment
+            Manual payment assistance
           </p>
 
           <h3 className="mt-2 text-lg font-black text-amber-950">
@@ -318,10 +318,9 @@ export default function PaymentActions({
           </h3>
 
           <p className="mt-2 text-sm leading-6 text-amber-800">
-            Online payment is currently being prepared.
-            Please contact Nusa Gili Boat support to
-            receive the available manual payment
-            instructions for this booking.
+            Our support team will provide the available
+            payment instructions for this booking and
+            help you complete the payment securely.
           </p>
         </div>
 
@@ -332,7 +331,7 @@ export default function PaymentActions({
             rel="noreferrer"
             className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Contact support for payment
+            Request Payment Instructions
           </a>
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -366,10 +365,14 @@ export default function PaymentActions({
         </h3>
 
         <p className="mt-2 text-sm leading-6 text-sky-800">
-          You will be redirected to the secure iPaymu
-          payment page to select an available payment
-          method.
+          This booking has been authorized for secure
+          online payment. You will be redirected to
+          iPaymu to select an available payment method.
         </p>
+
+        <div className="mt-4 inline-flex rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-xs font-black text-sky-700">
+          Powered by iPaymu
+        </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
