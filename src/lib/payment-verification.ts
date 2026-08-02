@@ -32,10 +32,19 @@ function isSha256Hex(
 }
 
 export function isPaymentVerificationModeEnabled(): boolean {
+  /*
+   * Fail closed:
+   * verification remains required when the
+   * environment variable is absent, empty,
+   * misspelled, or otherwise misconfigured.
+   *
+   * Only an explicit "disabled" value opens
+   * online payment to every eligible booking.
+   */
   return normalizeMode(
     process.env
       .PAYMENT_VERIFICATION_MODE
-  ) === "enabled"
+  ) !== "disabled"
 }
 
 export function isPaymentVerificationAllowed(
