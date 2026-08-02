@@ -55,6 +55,7 @@ type BookingConfirmationData = {
   createdAt: string
   bookingStatus: string
   paymentStatus: string
+  paymentVerificationAllowed?: boolean
 
   tripType: string
   departureDate: string
@@ -333,6 +334,13 @@ export default function CheckoutForm({
       formData.get("notes") ?? ""
     ).trim()
 
+    const verificationCode =
+      String(
+        formData.get(
+          "verificationCode"
+        ) ?? ""
+      ).trim()
+
     if (
       !fullName ||
       !email ||
@@ -379,6 +387,8 @@ export default function CheckoutForm({
 
       passengers,
       notes,
+
+      verificationCode,
     }
 
     try {
@@ -683,6 +693,25 @@ export default function CheckoutForm({
             <h2 className="mt-2 text-2xl font-black">
               Notes or special requests
             </h2>
+
+            <div className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+              <label className="block text-sm font-black text-slate-800">
+                Payment Verification Code
+
+                <input
+                  type="password"
+                  name="verificationCode"
+                  maxLength={200}
+                  autoComplete="off"
+                  placeholder="Enter verification code if provided"
+                  className="mt-2 w-full rounded-xl border border-cyan-200 bg-white px-4 py-3.5 font-medium outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                />
+              </label>
+
+              <p className="mt-2 text-xs leading-5 text-slate-600">
+                Optional. Use this field only if Nusa Gili Boat has provided you with a payment verification code.
+              </p>
+            </div>
 
             <label className="mt-5 block">
               <span className="sr-only">

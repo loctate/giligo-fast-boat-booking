@@ -8,6 +8,7 @@ type PaymentActionsProps = {
   bookingCode: string
   bookingStatus: string
   paymentStatus: string
+  paymentVerificationAllowed: boolean
   customerFullName: string
   customerEmail: string
   routeFrom: string
@@ -59,10 +60,63 @@ function cleanText(
   return String(value ?? "").trim()
 }
 
+function getSupportWhatsapp(): string {
+  return String(
+    process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ??
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+      process.env.NEXT_PUBLIC_WHATSAPP ??
+      ""
+  ).replace(/\D/g, "")
+}
+
+function createManualPaymentUrl({
+  supportWhatsapp,
+  bookingCode,
+  customerFullName,
+  customerEmail,
+  routeFrom,
+  routeTo,
+  departureLabel,
+  totalLabel,
+}: {
+  supportWhatsapp: string
+  bookingCode: string
+  customerFullName: string
+  customerEmail: string
+  routeFrom: string
+  routeTo: string
+  departureLabel: string
+  totalLabel: string
+}): string {
+  if (!supportWhatsapp) {
+    return ""
+  }
+
+  const message = [
+    "Hello Nusa Gili Boat Support,",
+    "",
+    "I would like to request manual payment instructions for this booking.",
+    "",
+    `Booking code: ${bookingCode}`,
+    `Passenger: ${customerFullName}`,
+    `Email: ${customerEmail}`,
+    `Route: ${routeFrom} to ${routeTo}`,
+    `Departure: ${departureLabel}`,
+    `Total: ${totalLabel}`,
+    "",
+    "I understand that my booking will be confirmed after payment verification by the admin.",
+  ].join("\n")
+
+  return `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(
+    message
+  )}`
+}
+
 export default function PaymentActions({
   bookingCode,
   bookingStatus,
   paymentStatus,
+  paymentVerificationAllowed,
   customerFullName,
   customerEmail,
   routeFrom,
@@ -232,6 +286,70 @@ export default function PaymentActions({
           The booking may already be paid, completed,
           cancelled, or expired.
         </p>
+      </div>
+    )
+  }
+
+  if (!paymentVerificationAllowed) {
+    const supportWhatsapp =
+      getSupportWhatsapp()
+
+    const manualPaymentUrl =
+      createManualPaymentUrl({
+        supportWhatsapp,
+        bookingCode,
+        customerFullName,
+        customerEmail,
+        routeFrom,
+        routeTo,
+        departureLabel,
+        totalLabel,
+      })
+
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <p className="text-sm font-black uppercase tracking-wider text-amber-700">
+            Manual payment
+          </p>
+
+          <h3 className="mt-2 text-lg font-black text-amber-950">
+            Request payment instructions
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-amber-800">
+            Online payment is currently being prepared.
+            Please contact Nusa Gili Boat support to
+            receive the available manual payment
+            instructions for this booking.
+          </p>
+        </div>
+
+        {manualPaymentUrl ? (
+          <a
+            href={manualPaymentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-emerald-700"
+          >
+            Contact support for payment
+          </a>
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-sm leading-6 text-slate-700">
+              Please use the Contact Us page to request
+              payment assistance.
+            </p>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs leading-5 text-slate-600">
+            Never send your PIN, OTP, CVV, banking
+            password, or complete card details through
+            WhatsApp or email.
+          </p>
+        </div>
       </div>
     )
   }

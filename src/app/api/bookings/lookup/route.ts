@@ -5,6 +5,10 @@ import {
   tablesDB,
 } from "@/lib/appwrite-server"
 
+import {
+  isPaymentVerificationModeEnabled,
+} from "@/lib/payment-verification"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -469,6 +473,19 @@ export async function POST(
         booking.currency
       ).toUpperCase() || "IDR"
 
+    /*
+     * Saat verification mode aktif, hanya
+     * booking dengan flag true yang boleh
+     * memakai online payment.
+     *
+     * Saat verification mode dinonaktifkan
+     * setelah Production siap, seluruh
+     * booking otomatis boleh memakai gateway.
+     */
+    const paymentVerificationAllowed =
+      !isPaymentVerificationModeEnabled() ||
+      booking.paymentVerificationAllowed === true
+
     const outboundTrip: BookingTrip = {
       id:
         cleanText(
@@ -575,6 +592,8 @@ export async function POST(
           cleanText(
             booking.paymentStatus
           ),
+
+        paymentVerificationAllowed,
 
         tripType,
 

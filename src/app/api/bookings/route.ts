@@ -15,6 +15,10 @@ import {
   createSeatHoldExpiresAt,
 } from "@/lib/seat-hold"
 
+import {
+  isPaymentVerificationAllowed,
+} from "@/lib/payment-verification"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -40,6 +44,7 @@ type BookingRequest = {
   }[]
 
   notes?: unknown
+  verificationCode?: unknown
 }
 
 type AppwriteRow = Record<string, unknown> & {
@@ -994,6 +999,11 @@ export async function POST(
       )
     }
 
+    const paymentVerificationAllowed =
+      isPaymentVerificationAllowed(
+        body.verificationCode
+      )
+
     const transaction =
       await tablesDB.createTransaction({
         ttl: 60,
@@ -1143,6 +1153,7 @@ export async function POST(
       bookingStatus,
       paymentStatus,
       seatHoldExpiresAt,
+      paymentVerificationAllowed,
 
       tripType,
 
@@ -1332,6 +1343,7 @@ export async function POST(
           bookingStatus,
           paymentStatus,
           seatHoldExpiresAt,
+          paymentVerificationAllowed,
 
           tripType,
 

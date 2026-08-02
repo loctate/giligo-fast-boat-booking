@@ -5,6 +5,10 @@ import {
   tablesDB,
 } from "@/lib/appwrite-server"
 
+import {
+  isPaymentVerificationModeEnabled,
+} from "@/lib/payment-verification"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -328,6 +332,16 @@ export async function POST(
       throw new PaymentError(
         404,
         "Booking could not be verified."
+      )
+    }
+
+    if (
+      isPaymentVerificationModeEnabled() &&
+      booking.paymentVerificationAllowed !== true
+    ) {
+      throw new PaymentError(
+        403,
+        "Online payment is not available for this booking."
       )
     }
 
