@@ -19,6 +19,7 @@ type BookingRow = {
   bookingCode: string
   bookingStatus: string
   paymentStatus: string
+  paymentVerificationAllowed?: boolean
   tripType: string
 
   departureDate: string
@@ -50,6 +51,32 @@ type BookingResult = {
   rows: BookingRow[]
   total: number
   currentTime: number
+}
+
+type AdminPageProps = {
+  searchParams: Promise<{
+    q?: string | string[]
+    bookingStatus?: string | string[]
+    paymentStatus?: string | string[]
+    departureDate?: string | string[]
+  }>
+}
+
+function getSearchParam(
+  value: string | string[] | undefined
+): string {
+  return Array.isArray(value)
+    ? String(value[0] ?? "").trim()
+    : String(value ?? "").trim()
+}
+
+function normalizeSearchValue(
+  value: unknown
+): string {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()
 }
 
 function formatCurrency(value: number) {
@@ -128,8 +155,29 @@ async function getBookings(): Promise<BookingResult> {
   }
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: AdminPageProps) {
   const admin = await requireAdmin()
+  const params = await searchParams
+
+  const searchQuery =
+    getSearchParam(params.q)
+
+  const bookingStatusFilter =
+    getSearchParam(
+      params.bookingStatus
+    )
+
+  const paymentStatusFilter =
+    getSearchParam(
+      params.paymentStatus
+    )
+
+  const departureDateFilter =
+    getSearchParam(
+      params.departureDate
+    )
 
   let bookings: BookingRow[] = []
   let totalBookings = 0
@@ -153,6 +201,77 @@ export default async function AdminPage() {
         ? error.message
         : "Booking data could not be loaded."
   }
+
+  const normalizedSearchQuery =
+    normalizeSearchValue(
+      searchQuery
+    )
+
+  const filteredBookings =
+    bookings.filter((booking) => {
+      if (
+        bookingStatusFilter &&
+        normalizeSearchValue(
+          booking.bookingStatus
+        ) !==
+          normalizeSearchValue(
+            bookingStatusFilter
+          )
+      ) {
+        return false
+      }
+
+      if (
+        paymentStatusFilter &&
+        normalizeSearchValue(
+          booking.paymentStatus
+        ) !==
+          normalizeSearchValue(
+            paymentStatusFilter
+          )
+      ) {
+        return false
+      }
+
+      if (
+        departureDateFilter &&
+        booking.departureDate !==
+          departureDateFilter
+      ) {
+        return false
+      }
+
+      if (!normalizedSearchQuery) {
+        return true
+      }
+
+      const searchableValues = [
+        booking.bookingCode,
+        booking.customerFullName,
+        booking.customerEmail,
+        booking.customerWhatsapp,
+        booking.operatorName,
+        booking.fromPort,
+        booking.toPort,
+      ]
+
+      return searchableValues.some(
+        (value) =>
+          normalizeSearchValue(
+            value
+          ).includes(
+            normalizedSearchQuery
+          )
+      )
+    })
+
+  const filtersAreActive =
+    Boolean(
+      searchQuery ||
+        bookingStatusFilter ||
+        paymentStatusFilter ||
+        departureDateFilter
+    )
 
   const totalPassengers = bookings.reduce(
     (total, booking) =>
@@ -458,34 +577,157 @@ export default async function AdminPage() {
         </div>
 
         <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col justify-between gap-4 border-b border-slate-200 p-6 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="text-2xl font-black">
-                Recent bookings
-              </h2>
+          <div className="border-b border-slate-200 p-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-2xl font-black">
+                  Recent bookings
+                </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Latest reservations stored in Appwrite.
+                <p className="mt-1 text-sm text-slate-500">
+                  Search and filter the latest reservations stored in Appwrite.
+                </p>
+              </div>
+
+              <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                {filteredBookings.length} of{" "}
+                {bookings.length} displayed
+              </div>
+            </div>
+
+            <form
+              method="GET"
+              action="/admin"
+              className="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-[minmax(260px,1.5fr)_1fr_1fr_1fr_auto_auto]"
+            >
+              <label className="block">
+                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Search booking
+                </span>
+
+                <input
+                  type="search"
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Code, customer, email, WhatsApp, route..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Booking status
+                </span>
+
+                <select
+                  name="bookingStatus"
+                  defaultValue={bookingStatusFilter}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                >
+                  <option value="">
+                    All statuses
+                  </option>
+                  <option value="Pending">
+                    Pending
+                  </option>
+                  <option value="Confirmed">
+                    Confirmed
+                  </option>
+                  <option value="Completed">
+                    Completed
+                  </option>
+                  <option value="Cancelled">
+                    Cancelled
+                  </option>
+                  <option value="Expired">
+                    Expired
+                  </option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Payment status
+                </span>
+
+                <select
+                  name="paymentStatus"
+                  defaultValue={paymentStatusFilter}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                >
+                  <option value="">
+                    All payments
+                  </option>
+                  <option value="Pending">
+                    Pending
+                  </option>
+                  <option value="Paid">
+                    Paid
+                  </option>
+                  <option value="Failed">
+                    Failed
+                  </option>
+                  <option value="Expired">
+                    Expired
+                  </option>
+                  <option value="Refunded">
+                    Refunded
+                  </option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Departure date
+                </span>
+
+                <input
+                  type="date"
+                  name="departureDate"
+                  defaultValue={departureDateFilter}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="self-end rounded-xl bg-cyan-700 px-5 py-3 text-sm font-black text-white transition hover:bg-cyan-800"
+              >
+                Apply Filters
+              </button>
+
+              <Link
+                href="/admin"
+                className="self-end rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-black text-slate-700 transition hover:bg-slate-100"
+              >
+                Clear
+              </Link>
+            </form>
+
+            {filtersAreActive && (
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                Filters are applied to the latest{" "}
+                {bookings.length} loaded booking records.
               </p>
-            </div>
-
-            <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
-              {bookings.length} displayed
-            </div>
+            )}
           </div>
 
-          {bookings.length === 0 ? (
+          {filteredBookings.length === 0 ? (
             <div className="px-6 py-16 text-center">
               <div className="text-5xl">
                 🎫
               </div>
 
               <h3 className="mt-5 text-xl font-black">
-                No bookings yet
+                {filtersAreActive
+                  ? "No matching bookings"
+                  : "No bookings yet"}
               </h3>
 
               <p className="mt-2 text-slate-500">
-                New GiliGo bookings will appear here.
+                {filtersAreActive
+                  ? "Try changing or clearing the current filters."
+                  : "New Nusa Gili Boat bookings will appear here."}
               </p>
 
               <Link
@@ -535,7 +777,7 @@ export default async function AdminPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {bookings.map((booking) => (
+                  {filteredBookings.map((booking) => (
                     <tr
                       key={booking.$id}
                       className="transition hover:bg-slate-50"
@@ -632,13 +874,27 @@ export default async function AdminPage() {
                       </td>
 
                       <td className="px-6 py-5 align-top">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${statusClass(
-                            booking.paymentStatus
-                          )}`}
-                        >
-                          {booking.paymentStatus}
-                        </span>
+                        <div className="flex flex-col items-start gap-2">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${statusClass(
+                              booking.paymentStatus
+                            )}`}
+                          >
+                            {booking.paymentStatus}
+                          </span>
+
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
+                              booking.paymentVerificationAllowed === true
+                                ? "bg-sky-100 text-sky-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {booking.paymentVerificationAllowed === true
+                              ? "iPaymu Verification"
+                              : "Manual Assistance"}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))}
