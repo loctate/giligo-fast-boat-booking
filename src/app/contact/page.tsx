@@ -127,15 +127,19 @@ export default function ContactPage() {
           </p>
 
           <h2 className="mt-3 text-xl font-black text-slate-950">
-            Jakarta, Indonesia
+            Registered business address
           </h2>
 
           <address className="mt-3 not-italic leading-7 text-slate-600">
+            Jl. Gelong Baru Selatan V No. 37
+            <br />
+            RT 008/RW 001
+            <br />
             Tomang, Grogol Petamburan
             <br />
-            Jakarta Barat, DKI Jakarta
+            West Jakarta 11440
             <br />
-            Indonesia
+            DKI Jakarta, Indonesia
           </address>
 
           <p className="mt-4 text-sm leading-6 text-slate-500">
