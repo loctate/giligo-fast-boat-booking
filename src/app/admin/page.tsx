@@ -10,7 +10,7 @@ import {
   getCurrentBaliDate,
 } from "@/lib/bali-date"
 
-import LogoutButton from "./LogoutButton"
+import AdminShell from "./AdminShell"
 
 export const dynamic = "force-dynamic"
 
@@ -408,85 +408,8 @@ export default async function AdminPage({
     )
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-800 bg-slate-950 text-white">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-3xl font-black"
-            >
-              Gili{" "}
-              <span className="text-cyan-300">
-                Go
-              </span>
-            </Link>
-
-            <span className="hidden h-7 w-px bg-slate-700 sm:block" />
-
-            <div className="hidden sm:block">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
-                Administration
-              </p>
-
-              <p className="text-sm text-slate-400">
-                Booking Management Dashboard
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="hidden text-sm text-slate-400 xl:block">
-              {admin.email}
-            </span>
-
-            <Link
-              href="/admin/operators"
-              className="rounded-full bg-cyan-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
-            >
-              Operators
-            </Link>
-
-            <Link
-              href="/admin/vessels"
-              className="rounded-full bg-blue-500 px-5 py-2 text-sm font-black text-white transition hover:bg-blue-400"
-            >
-              Vessels
-            </Link>
-
-            <Link
-              href="/admin/routes"
-              className="rounded-full bg-violet-500 px-5 py-2 text-sm font-black text-white transition hover:bg-violet-400"
-            >
-              Routes
-            </Link>
-
-            <Link
-              href="/admin/trip-inventory"
-              className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400"
-            >
-              Trip Inventory
-            </Link>
-
-            <Link
-              href="/admin/trip-schedules"
-              className="rounded-full bg-amber-500 px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-400"
-            >
-              Trip Schedules
-            </Link>
-
-            <Link
-              href="/"
-              className="hidden rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950 sm:inline-flex"
-            >
-              View Website
-            </Link>
-
-            <LogoutButton />
-          </div>
-        </div>
-      </header>
-
+    <AdminShell adminEmail={admin.email}>
+      <main className="min-h-screen bg-slate-100 text-slate-900">
       <section className="bg-gradient-to-r from-cyan-700 to-blue-900 py-12 text-white">
         <div className="mx-auto max-w-[1500px] px-5 lg:px-8">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
@@ -1059,6 +982,7 @@ export default async function AdminPage({
           </p>
         </div>
       </section>
-    </main>
+      </main>
+    </AdminShell>
   )
 }

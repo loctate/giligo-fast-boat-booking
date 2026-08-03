@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Query } from "node-appwrite"
 
 import { requireAdmin } from "@/lib/admin-auth"
@@ -7,7 +6,7 @@ import {
   tablesDB,
 } from "@/lib/appwrite-server"
 
-import LogoutButton from "../LogoutButton"
+import AdminShell from "../AdminShell"
 import VesselsManager, {
   type OperatorOption,
   type VesselRow,
@@ -220,71 +219,8 @@ export default async function VesselsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-800 bg-slate-950 text-white">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-5 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-3xl font-black"
-            >
-              Gili{" "}
-              <span className="text-cyan-300">
-                Go
-              </span>
-            </Link>
-
-            <span className="hidden h-7 w-px bg-slate-700 sm:block" />
-
-            <div className="hidden sm:block">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
-                Administration
-              </p>
-
-              <p className="text-sm text-slate-400">
-                Vessel Management
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-slate-400 xl:block">
-              {admin.email}
-            </span>
-
-<Link
-  href="/admin/routes"
-  className="hidden rounded-full border border-violet-400 px-5 py-2 text-sm font-bold text-violet-200 transition hover:bg-violet-400 hover:text-slate-950 lg:inline-flex"
->
-  Routes
-</Link>
-
-<Link
-  href="/admin/trip-schedules"
-  className="hidden rounded-full border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200 transition hover:bg-amber-400 hover:text-slate-950 xl:inline-flex"
->
-  Trip Schedules
-</Link>
-
-            <Link
-              href="/admin/operators"
-              className="hidden rounded-full border border-cyan-400 px-5 py-2 text-sm font-bold text-cyan-200 transition hover:bg-cyan-400 hover:text-slate-950 sm:inline-flex"
-            >
-              Operators
-            </Link>
-
-            <Link
-              href="/admin"
-              className="rounded-full border border-white/25 px-5 py-2 text-sm font-bold transition hover:bg-white hover:text-slate-950"
-            >
-              Dashboard
-            </Link>
-
-            <LogoutButton />
-          </div>
-        </div>
-      </header>
-
+    <AdminShell adminEmail={admin.email}>
+      <main className="min-h-screen bg-slate-100 text-slate-900">
       <section className="bg-gradient-to-r from-cyan-700 to-blue-900 py-10 text-white">
         <div className="mx-auto max-w-[1500px] px-5 lg:px-8">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
@@ -321,6 +257,7 @@ export default async function VesselsPage() {
           operators={operators}
         />
       </section>
-    </main>
+      </main>
+    </AdminShell>
   )
 }
