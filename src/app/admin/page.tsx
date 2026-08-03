@@ -6,6 +6,9 @@ import {
   appwriteConfig,
   tablesDB,
 } from "@/lib/appwrite-server"
+import {
+  getCurrentBaliDate,
+} from "@/lib/bali-date"
 
 import LogoutButton from "./LogoutButton"
 
@@ -50,7 +53,6 @@ type BookingRow = {
 type BookingResult = {
   rows: BookingRow[]
   total: number
-  currentTime: number
 }
 
 type AdminPageProps = {
@@ -77,6 +79,54 @@ function normalizeSearchValue(
     .trim()
     .replace(/\s+/g, " ")
     .toLowerCase()
+}
+
+function addDateOnlyDays(
+  dateValue: string,
+  numberOfDays: number
+): string {
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+      dateValue
+    )
+
+  if (!match) {
+    return ""
+  }
+
+  const date = new Date(
+    Date.UTC(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]) + numberOfDays
+    )
+  )
+
+  return [
+    date.getUTCFullYear(),
+    String(
+      date.getUTCMonth() + 1
+    ).padStart(2, "0"),
+    String(
+      date.getUTCDate()
+    ).padStart(2, "0"),
+  ].join("-")
+}
+
+function isOperationalBooking(
+  booking: BookingRow
+): boolean {
+  const status =
+    normalizeSearchValue(
+      booking.bookingStatus
+    )
+
+  return ![
+    "cancelled",
+    "canceled",
+    "expired",
+    "rejected",
+  ].includes(status)
 }
 
 function formatCurrency(value: number) {
@@ -149,9 +199,6 @@ async function getBookings(): Promise<BookingResult> {
   return {
     rows: response.rows as unknown as BookingRow[],
     total: response.total,
-
-    // Date.now() dijalankan di fungsi server, bukan saat JSX dirender.
-    currentTime: Date.now(),
   }
 }
 
@@ -181,7 +228,6 @@ export default async function AdminPage({
 
   let bookings: BookingRow[] = []
   let totalBookings = 0
-  let currentTime = 0
   let loadError = ""
 
   try {
@@ -189,7 +235,6 @@ export default async function AdminPage({
 
     bookings = result.rows
     totalBookings = result.total
-    currentTime = result.currentTime
   } catch (error) {
     console.error(
       "Admin dashboard Appwrite error:",
@@ -273,39 +318,94 @@ export default async function AdminPage({
         departureDateFilter
     )
 
-  const totalPassengers = bookings.reduce(
-    (total, booking) =>
-      total +
-      Number(booking.passengerCount || 0),
-    0
-  )
+  const currentWitaDate =
+    getCurrentBaliDate()
 
-  const totalRevenue = bookings.reduce(
-    (total, booking) =>
-      total +
-      Number(booking.totalPrice || 0),
-    0
-  )
+  const tomorrowWitaDate =
+    addDateOnlyDays(
+      currentWitaDate,
+      1
+    )
 
-  const confirmedBookings = bookings.filter(
-    (booking) =>
-      booking.bookingStatus.toLowerCase() ===
-      "confirmed"
-  ).length
+  const sevenDayEndDate =
+    addDateOnlyDays(
+      currentWitaDate,
+      6
+    )
 
-  const upcomingBookings = bookings.filter(
-    (booking) => {
-      const departureTime = new Date(
-        `${booking.departureDate}T23:59:59`
-      ).getTime()
+  const operationalBookings =
+    bookings.filter(
+      isOperationalBooking
+    )
 
-      if (Number.isNaN(departureTime)) {
-        return false
-      }
+  const pendingPaymentBookings =
+    operationalBookings.filter(
+      (booking) =>
+        normalizeSearchValue(
+          booking.paymentStatus
+        ) === "pending"
+    ).length
 
-      return departureTime >= currentTime
-    }
-  ).length
+  const paidBookings =
+    operationalBookings.filter(
+      (booking) =>
+        normalizeSearchValue(
+          booking.paymentStatus
+        ) === "paid"
+    ).length
+
+  const todayBookings =
+    operationalBookings.filter(
+      (booking) =>
+        booking.departureDate ===
+        currentWitaDate
+    )
+
+  const passengersToday =
+    todayBookings.reduce(
+      (total, booking) =>
+        total +
+        Number(
+          booking.passengerCount || 0
+        ),
+      0
+    )
+
+  const tomorrowBookings =
+    operationalBookings.filter(
+      (booking) =>
+        booking.departureDate ===
+        tomorrowWitaDate
+    )
+
+  const passengersTomorrow =
+    tomorrowBookings.reduce(
+      (total, booking) =>
+        total +
+        Number(
+          booking.passengerCount || 0
+        ),
+      0
+    )
+
+  const nextSevenDayBookings =
+    operationalBookings.filter(
+      (booking) =>
+        booking.departureDate >=
+          currentWitaDate &&
+        booking.departureDate <=
+          sevenDayEndDate
+    )
+
+  const nextSevenDayPassengers =
+    nextSevenDayBookings.reduce(
+      (total, booking) =>
+        total +
+        Number(
+          booking.passengerCount || 0
+        ),
+      0
+    )
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
@@ -486,95 +586,138 @@ export default async function AdminPage({
           </section>
 
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-bold text-slate-500">
-                  Total bookings
-                </p>
+            <article className="rounded-3xl border border-amber-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Pending payment
+                  </p>
 
-                <p className="mt-3 text-4xl font-black">
-                  {totalBookings}
-                </p>
+                  <p className="mt-3 text-4xl font-black text-amber-700">
+                    {pendingPaymentBookings}
+                  </p>
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
+                  ⏳
+                </div>
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 text-2xl">
-                🎫
+              <p className="mt-5 text-xs text-slate-400">
+                Active bookings requiring payment follow-up
+              </p>
+            </article>
+
+            <article className="rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Paid bookings
+                  </p>
+
+                  <p className="mt-3 text-4xl font-black text-emerald-700">
+                    {paidBookings}
+                  </p>
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">
+                  ✓
+                </div>
               </div>
+
+              <p className="mt-5 text-xs text-slate-400">
+                Active bookings with paid status
+              </p>
+            </article>
+
+            <article className="rounded-3xl border border-cyan-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Departures today
+                  </p>
+
+                  <p className="mt-3 text-4xl font-black text-cyan-700">
+                    {todayBookings.length}
+                  </p>
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 text-2xl">
+                  🚤
+                </div>
+              </div>
+
+              <p className="mt-5 text-xs text-slate-400">
+                Booking records departing today in WITA
+              </p>
+            </article>
+
+            <article className="rounded-3xl border border-blue-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Passengers today
+                  </p>
+
+                  <p className="mt-3 text-4xl font-black text-blue-700">
+                    {passengersToday}
+                  </p>
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
+                  👥
+                </div>
+              </div>
+
+              <p className="mt-5 text-xs text-slate-400">
+                Passengers departing today in WITA
+              </p>
+            </article>
+          </div>
+
+          <section className="mt-5 grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3">
+            <div className="rounded-2xl bg-amber-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-amber-700">
+                Tomorrow
+              </p>
+
+              <p className="mt-2 text-lg font-black text-slate-950">
+                {tomorrowBookings.length} bookings
+              </p>
+
+              <p className="mt-1 text-sm text-slate-600">
+                {passengersTomorrow} passengers
+              </p>
             </div>
 
-            <p className="mt-5 text-xs text-slate-400">
-              All booking records in Appwrite
-            </p>
-          </article>
+            <div className="rounded-2xl bg-violet-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-violet-700">
+                Next 7 days
+              </p>
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-bold text-slate-500">
-                  Total passengers
-                </p>
+              <p className="mt-2 text-lg font-black text-slate-950">
+                {nextSevenDayBookings.length} bookings
+              </p>
 
-                <p className="mt-3 text-4xl font-black">
-                  {totalPassengers}
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
-                👥
-              </div>
+              <p className="mt-1 text-sm text-slate-600">
+                {nextSevenDayPassengers} passengers
+              </p>
             </div>
 
-            <p className="mt-5 text-xs text-slate-400">
-              Passengers from loaded bookings
-            </p>
-          </article>
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+                Dashboard coverage
+              </p>
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-slate-500">
-                  Booking value
-                </p>
+              <p className="mt-2 text-lg font-black text-slate-950">
+                {bookings.length} loaded
+              </p>
 
-                <p className="mt-3 text-2xl font-black text-cyan-700">
-                  {formatCurrency(totalRevenue)}
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">
-                💳
-              </div>
+              <p className="mt-1 text-sm text-slate-600">
+                {totalBookings} total records
+              </p>
             </div>
-
-            <p className="mt-5 text-xs text-slate-400">
-              Total transaction value
-            </p>
-          </article>
-
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-bold text-slate-500">
-                  Upcoming trips
-                </p>
-
-                <p className="mt-3 text-4xl font-black">
-                  {upcomingBookings}
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
-                🚤
-              </div>
-            </div>
-
-            <p className="mt-5 text-xs text-slate-400">
-              {confirmedBookings} confirmed booking
-              {confirmedBookings === 1 ? "" : "s"}
-            </p>
-          </article>
-        </div>
+          </section>
 
         <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 p-6">
