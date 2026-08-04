@@ -153,7 +153,7 @@ function getStatusContent(
       eyebrow: "Booking confirmed",
       title: "Your trip is reserved!",
       description:
-        "Your booking has been confirmed. Keep this confirmation for your journey.",
+        "Your booking and payment have been confirmed. Present this Booking Confirmation to the assigned fast boat agent or provider for verification and official ticket issuance.",
       badgeClass:
         "bg-emerald-100 text-emerald-700",
       iconClass:
@@ -1096,7 +1096,28 @@ export default function BookingConfirmationPage() {
               </section>
 
               <section className="space-y-3">
-                <button
+                                <div className="mb-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-sm leading-6 text-cyan-950">
+                  <p className="font-black">
+                    Booking Confirmation
+                  </p>
+
+                  <p className="mt-2">
+                    This Booking Confirmation is not the official
+                    fast boat ticket. Present it to the assigned
+                    fast boat agent or provider for verification.
+                    The official travel ticket will be issued by
+                    the fast boat provider.
+                  </p>
+
+                  <p className="mt-3 border-t border-cyan-200 pt-3 text-xs leading-5 text-cyan-800">
+                    Konfirmasi booking ini bukan tiket resmi fast
+                    boat. Tunjukkan kepada agen atau provider fast
+                    boat terkait untuk verifikasi dan penerbitan
+                    tiket perjalanan resmi.
+                  </p>
+                </div>
+
+<button
                   type="button"
                   onClick={() =>
                     window.print()

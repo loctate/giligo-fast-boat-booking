@@ -513,7 +513,7 @@ export default async function AdminPage({
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
-                    Pending payment
+                    Pending Customer Follow-up
                   </p>
 
                   <p className="mt-3 text-4xl font-black text-amber-700">
@@ -527,7 +527,7 @@ export default async function AdminPage({
               </div>
 
               <p className="mt-5 text-xs text-slate-400">
-                Active bookings requiring payment follow-up
+                Customers to contact because payment is still pending or the booking needs assistance
               </p>
             </article>
 
@@ -535,7 +535,7 @@ export default async function AdminPage({
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
-                    Paid bookings
+                    Paid Bookings Ready for Manifest
                   </p>
 
                   <p className="mt-3 text-4xl font-black text-emerald-700">
@@ -549,7 +549,7 @@ export default async function AdminPage({
               </div>
 
               <p className="mt-5 text-xs text-slate-400">
-                Active bookings with paid status
+                Paid bookings available for provider manifest reporting
               </p>
             </article>
 
@@ -557,7 +557,7 @@ export default async function AdminPage({
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
-                    Departures today
+                    Today’s Departures
                   </p>
 
                   <p className="mt-3 text-4xl font-black text-cyan-700">
@@ -571,7 +571,7 @@ export default async function AdminPage({
               </div>
 
               <p className="mt-5 text-xs text-slate-400">
-                Booking records departing today in WITA
+                Bookings scheduled to depart today in WITA
               </p>
             </article>
 
@@ -579,7 +579,7 @@ export default async function AdminPage({
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
-                    Passengers today
+                    Today’s Passengers
                   </p>
 
                   <p className="mt-3 text-4xl font-black text-blue-700">
@@ -593,7 +593,7 @@ export default async function AdminPage({
               </div>
 
               <p className="mt-5 text-xs text-slate-400">
-                Passengers departing today in WITA
+                Passengers scheduled to depart today in WITA
               </p>
             </article>
           </div>

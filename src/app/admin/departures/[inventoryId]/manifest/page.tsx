@@ -656,17 +656,13 @@ function BookingCard({
 
 function ManifestPrintDocument({
   inventory,
-  activeBookings,
-  pendingBookings,
+  manifestBookings,
 }: {
   inventory: ManifestInventory
-  activeBookings: ManifestBooking[]
-  pendingBookings: ManifestBooking[]
+  manifestBookings: ManifestBooking[]
 }) {
-  const printableBookings = [
-    ...activeBookings,
-    ...pendingBookings,
-  ]
+  const printableBookings =
+    manifestBookings
 
   const totalPassengers =
     printableBookings.reduce(
@@ -703,7 +699,7 @@ function ManifestPrintDocument({
           </h1>
 
           <p className="manifest-print-subtitle">
-            Agent booking and passenger summary
+            Paid booking and passenger summary
           </p>
         </div>
 
@@ -801,7 +797,7 @@ function ManifestPrintDocument({
             </h2>
 
             <p>
-              Confirmed, completed and pending follow-up
+              Confirmed or completed bookings with verified paid status
             </p>
           </div>
 
@@ -942,32 +938,21 @@ export default async function ManifestPage({
     notFound()
   }
 
-  const activeBookings =
+  const manifestBookings =
     bookings.filter(
       (booking) =>
-        booking.bookingStatus ===
-          "Confirmed" ||
-        booking.bookingStatus ===
-          "Completed"
+        (
+          booking.bookingStatus ===
+            "Confirmed" ||
+          booking.bookingStatus ===
+            "Completed"
+        ) &&
+        booking.paymentStatus ===
+          "Paid"
     )
 
-  const pendingBookings =
-    bookings.filter(
-      (booking) =>
-        booking.bookingStatus ===
-        "Pending"
-    )
-
-  const activePassengers =
-    activeBookings.reduce(
-      (total, booking) =>
-        total +
-        booking.passengerCount,
-      0
-    )
-
-  const pendingPassengers =
-    pendingBookings.reduce(
+  const manifestPassengers =
+    manifestBookings.reduce(
       (total, booking) =>
         total +
         booking.passengerCount,
@@ -1019,8 +1004,7 @@ export default async function ManifestPage({
 
           <ManifestPrintDocument
             inventory={inventory}
-            activeBookings={activeBookings}
-            pendingBookings={pendingBookings}
+            manifestBookings={manifestBookings}
           />
 
 
@@ -1168,37 +1152,37 @@ export default async function ManifestPage({
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">
-                  Confirmed manifest
+                  Paid sales manifest
                 </p>
 
                 <h2 className="mt-2 text-2xl font-black">
-                  Confirmed and completed bookings
+                  Paid bookings ready for provider
                 </h2>
               </div>
 
               <p className="text-sm font-bold text-slate-500">
-                {activeBookings.length} booking
-                {activeBookings.length === 1 ? "" : "s"}
+                {manifestBookings.length} booking
+                {manifestBookings.length === 1 ? "" : "s"}
                 {" · "}
-                {activePassengers} passenger
-                {activePassengers === 1 ? "" : "s"}
+                {manifestPassengers} passenger
+                {manifestPassengers === 1 ? "" : "s"}
               </p>
             </div>
 
-            {activeBookings.length === 0 ? (
+            {manifestBookings.length === 0 ? (
               <div className="manifest-empty-state mt-5 rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
                 <p className="text-lg font-black">
-                  No confirmed bookings
+                  No paid bookings ready for provider
                 </p>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  This departure does not yet have
-                  confirmed or completed bookings.
+                  This departure does not yet have a
+                  Confirmed or Completed booking with Paid status.
                 </p>
               </div>
             ) : (
               <div className="mt-5 space-y-5">
-                {activeBookings.map(
+                {manifestBookings.map(
                   (booking) => (
                     <BookingCard
                       key={booking.$id}
@@ -1208,49 +1192,6 @@ export default async function ManifestPage({
                 )}
               </div>
             )}
-          </section>
-
-          <section className="manifest-pending-section print:hidden mt-10">
-            <div className="manifest-pending-panel rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-700">
-                    Follow-up required
-                  </p>
-
-                  <h2 className="mt-2 text-2xl font-black text-slate-950">
-                    Pending bookings
-                  </h2>
-                </div>
-
-                <p className="text-sm font-bold text-amber-800">
-                  {pendingBookings.length} booking
-                  {pendingBookings.length === 1 ? "" : "s"}
-                  {" · "}
-                  {pendingPassengers} passenger
-                  {pendingPassengers === 1 ? "" : "s"}
-                </p>
-              </div>
-
-              {pendingBookings.length === 0 ? (
-                <p className="mt-5 text-sm leading-6 text-amber-800">
-                  No pending booking requires follow-up
-                  for this departure.
-                </p>
-              ) : (
-                <div className="mt-6 space-y-5">
-                  {pendingBookings.map(
-                    (booking) => (
-                      <BookingCard
-                        key={booking.$id}
-                        booking={booking}
-                        pending
-                      />
-                    )
-                  )}
-                </div>
-              )}
-            </div>
           </section>
 
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm print:hidden">
