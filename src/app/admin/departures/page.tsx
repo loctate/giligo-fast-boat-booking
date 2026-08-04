@@ -777,9 +777,12 @@ export default async function DepartureOperationsPage({
                     </div>
 
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                      <div className="inline-flex flex-1 cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-5 py-3 text-sm font-black text-slate-500">
-                        View Manifest — R20C
-                      </div>
+                      <Link
+                        href={`/admin/departures/${departure.$id}/manifest`}
+                        className="inline-flex flex-1 items-center justify-center rounded-xl bg-cyan-700 px-5 py-3 text-sm font-black text-white transition hover:bg-cyan-800"
+                      >
+                        View Manifest
+                      </Link>
 
                       <Link
                         href="/admin/trip-inventory"

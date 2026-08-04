@@ -48,8 +48,8 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         label: "Manifest",
+        href: "/admin/manifests",
         icon: "☷",
-        comingSoon: true,
       },
     ],
   },
@@ -100,6 +100,30 @@ function isNavigationActive(
   href?: string
 ): boolean {
   if (!href || href === "/") {
+    return false
+  }
+
+  const manifestDetail =
+    pathname.startsWith(
+      "/admin/departures/"
+    ) &&
+    pathname.endsWith(
+      "/manifest"
+    )
+
+  if (href === "/admin/manifests") {
+    return (
+      pathname.startsWith(
+        "/admin/manifests"
+      ) ||
+      manifestDetail
+    )
+  }
+
+  if (
+    href === "/admin/departures" &&
+    manifestDetail
+  ) {
     return false
   }
 

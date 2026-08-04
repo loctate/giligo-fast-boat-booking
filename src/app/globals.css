@@ -25,3 +25,481 @@ button,
 a {
   cursor: pointer;
 }
+/* NUSAGILIBOAT AGENT MANIFEST PRINT */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body {
+    color: #0f172a !important;
+    font-size: 10pt;
+  }
+
+  .manifest-print-area {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .manifest-print-area article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .manifest-print-area a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  .manifest-print-area .shadow-sm,
+  .manifest-print-area .shadow-lg,
+  .manifest-print-area .shadow-xl,
+  .manifest-print-area .shadow-2xl {
+    box-shadow: none !important;
+  }
+}
+
+/* NUSAGILIBOAT COMPACT MANIFEST PRINT */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  .manifest-print-area {
+    font-size: 8.5pt !important;
+    line-height: 1.3 !important;
+  }
+
+  .manifest-trip-card {
+    border-radius: 10px !important;
+  }
+
+  .manifest-trip-card > div:first-child {
+    padding: 12px !important;
+  }
+
+  .manifest-trip-card > div:first-child > div:first-child {
+    gap: 8px !important;
+  }
+
+  .manifest-trip-card h2 {
+    margin-top: 3px !important;
+    font-size: 16pt !important;
+    line-height: 1.15 !important;
+  }
+
+  .manifest-trip-card .mt-3 {
+    margin-top: 4px !important;
+  }
+
+  .manifest-trip-card .mt-7 {
+    margin-top: 10px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .manifest-trip-card .mt-7 > div {
+    padding: 8px !important;
+    border-radius: 7px !important;
+  }
+
+  .manifest-trip-card > div:last-child {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+
+  .manifest-trip-card > div:last-child > div {
+    padding: 8px !important;
+    border-radius: 7px !important;
+  }
+
+  .manifest-confirmed-section,
+  .manifest-pending-section {
+    margin-top: 12px !important;
+  }
+
+  .manifest-confirmed-section h2,
+  .manifest-pending-section h2 {
+    margin-top: 3px !important;
+    font-size: 14pt !important;
+    line-height: 1.15 !important;
+  }
+
+  .manifest-empty-state {
+    margin-top: 6px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .manifest-empty-state p {
+    margin-top: 2px !important;
+  }
+
+  .manifest-pending-panel {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .manifest-pending-panel > div:first-child {
+    gap: 5px !important;
+  }
+
+  .manifest-pending-panel > .mt-6 {
+    margin-top: 8px !important;
+  }
+
+  .manifest-booking-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+  }
+
+  .manifest-booking-header {
+    gap: 6px !important;
+    padding-bottom: 7px !important;
+  }
+
+  .manifest-booking-header a {
+    font-size: 11pt !important;
+  }
+
+  .manifest-booking-header .gap-2 {
+    gap: 3px !important;
+  }
+
+  .manifest-booking-header span {
+    padding: 2px 6px !important;
+    font-size: 7pt !important;
+  }
+
+  .manifest-passenger-grid {
+    margin-top: 8px !important;
+    grid-template-columns: 90px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .manifest-passenger-grid > div:first-child {
+    padding: 8px !important;
+    border-radius: 7px !important;
+  }
+
+  .manifest-passenger-grid > div:first-child p:last-child {
+    margin-top: 2px !important;
+    font-size: 16pt !important;
+  }
+
+  .manifest-passenger-list {
+    margin-top: 5px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  .manifest-passenger-list li {
+    padding: 5px 7px !important;
+    border-radius: 5px !important;
+    font-size: 8pt !important;
+  }
+
+  .manifest-booking-card > .mt-5.rounded-2xl {
+    margin-top: 7px !important;
+    padding: 7px !important;
+    border-radius: 6px !important;
+  }
+
+  .manifest-print-area .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 7px !important;
+  }
+}
+
+/* NUSAGILIBOAT PROFESSIONAL MANIFEST DOCUMENT */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  .manifest-print-document {
+    display: block !important;
+    width: 100%;
+    color: #0f172a;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.3;
+  }
+
+  .manifest-print-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0891b2;
+  }
+
+  .manifest-print-brand {
+    margin: 0;
+    color: #0e7490;
+    font-size: 8pt;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .manifest-print-header h1 {
+    margin: 2px 0 0;
+    font-size: 18pt;
+    line-height: 1.1;
+  }
+
+  .manifest-print-subtitle {
+    margin: 3px 0 0;
+    color: #64748b;
+  }
+
+  .manifest-print-meta {
+    text-align: right;
+  }
+
+  .manifest-print-meta p,
+  .manifest-print-meta strong {
+    display: block;
+    margin: 0;
+  }
+
+  .manifest-print-meta p {
+    color: #64748b;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .manifest-print-trip {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+  }
+
+  .manifest-print-route p,
+  .manifest-print-route h2,
+  .manifest-print-route span {
+    margin: 0;
+  }
+
+  .manifest-print-route p {
+    color: #0e7490;
+    font-size: 7pt;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .manifest-print-route h2 {
+    margin-top: 2px;
+    font-size: 14pt;
+  }
+
+  .manifest-print-route span {
+    display: block;
+    margin-top: 2px;
+    color: #475569;
+    font-weight: 700;
+  }
+
+  .manifest-print-trip-grid,
+  .manifest-print-seat-grid {
+    display: grid;
+    margin: 7px 0 0;
+    gap: 5px;
+  }
+
+  .manifest-print-trip-grid {
+    grid-template-columns:
+      1.35fr 0.65fr 0.65fr 1.35fr;
+  }
+
+  .manifest-print-seat-grid {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+    padding-top: 6px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .manifest-print-trip-grid div,
+  .manifest-print-seat-grid div {
+    min-width: 0;
+  }
+
+  .manifest-print-trip-grid dt,
+  .manifest-print-seat-grid dt {
+    color: #64748b;
+    font-size: 6.5pt;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .manifest-print-trip-grid dd,
+  .manifest-print-seat-grid dd {
+    margin: 1px 0 0;
+    overflow-wrap: anywhere;
+    font-weight: 800;
+  }
+
+  .manifest-print-seat-grid dd {
+    font-size: 11pt;
+  }
+
+  .manifest-print-bookings {
+    margin-top: 9px;
+  }
+
+  .manifest-print-section-title {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 5px;
+  }
+
+  .manifest-print-section-title h2,
+  .manifest-print-section-title p {
+    margin: 0;
+  }
+
+  .manifest-print-section-title h2 {
+    font-size: 12pt;
+  }
+
+  .manifest-print-section-title p {
+    margin-top: 1px;
+    color: #64748b;
+  }
+
+  .manifest-print-section-title strong {
+    white-space: nowrap;
+    font-size: 7.5pt;
+  }
+
+  .manifest-print-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .manifest-print-table th,
+  .manifest-print-table td {
+    border: 1px solid #cbd5e1;
+    padding: 4px;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .manifest-print-table th {
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 6.5pt;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .manifest-print-table th:nth-child(1),
+  .manifest-print-table td:nth-child(1) {
+    width: 5%;
+    text-align: center;
+  }
+
+  .manifest-print-table th:nth-child(2),
+  .manifest-print-table td:nth-child(2) {
+    width: 30%;
+  }
+
+  .manifest-print-table th:nth-child(3),
+  .manifest-print-table td:nth-child(3) {
+    width: 37%;
+  }
+
+  .manifest-print-table th:nth-child(4),
+  .manifest-print-table td:nth-child(4) {
+    width: 6%;
+  }
+
+  .manifest-print-table th:nth-child(5),
+  .manifest-print-table td:nth-child(5) {
+    width: 22%;
+  }
+
+  .manifest-print-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .manifest-print-table strong,
+  .manifest-print-table span,
+  .manifest-print-table small {
+    display: block;
+  }
+
+  .manifest-print-table span,
+  .manifest-print-table small {
+    margin-top: 1px;
+  }
+
+  .manifest-print-table small {
+    color: #64748b;
+    font-size: 7pt;
+  }
+
+  .manifest-print-table ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .manifest-print-table li + li {
+    margin-top: 1px;
+  }
+
+  .manifest-print-note {
+    margin-top: 3px !important;
+    color: #92400e !important;
+  }
+
+  .manifest-print-center {
+    text-align: center;
+    font-size: 11pt;
+    font-weight: 800;
+  }
+
+  .manifest-print-empty {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    color: #64748b;
+  }
+
+  .manifest-print-footer {
+    margin-top: 7px;
+    padding-top: 5px;
+    border-top: 1px solid #cbd5e1;
+    color: #64748b;
+    font-size: 6.5pt;
+  }
+
+  .manifest-print-footer p {
+    margin: 0;
+  }
+}

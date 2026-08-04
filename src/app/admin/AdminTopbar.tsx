@@ -14,6 +14,22 @@ function getPageTitle(
 ): string {
   if (
     pathname.startsWith(
+      "/admin/manifests"
+    )
+  ) {
+    return "Passenger Manifests"
+  }
+
+  if (
+    pathname.includes(
+      "/manifest"
+    )
+  ) {
+    return "Passenger Manifest"
+  }
+
+  if (
+    pathname.startsWith(
       "/admin/departures"
     )
   ) {
@@ -93,7 +109,7 @@ export default function AdminTopbar({
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <button

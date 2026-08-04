@@ -66,7 +66,7 @@ export default function AdminShell({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-slate-800 transition-[width] duration-200 lg:block ${
+        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-slate-800 transition-[width] duration-200 print:hidden lg:block ${
           sidebarCollapsed
             ? "w-[88px]"
             : "w-72"
@@ -80,7 +80,7 @@ export default function AdminShell({
       </aside>
 
       {mobileNavigationOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 print:hidden lg:hidden">
           <button
             type="button"
             aria-label="Close admin navigation"
@@ -119,7 +119,7 @@ export default function AdminShell({
       )}
 
       <div
-        className={`min-h-screen transition-[padding] duration-200 ${
+        className={`min-h-screen transition-[padding] duration-200 print:pl-0 ${
           sidebarCollapsed
             ? "lg:pl-[88px]"
             : "lg:pl-72"
