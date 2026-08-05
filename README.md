@@ -197,45 +197,82 @@ Only bookings meeting this rule appear in the final provider manifest.
   <tr>
     <td width="50%" align="center">
       <strong>Public trip search</strong><br>
-      <img src="docs/screenshots/01-public-search.png" alt="GiliGo public fast boat search">
+      <img
+        src="docs/screenshots/01-public-search.png"
+        alt="GiliGo public fast boat search"
+      >
     </td>
     <td width="50%" align="center">
       <strong>Available trip results</strong><br>
-      <img src="docs/screenshots/02-trip-results.png" alt="GiliGo trip search results">
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Passenger checkout</strong><br>
-      <img src="docs/screenshots/03-checkout.png" alt="GiliGo passenger checkout">
-    </td>
-    <td width="50%" align="center">
-      <strong>Booking confirmation</strong><br>
-      <img src="docs/screenshots/04-booking-confirmation.png" alt="GiliGo booking confirmation">
+      <img
+        src="docs/screenshots/02-trip-results.png"
+        alt="GiliGo trip search results"
+      >
     </td>
   </tr>
 </table>
+
+<p align="center">
+  <strong>Passenger checkout</strong>
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/03-checkout.png"
+    alt="GiliGo passenger checkout"
+    width="900"
+  >
+</p>
+
+<p align="center">
+  <strong>Booking confirmation</strong>
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/04-booking-confirmation.png"
+    alt="GiliGo booking confirmation"
+    width="720"
+  >
+</p>
 
 ### Operational administration
 
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Operational dashboard</strong><br>
-      <img src="docs/screenshots/05-admin-dashboard.png" alt="GiliGo operational admin dashboard">
-    </td>
-    <td width="50%" align="center">
-      <strong>Dated trip inventory</strong><br>
-      <img src="docs/screenshots/06-trip-inventory.png" alt="GiliGo trip inventory management">
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <strong>Booking and seat lifecycle operations</strong><br>
-      <img src="docs/screenshots/07-booking-operations.png" alt="GiliGo booking operations">
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <strong>Operational dashboard</strong>
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/05-admin-dashboard.png"
+    alt="GiliGo operational admin dashboard"
+    width="900"
+  >
+</p>
+
+<p align="center">
+  <strong>Dated trip inventory</strong>
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/06-trip-inventory.png"
+    alt="GiliGo trip inventory management"
+    width="760"
+  >
+</p>
+
+<p align="center">
+  <strong>Booking and seat lifecycle operations</strong>
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/07-booking-operations.png"
+    alt="GiliGo booking and seat lifecycle operations"
+    width="820"
+  >
+</p>
 
 ---
 
