@@ -1,0 +1,344 @@
+# SOP Admin Operasional Harian Nusa Gili Boat
+
+**Sistem:** NusaGiliBoat / GiliGo Booking Operations  
+**Zona waktu:** WITA — Asia/Makassar  
+**Versi:** 1.0  
+**Tanggal berlaku:** 6 Agustus 2026  
+**Status:** Final operasional
+
+## 1. Tujuan
+
+SOP ini menjadi panduan admin untuk memperbarui inventory, memantau booking dan pembayaran, membantu pelanggan, menyiapkan manifest, serta menjaga data operasional tetap akurat.
+
+Admin tidak boleh menebak ketersediaan kursi atau mengonfirmasi booking sebelum pembayaran dan ketersediaan kursi dipastikan.
+
+## 2. Prinsip Dasar
+
+### Aturan H+2
+
+Pelanggan hanya dapat memesan perjalanan minimal dua hari dari tanggal pemesanan. Admin harus memastikan inventory beberapa hari berikutnya tersedia.
+
+### Posisi kursi
+
+| Kondisi booking | Posisi kursi |
+|---|---|
+| Pending | Held |
+| Confirmed | Booked |
+| Completed | Booked |
+| Cancelled | Dilepaskan |
+| Expired dan belum dibayar | Dilepaskan |
+
+Booking yang belum dibayar tidak dihitung sebagai penjualan.
+
+### Aturan manifest
+
+Manifest hanya memuat:
+
+```text
+Booking Status = Confirmed atau Completed
+Payment Status = Paid
+```
+
+Booking Pending, Cancelled, Expired, atau belum dibayar tidak dimasukkan.
+
+### Dokumen pelanggan
+
+Nusa Gili Boat menerbitkan **Booking Confirmation**, bukan tiket resmi fast boat. Pelanggan menunjukkan dokumen tersebut kepada agen atau provider untuk verifikasi dan penerbitan tiket resmi.
+
+## 3. Persiapan Awal Hari
+
+Buka Dashboard dan periksa:
+
+- Pending Customer Follow-up
+- Paid Bookings Ready for Manifest
+- Today’s Departures
+- Today’s Passengers
+- Tomorrow
+- Next 7 Days
+
+Lalu periksa Trip Inventory:
+
+- tanggal perjalanan;
+- operator, kapal, rute, dan jam;
+- kapasitas kursi;
+- Booked, Held, dan Available;
+- harga;
+- Sales Status;
+- status aktif.
+
+Prioritaskan inventory yang belum diperbarui, booking Pending, pembayaran bermasalah, keberangkatan terdekat, dan manifest yang harus dikirim.
+
+## 4. Update Trip Inventory
+
+Kapasitas kursi harus berdasarkan informasi terbaru dari agen atau provider. Jangan menebak sisa kursi.
+
+Jika provider belum memberi konfirmasi:
+
+```text
+Sales Status = CLOSED
+```
+
+Data yang harus diperiksa saat membuat atau mengubah inventory:
+
+- Trip Schedule
+- Travel Date
+- Seat Capacity
+- Adult, Child, dan Infant Price
+- Currency
+- Sales Status
+- Notes
+- Trip inventory is active
+
+Status penjualan:
+
+| Status | Penggunaan |
+|---|---|
+| OPEN | Jadwal aktif dan dapat dijual |
+| CLOSED | Penjualan ditutup sementara |
+| SOLD_OUT | Kursi sudah habis |
+
+Inventory hanya tampil di pencarian jika OPEN, aktif, dan Available Seats lebih dari 0.
+
+Seat Capacity tidak boleh melebihi kapasitas aktif kapal atau lebih kecil dari jumlah Booked dan Held.
+
+Inventory lama tidak dihapus karena menjadi bagian dari riwayat booking dan pembayaran.
+
+## 5. Pemeriksaan Booking Pending
+
+Booking Pending berarti:
+
+```text
+Booking Status = Pending
+Payment Status = Pending
+Seats = Held
+```
+
+Periksa booking code, pelanggan, kontak, rute, tanggal, jumlah penumpang, total, metode pembayaran, batas waktu pembayaran, dan posisi kursi.
+
+Hubungi pelanggan bila pembayaran belum selesai, ada kendala, data belum lengkap, jadwal semakin dekat, atau inventory provider berubah.
+
+Contoh pesan:
+
+```text
+Halo Bapak/Ibu,
+
+Kami menghubungi Anda terkait booking Nusa Gili Boat dengan kode [BOOKING CODE].
+
+Status pembayaran masih Pending. Apakah ada kendala dalam proses pembayaran yang dapat kami bantu?
+
+Terima kasih.
+```
+
+Jika booking expired atau dibatalkan, pastikan Held Seats berkurang dan Available Seats bertambah kembali.
+
+## 6. Pemeriksaan Pembayaran
+
+### Pembayaran iPaymu
+
+Alur normal:
+
+1. pelanggan menyelesaikan pembayaran;
+2. iPaymu mengirim callback;
+3. sistem memverifikasi callback;
+4. booking berubah menjadi Confirmed dan Paid;
+5. kursi berpindah dari Held ke Booked.
+
+Target:
+
+```text
+Booking Status = Confirmed
+Payment Status = Paid
+Held Seats berkurang
+Booked Seats bertambah
+```
+
+### Pembayaran manual
+
+Sebelum mengonfirmasi booking:
+
+1. cocokkan nama, nominal, waktu, dan referensi;
+2. pastikan dana benar-benar diterima;
+3. periksa kembali ketersediaan kursi;
+4. baru perbarui status booking.
+
+Jangan mengonfirmasi booking hanya berdasarkan screenshot bukti transfer.
+
+### Pembayaran setelah pembatalan
+
+Jika pembayaran diterima setelah booking dibatalkan, periksa kursi, hubungi pelanggan, lalu putuskan aktivasi ulang atau refund. Catat seluruh tindakan admin.
+
+## 7. Perubahan Status Booking
+
+| Booking Status | Payment Status yang sesuai |
+|---|---|
+| Pending | Pending |
+| Confirmed | Paid, Refunded, atau Demo |
+| Completed | Paid, Refunded, atau Demo |
+| Cancelled | Pending, Paid, Refunded, atau Demo sesuai kasus |
+
+Kombinasi berikut tidak boleh dibuat:
+
+```text
+Pending + Paid
+Confirmed + Pending
+Completed + Pending
+```
+
+## 8. Menyiapkan Manifest Provider
+
+Manifest diperiksa menjelang keberangkatan setelah status pembayaran dipastikan.
+
+Hanya booking Confirmed/Completed dengan status Paid yang masuk manifest.
+
+Periksa:
+
+- booking code;
+- nama pemesan dan kontak;
+- nama dan jumlah penumpang;
+- status booking dan pembayaran;
+- rute, tanggal, dan jam;
+- operator dan kapal.
+
+Gunakan **Print / Save as PDF**, periksa hasilnya, lalu kirim melalui kanal yang disepakati dengan provider.
+
+Contoh pesan:
+
+```text
+Halo,
+
+Berikut manifest penumpang Nusa Gili Boat untuk keberangkatan:
+
+Tanggal:
+Jam:
+Rute:
+Operator/Kapal:
+
+Manifest hanya berisi booking yang sudah dikonfirmasi dan dibayar.
+
+Terima kasih.
+```
+
+## 9. Hari Keberangkatan
+
+1. Buka Departures dan pilih tanggal perjalanan.
+2. Periksa Booked dan Held.
+3. Pastikan manifest sudah dikirim.
+4. Pastikan pelanggan memahami proses verifikasi dengan provider.
+5. Bantu pelanggan bila ada kendala.
+6. Catat masalah operasional.
+7. Setelah perjalanan selesai, ubah booking menjadi Completed bila diperlukan.
+
+Booking Pending yang belum dibayar tidak dihitung sebagai penumpang terjual.
+
+## 10. Penutupan Operasional Harian
+
+Sebelum selesai bekerja:
+
+- periksa booking Pending;
+- tindak lanjuti pembayaran bermasalah;
+- pastikan inventory beberapa hari ke depan tersedia;
+- tutup inventory yang belum dikonfirmasi provider;
+- periksa keberangkatan hari berikutnya;
+- periksa manifest yang harus dikirim;
+- pastikan tidak ada status booking yang tidak konsisten.
+
+Checklist:
+
+```text
+[ ] Inventory berikutnya tersedia
+[ ] Pending booking diperiksa
+[ ] Pembayaran bermasalah ditindaklanjuti
+[ ] Paid booking masuk manifest
+[ ] Manifest keberangkatan berikutnya siap
+[ ] Data test tidak tampil sebagai inventory normal
+[ ] Tidak ada OPEN inventory dengan Available 0
+```
+
+## 11. Prosedur High Season
+
+Saat high season:
+
+- periksa inventory lebih sering;
+- lakukan follow-up Pending lebih cepat;
+- tutup penjualan jika kursi tidak pasti;
+- catat waktu terakhir konfirmasi dan nama kontak provider;
+- pantau perubahan jadwal, pembatalan, dan titik check-in;
+- hindari overselling dengan mengutamakan data terbaru.
+
+Jika ketersediaan tidak dapat dipastikan:
+
+```text
+Sales Status = CLOSED
+```
+
+## 12. Penanganan Data Pengujian
+
+Inventory atau booking test harus diberi catatan yang jelas, tidak dibiarkan aktif untuk pelanggan umum, dan dinonaktifkan setelah pengujian.
+
+Jangan menghapus inventory yang sudah memiliki booking atau payment session. Simpan sebagai riwayat pengujian Production.
+
+Jika masih memiliki Held Seats, tunggu booking expired atau selesaikan status booking sebelum menonaktifkan inventory.
+
+## 13. Tindakan Darurat
+
+### Website atau pembayaran bermasalah
+
+1. jangan mengubah status sembarangan;
+2. catat booking code dan waktu kejadian;
+3. simpan screenshot error;
+4. gunakan bantuan manual bila diperlukan;
+5. hubungi pelanggan;
+6. periksa kembali setelah sistem normal.
+
+### Perubahan jadwal provider
+
+1. ubah inventory menjadi CLOSED;
+2. hentikan penjualan;
+3. identifikasi booking terdampak;
+4. hubungi pelanggan;
+5. tawarkan jadwal pengganti atau refund sesuai kebijakan.
+
+### Overselling
+
+1. hentikan penjualan;
+2. konfirmasi kapasitas dengan provider;
+3. prioritaskan booking Paid dan Confirmed;
+4. hubungi pelanggan terdampak;
+5. catat seluruh tindakan.
+
+## 14. Ringkasan Alur Admin
+
+```text
+Update Inventory
+        ↓
+Pantau Booking Pending
+        ↓
+Bantu Pelanggan Bermasalah
+        ↓
+Verifikasi Pembayaran
+        ↓
+Confirmed + Paid
+        ↓
+Held menjadi Booked
+        ↓
+Masuk Manifest
+        ↓
+Kirim ke Provider
+        ↓
+Pantau Keberangkatan
+        ↓
+Selesaikan dan Arsipkan
+```
+
+## 15. Aturan yang Tidak Boleh Dilanggar
+
+1. Jangan menebak jumlah kursi.
+2. Jangan mengonfirmasi booking sebelum pembayaran diverifikasi.
+3. Jangan memasukkan booking Pending ke manifest.
+4. Jangan menghapus inventory yang memiliki riwayat booking.
+5. Jangan mempertahankan OPEN jika kursi tidak pasti.
+6. Jangan mengubah integrasi payment tanpa prosedur teknis.
+7. Jangan membagikan API key, token, VA merchant, atau credential.
+8. Jangan menganggap Booking Confirmation sebagai tiket resmi provider.
+9. Jangan menjanjikan kursi sebelum inventory tersedia.
+10. Utamakan akurasi data dibanding jumlah penjualan.
