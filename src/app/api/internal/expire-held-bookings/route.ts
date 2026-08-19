@@ -23,7 +23,7 @@ export const dynamic =
   "force-dynamic"
 
 const MAX_PROCESS_PER_RUN =
-  20
+  5
 
 type AppwriteRow =
   Record<string, unknown> & {
