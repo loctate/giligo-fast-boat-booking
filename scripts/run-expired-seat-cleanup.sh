@@ -104,10 +104,6 @@ HTTP_CODE="$(
     --show-error \
     --connect-timeout 10 \
     --max-time 60 \
-    --retry 2 \
-    --retry-delay 2 \
-    --retry-connrefused \
-    --retry-all-errors \
     --output "${RESPONSE_FILE}" \
     --write-out '%{http_code}' \
     "${CLEANUP_ENDPOINT_URL}"
@@ -161,14 +157,6 @@ if http_code != 200:
     )
     raise SystemExit(1)
 
-if body.get("success") is not True:
-    print(
-        "[nusagiliboat-seat-cleanup] ERROR: Endpoint reported success=false.",
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-
-
 def integer_value(name: str) -> int:
     value = body.get(name, 0)
 
@@ -188,16 +176,48 @@ skipped = integer_value("skippedCount")
 failed = integer_value("failedCount")
 
 print(
-    "[nusagiliboat-seat-cleanup] Cleanup completed successfully."
-)
-
-print(
     "[nusagiliboat-seat-cleanup] "
     f"scanned={scanned} "
     f"candidates={candidates} "
     f"processed={processed} "
     f"skipped={skipped} "
     f"failed={failed}"
+)
+
+if body.get("success") is not True:
+    print(
+        "[nusagiliboat-seat-cleanup] "
+        "ERROR: Endpoint reported success=false.",
+        file=sys.stderr,
+    )
+
+    results = body.get("results", [])
+
+    if isinstance(results, list):
+        for result in results:
+            if (
+                isinstance(result, dict)
+                and result.get("state") == "failed"
+            ):
+                booking_code = str(
+                    result.get("bookingCode") or "unknown"
+                )
+                reason = str(
+                    result.get("reason")
+                    or "Unknown cleanup error."
+                )
+
+                print(
+                    "[nusagiliboat-seat-cleanup] "
+                    f"FAILED booking={booking_code} "
+                    f"reason={reason}",
+                    file=sys.stderr,
+                )
+
+    raise SystemExit(1)
+
+print(
+    "[nusagiliboat-seat-cleanup] Cleanup completed successfully."
 )
 
 if failed > 0:
