@@ -319,9 +319,9 @@ test(
 );
 
 test(
-  "late success after seat release requires manual review",
+  "late success after seat release persists manual review metadata",
   async () => {
-    let mutationCalls = 0;
+    const mutations = [];
 
     const processor =
       createCallbackProcessor({
@@ -337,11 +337,15 @@ test(
           ],
 
         applyLifecycleImpl:
-          async () => {
-            mutationCalls += 1;
+          async (mutation) => {
+            mutations.push(
+              mutation,
+            );
 
             return {
               duplicate: false,
+              applied: true,
+              manualReview: true,
             };
           },
       });
@@ -363,12 +367,47 @@ test(
 
     assert.equal(
       result.applied,
+      true,
+    );
+
+    assert.equal(
+      result.duplicate,
       false,
     );
 
     assert.equal(
-      mutationCalls,
-      0,
+      mutations.length,
+      1,
+    );
+
+    assert.equal(
+      mutations[0].seatAction,
+      "none",
+    );
+
+    assert.equal(
+      mutations[0].nextBookingStatus,
+      "Cancelled",
+    );
+
+    assert.equal(
+      mutations[0].nextPaymentStatus,
+      "Pending",
+    );
+
+    assert.equal(
+      mutations[0].paymentReviewRequired,
+      true,
+    );
+
+    assert.equal(
+      mutations[0].paymentReviewReason,
+      "LATE_SUCCESS_AFTER_SEAT_RELEASE",
+    );
+
+    assert.equal(
+      mutations[0].paymentReviewAt,
+      "2026-07-26T16:10:00.000Z",
     );
   },
 );

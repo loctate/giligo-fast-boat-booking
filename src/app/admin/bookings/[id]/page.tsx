@@ -42,6 +42,9 @@ type BookingRow = {
   bookingStatus: string
   paymentStatus: string
   paymentVerificationAllowed?: boolean
+  paymentReviewRequired?: boolean | null
+  paymentReviewReason?: string | null
+  paymentReviewAt?: string | null
   expiresAt?: string | null
 
   tripType: string
@@ -1168,6 +1171,15 @@ export default async function BookingDetailPage({
             }
             initialPaymentStatus={
               booking.paymentStatus
+            }
+            paymentReviewRequired={
+              booking.paymentReviewRequired === true
+            }
+            paymentReviewReason={
+              booking.paymentReviewReason ?? null
+            }
+            paymentReviewAt={
+              booking.paymentReviewAt ?? null
             }
           />
         </aside>

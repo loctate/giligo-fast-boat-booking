@@ -178,10 +178,11 @@ function normalizeMutation(
     !supportedSeatActions.has(
       seatAction,
     )
+    && seatAction !== "none"
   ) {
     fail(
       "UNSUPPORTED_SEAT_ACTION",
-      "The callback adapter only supports held-to-booked and release-held.",
+      "The callback adapter only supports held-to-booked, release-held, and metadata-only review.",
     );
   }
 
@@ -270,6 +271,20 @@ function normalizeMutation(
       requireText(
         mutation.nextPaymentStatus,
         "mutation.nextPaymentStatus",
+      ),
+
+    paymentReviewRequired:
+      mutation.paymentReviewRequired
+        === true,
+
+    paymentReviewReason:
+      optionalText(
+        mutation.paymentReviewReason,
+      ),
+
+    paymentReviewAt:
+      optionalText(
+        mutation.paymentReviewAt,
       ),
   };
 }
@@ -717,6 +732,93 @@ createAppwriteCallbackAdapter({
         currentPlan.kind
           !== "transition"
       ) {
+        if (
+          currentPlan.kind
+            === "manual-review"
+        ) {
+          if (
+            mutation.paymentReviewRequired
+              !== true
+            || mutation.paymentReviewReason
+              !== currentPlan.reason
+            || !mutation.paymentReviewAt
+          ) {
+            fail(
+              "INVALID_PAYMENT_REVIEW_MUTATION",
+              "The callback payment-review metadata is invalid.",
+            );
+          }
+
+          const alreadyRecorded =
+            booking.paymentReviewRequired
+              === true
+            && cleanText(
+              booking.paymentReviewReason,
+            ) === currentPlan.reason;
+
+          if (alreadyRecorded) {
+            await tablesDB
+              .updateTransaction({
+                transactionId,
+                rollback:
+                  true,
+              });
+
+            transactionId =
+              null;
+
+            return {
+              duplicate: true,
+              applied: false,
+              manualReview: true,
+              reason:
+                currentPlan.reason,
+            };
+          }
+
+          await tablesDB.updateRow({
+            databaseId:
+              config.databaseId,
+
+            tableId:
+              config.bookingsTableId,
+
+            rowId:
+              mutation.bookingId,
+
+            data: {
+              paymentReviewRequired:
+                true,
+
+              paymentReviewReason:
+                currentPlan.reason,
+
+              paymentReviewAt:
+                mutation.paymentReviewAt,
+            },
+
+            transactionId,
+          });
+
+          await tablesDB
+            .updateTransaction({
+              transactionId,
+              commit:
+                true,
+            });
+
+          transactionId =
+            null;
+
+          return {
+            duplicate: false,
+            applied: true,
+            manualReview: true,
+            reason:
+              currentPlan.reason,
+          };
+        }
+
         await tablesDB
           .updateTransaction({
             transactionId,
@@ -726,16 +828,6 @@ createAppwriteCallbackAdapter({
 
         transactionId =
           null;
-
-        if (
-          currentPlan.kind
-            === "manual-review"
-        ) {
-          fail(
-            "CALLBACK_REQUIRES_MANUAL_REVIEW",
-            currentPlan.reason,
-          );
-        }
 
         return {
           duplicate: true,

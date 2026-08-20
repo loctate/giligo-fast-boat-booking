@@ -7,6 +7,9 @@ type StatusEditorProps = {
   rowId: string
   initialBookingStatus: string
   initialPaymentStatus: string
+  paymentReviewRequired: boolean
+  paymentReviewReason: string | null
+  paymentReviewAt: string | null
 }
 
 type UpdateResponse = {
@@ -69,6 +72,9 @@ export default function StatusEditor({
   rowId,
   initialBookingStatus,
   initialPaymentStatus,
+  paymentReviewRequired,
+  paymentReviewReason,
+  paymentReviewAt,
 }: StatusEditorProps) {
   const router = useRouter()
 
@@ -101,6 +107,30 @@ export default function StatusEditor({
   const cancelledPaidNeedsReview =
     bookingStatus === "Cancelled" &&
     paymentStatus === "Paid"
+
+  const callbackPaymentNeedsReview =
+    paymentReviewRequired === true
+
+  const reviewReasonLabel =
+    paymentReviewReason ===
+    "LATE_SUCCESS_AFTER_SEAT_RELEASE"
+      ? "Payment received after seat release"
+      : paymentReviewReason ||
+        "Payment review required"
+
+  const reviewAtLabel =
+    paymentReviewAt
+      ? new Intl.DateTimeFormat(
+          "en-GB",
+          {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Asia/Makassar",
+          }
+        ).format(
+          new Date(paymentReviewAt)
+        )
+      : null
 
   async function handleSave() {
     if (isSaving) {
@@ -241,6 +271,33 @@ export default function StatusEditor({
             </option>
           </select>
         </label>
+
+        {callbackPaymentNeedsReview && (
+          <div
+            role="alert"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+          >
+            <p className="font-black">
+              Action required: {reviewReasonLabel}
+            </p>
+
+            {reviewAtLabel && (
+              <p className="mt-2 text-xs font-bold uppercase tracking-wide text-amber-800">
+                Review recorded {reviewAtLabel} WITA
+              </p>
+            )}
+
+            <p className="mt-2 leading-6">
+              A payment callback was received after this booking had already released its seats.
+              The booking remains cancelled and no seats have been reserved again.
+            </p>
+
+            <p className="mt-2 font-semibold leading-6">
+              Verify the payment first, then check seat availability before reactivating this booking.
+              Otherwise process the appropriate refund or manual resolution.
+            </p>
+          </div>
+        )}
 
         {cancelledPaidNeedsReview && (
           <div

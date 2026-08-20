@@ -521,7 +521,15 @@ export function createCallbackProcessor({
         booking: bookings[0],
       });
 
-    if (plan.kind !== "transition") {
+    const persistPaymentReview =
+      plan.kind === "manual-review"
+      && plan.reason
+        === "LATE_SUCCESS_AFTER_SEAT_RELEASE";
+
+    if (
+      plan.kind !== "transition"
+      && !persistPaymentReview
+    ) {
       return {
         ...plan,
         applied: false,
@@ -572,13 +580,43 @@ export function createCallbackProcessor({
           plan.currentPaymentStatus,
 
         seatAction:
-          plan.seatAction,
+          persistPaymentReview
+            ? "none"
+            : plan.seatAction,
 
         nextBookingStatus:
-          plan.nextBookingStatus,
+          persistPaymentReview
+            ? plan.currentBookingStatus
+            : plan.nextBookingStatus,
 
         nextPaymentStatus:
-          plan.nextPaymentStatus,
+          persistPaymentReview
+            ? plan.currentPaymentStatus
+            : plan.nextPaymentStatus,
+
+        paymentReviewRequired:
+          persistPaymentReview,
+
+        paymentReviewReason:
+          persistPaymentReview
+            ? plan.reason
+            : null,
+
+        paymentReviewAt:
+          persistPaymentReview
+            ? (
+                normalizedEvent.timestamp
+                && !Number.isNaN(
+                  Date.parse(
+                    normalizedEvent.timestamp,
+                  ),
+                )
+                  ? new Date(
+                      normalizedEvent.timestamp,
+                    ).toISOString()
+                  : new Date().toISOString()
+              )
+            : null,
       });
 
     if (
@@ -594,7 +632,8 @@ export function createCallbackProcessor({
 
     return {
       ...plan,
-      applied: true,
+      applied:
+        result.applied !== false,
 
       duplicate:
         Boolean(result.duplicate),

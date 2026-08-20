@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  AppwriteCallbackAdapterError,
   createAppwriteCallbackAdapter,
 } from "../src/appwrite-callback-adapter.mjs";
 
@@ -654,21 +653,24 @@ test(
 );
 
 test(
-  "late success race requires manual review",
+  "late success race persists manual review without seat mutation",
   async () => {
+    const cancelledBooking =
+      bookingRow({
+        bookingStatus:
+          "Cancelled",
+
+        paymentStatus:
+          "Pending",
+      });
+
     const mock =
       createMockTables({
         lookupBooking:
-          bookingRow(),
+          cancelledBooking,
 
         transactionBooking:
-          bookingRow({
-            bookingStatus:
-              "Cancelled",
-
-            paymentStatus:
-              "Pending",
-          }),
+          cancelledBooking,
       });
 
     const processor =
@@ -676,26 +678,167 @@ test(
         ...createAdapter(mock),
       });
 
-    await assert.rejects(
-      () => processor(
+    const result =
+      await processor(
         callbackEvent(),
-      ),
+      );
 
-      (error) => {
-        assert.equal(
-          error
-            instanceof
-              AppwriteCallbackAdapterError,
+    assert.equal(
+      result.kind,
+      "manual-review",
+    );
+
+    assert.equal(
+      result.reason,
+      "LATE_SUCCESS_AFTER_SEAT_RELEASE",
+    );
+
+    assert.equal(
+      result.applied,
+      true,
+    );
+
+    assert.equal(
+      result.duplicate,
+      false,
+    );
+
+    assert.equal(
+      mock.calls.incrementRowColumn.length,
+      0,
+    );
+
+    assert.equal(
+      mock.calls.decrementRowColumn.length,
+      0,
+    );
+
+    assert.equal(
+      mock.calls.updateRow.length,
+      1,
+    );
+
+    const reviewWrite =
+      mock.calls.updateRow[0];
+
+    assert.equal(
+      reviewWrite.tableId,
+      config.bookingsTableId,
+    );
+
+    assert.equal(
+      reviewWrite.rowId,
+      cancelledBooking.$id,
+    );
+
+    assert.deepEqual(
+      reviewWrite.data,
+      {
+        paymentReviewRequired:
           true,
-        );
 
-        assert.equal(
-          error.code,
-          "CALLBACK_REQUIRES_MANUAL_REVIEW",
-        );
+        paymentReviewReason:
+          "LATE_SUCCESS_AFTER_SEAT_RELEASE",
 
-        return true;
+        paymentReviewAt:
+          "2026-07-26T16:30:00.000Z",
       },
+    );
+
+    assert.equal(
+      Object.hasOwn(
+        reviewWrite.data,
+        "bookingStatus",
+      ),
+      false,
+    );
+
+    assert.equal(
+      Object.hasOwn(
+        reviewWrite.data,
+        "paymentStatus",
+      ),
+      false,
+    );
+
+    assert.equal(
+      mock.calls
+        .updateTransaction
+        .at(-1)
+        .commit,
+      true,
+    );
+  },
+);
+
+test(
+  "duplicate manual review performs no second booking write",
+  async () => {
+    const reviewedBooking =
+      bookingRow({
+        bookingStatus:
+          "Cancelled",
+
+        paymentStatus:
+          "Pending",
+
+        paymentReviewRequired:
+          true,
+
+        paymentReviewReason:
+          "LATE_SUCCESS_AFTER_SEAT_RELEASE",
+
+        paymentReviewAt:
+          "2026-07-27T00:25:00+08:00",
+      });
+
+    const mock =
+      createMockTables({
+        lookupBooking:
+          reviewedBooking,
+
+        transactionBooking:
+          reviewedBooking,
+      });
+
+    const processor =
+      createCallbackProcessor({
+        ...createAdapter(mock),
+      });
+
+    const result =
+      await processor(
+        callbackEvent(),
+      );
+
+    assert.equal(
+      result.kind,
+      "manual-review",
+    );
+
+    assert.equal(
+      result.applied,
+      false,
+    );
+
+    assert.equal(
+      result.duplicate,
+      true,
+    );
+
+    assert.equal(
+      mock.calls.updateRow.length,
+      0,
+    );
+
+    assert.equal(
+      mock.calls.incrementRowColumn.length,
+      0,
+    );
+
+    assert.equal(
+      mock.calls.decrementRowColumn.length,
+      0,
     );
 
     assert.equal(
