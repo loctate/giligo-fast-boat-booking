@@ -629,7 +629,7 @@ export default function RefundAndCancellationPolicyPage() {
             "Disclosed administrative or service charges.",
             "Insurance premiums for active coverage.",
             "Charges for third-party services that have been used or cannot be cancelled.",
-            "Third-party payment processing fees actually charged and classified as non-refundable by PayPal, a card issuer, a bank, or another applicable payment service.",
+            "Third-party payment processing fees actually charged and classified as non-refundable by a payment provider, card issuer, bank, or another applicable payment service.",
           ]}
         />
 
@@ -685,9 +685,9 @@ export default function RefundAndCancellationPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          For a card payment completed through a PayPal
-          payment link, the refund may be processed
-          through PayPal, the card issuer, or another
+          Depending on the original payment method, a
+          refund may be processed through the applicable
+          payment provider, card issuer, bank, or another
           agreed method, subject to the relevant
           procedures.
         </p>
@@ -732,7 +732,7 @@ export default function RefundAndCancellationPolicyPage() {
         <p className="leading-8 text-slate-600">
           This timeframe is an estimate and may vary
           depending on the receiving bank, card issuer,
-          PayPal, payment network, public holidays,
+          payment provider, payment network, public holidays,
           currency conversion, and additional
           verification required for the refund.
         </p>
@@ -817,7 +817,7 @@ export default function RefundAndCancellationPolicyPage() {
 
         <p className="leading-8 text-slate-600">
           The customer is also responsible for ensuring
-          that the bank account, card, PayPal account,
+          that the bank account, card, payment account,
           or other payment method used is under their
           authority.
         </p>

@@ -6,6 +6,10 @@ import {
   tablesDB,
 } from "@/lib/appwrite-server"
 
+import {
+  isPaymentVerificationModeEnabled,
+} from "@/lib/payment-verification"
+
 import AdminShell from "../../AdminShell"
 import StatusEditor from "./StatusEditor"
 
@@ -814,15 +818,22 @@ export default async function BookingDetailPage({
         passengerCount
       : 0
 
-  const paymentChannel =
+  const paymentVerificationModeEnabled =
+    isPaymentVerificationModeEnabled()
+
+  const onlinePaymentAllowed =
+    !paymentVerificationModeEnabled ||
     booking.paymentVerificationAllowed === true
-      ? "iPaymu Verification"
+
+  const paymentChannel =
+    onlinePaymentAllowed
+      ? "iPaymu Online Payment"
       : "Manual Assistance"
 
   const verificationAccess =
-    booking.paymentVerificationAllowed === true
-      ? "Online payment authorized"
-      : "Standard manual-payment booking"
+    onlinePaymentAllowed
+      ? "Online payment available"
+      : "Controlled payment verification required"
 
   const seatPosition =
     getSeatPosition(
@@ -881,7 +892,7 @@ export default async function BookingDetailPage({
 
             <span
               className={`rounded-full px-4 py-2 text-sm font-black ${
-                booking.paymentVerificationAllowed === true
+                onlinePaymentAllowed
                   ? "bg-sky-100 text-sky-800"
                   : "bg-amber-100 text-amber-800"
               }`}

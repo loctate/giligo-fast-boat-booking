@@ -251,7 +251,7 @@ export default function PrivacyPolicyPage() {
             "Secara langsung dari pelanggan ketika mencari perjalanan, membuat booking, atau menghubungi kami.",
             "Dari orang yang membuat booking atas nama penumpang lain.",
             "Dari operator fast boat yang menangani perjalanan.",
-            "Dari PayPal, penerbit kartu, bank, penerima pembayaran QRIS, atau layanan pembayaran dan refund lain yang terlibat dalam transaksi.",
+            "Dari iPaymu, bank, penerbit kartu, jaringan pembayaran, atau layanan pembayaran dan refund lain yang terlibat dalam transaksi.",
             "Dari sistem teknis, log server, cookie, dan alat keamanan.",
             "Dari penyedia layanan yang membantu operasional situs dan booking.",
           ]}
@@ -366,29 +366,29 @@ export default function PrivacyPolicyPage() {
         title="Pemrosesan pembayaran"
       >
         <p className="leading-8 text-slate-600">
-          Proses pembayaran saat ini ditangani secara
-          manual. Pelanggan dapat meminta instruksi
-          pembayaran QRIS resmi atau payment link
-          PayPal melalui saluran layanan WhatsApp Nusa
-          Gili Boat.
+          Pembayaran online diproses melalui iPaymu.
+          Pelanggan diarahkan ke halaman pembayaran aman
+          yang menampilkan metode pembayaran yang tersedia
+          untuk transaksi tersebut.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Untuk pembayaran QRIS, Nusa Gili Boat dapat
-          menerima bukti pembayaran, referensi
-          transaksi, informasi pembayar, jumlah
-          pembayaran, waktu pembayaran, dan informasi
-          lain yang diperlukan untuk melakukan
-          verifikasi pembayaran secara manual.
+          Nusa Gili Boat dapat menerima informasi transaksi
+          dari penyedia pembayaran, termasuk nomor
+          referensi, ID transaksi, metode pembayaran,
+          jumlah pembayaran, status transaksi, waktu
+          pembayaran, dan informasi yang secara wajar
+          diperlukan untuk mencocokkan booking dan
+          pembayaran.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Untuk pembayaran kartu melalui payment link
-          PayPal, PayPal, penerbit kartu, serta penyedia
-          jasa keuangan terkait dapat mengumpulkan dan
-          memproses informasi yang diperlukan untuk
-          mengotorisasi, menyelesaikan, membatalkan,
-          menyengketakan, atau mengembalikan transaksi.
+          iPaymu serta bank, penerbit kartu, jaringan
+          pembayaran, atau penyedia jasa keuangan terkait
+          dapat mengumpulkan dan memproses informasi yang
+          diperlukan untuk mengotorisasi, menyelesaikan,
+          membatalkan, menyengketakan, atau mengembalikan
+          transaksi.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -396,10 +396,11 @@ export default function PrivacyPolicyPage() {
           transaksi seperti nomor referensi, ID
           transaksi, metode pembayaran, jumlah
           pembayaran, status transaksi, waktu
-          pembayaran, dan status refund. Konfirmasi
-          pembayaran dan booking diperiksa secara
-          manual oleh admin sebelum booking ditandai
-          Confirmed.
+          pembayaran, dan status refund. Status pembayaran dan booking dapat diperbarui
+          berdasarkan informasi transaksi terverifikasi
+          dari penyedia pembayaran. Transaksi yang
+          memerlukan pemeriksaan tambahan dapat ditangani
+          secara manual oleh admin.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -408,9 +409,9 @@ export default function PrivacyPolicyPage() {
           nomor kartu lengkap, CVV, PIN, kata sandi
           perbankan, atau kode OTP melalui WhatsApp,
           email, maupun formulir layanan pelanggan.
-          Data kartu yang dimasukkan pada PayPal
-          diproses melalui PayPal dan penyedia jasa
-          keuangan terkait.
+          Kredensial pembayaran sensitif yang dimasukkan
+          pada halaman pembayaran ter-host diproses oleh
+          penyedia pembayaran dan jasa keuangan terkait.
         </p>
       </PolicySection>
 
@@ -430,7 +431,7 @@ export default function PrivacyPolicyPage() {
             "Penyedia layanan keamanan, pemantauan, dan pencegahan penipuan.",
             "Penyedia analytics dan pengukuran kinerja situs.",
             "Penyedia layanan akuntansi, audit, pajak, atau bantuan profesional.",
-            "Bank, PayPal, penerbit kartu, penerima pembayaran QRIS, serta penyedia layanan pembayaran atau refund lainnya.",
+            "iPaymu, bank, penerbit kartu, jaringan pembayaran, serta penyedia layanan pembayaran atau refund lainnya.",
             "Instansi pemerintah, regulator, pengadilan, atau aparat penegak hukum apabila diwajibkan.",
             "Pihak lain berdasarkan instruksi atau persetujuan pengguna.",
           ]}
@@ -791,17 +792,17 @@ export default function PrivacyPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Dalam flow pembayaran manual QRIS dan payment
-          link PayPal yang berlaku saat ini, Nusa Gili
-          Boat tidak menandai booking sebagai Confirmed
-          hanya berdasarkan keputusan pembayaran
-          otomatis. Bukti pembayaran dan status
-          transaksi yang berlaku diperiksa oleh admin.
+          Status pembayaran dan booking dapat diperbarui
+          secara otomatis menggunakan informasi transaksi
+          terverifikasi yang diterima melalui integrasi
+          pembayaran. Transaksi yang tidak dapat
+          dicocokkan secara aman dapat memerlukan
+          pemeriksaan manual.
         </p>
 
         <p className="leading-8 text-slate-600">
-          PayPal, penerbit kartu, bank, dan penyedia jasa
-          keuangan lainnya dapat menggunakan sistem
+          iPaymu, penerbit kartu, bank, jaringan pembayaran,
+          dan penyedia jasa keuangan lainnya dapat menggunakan sistem
           otomatis untuk menilai risiko, mengotorisasi
           transaksi, dan mencegah penipuan sesuai
           kebijakan masing-masing.

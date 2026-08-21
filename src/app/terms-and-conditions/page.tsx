@@ -290,19 +290,19 @@ export default function TermsAndConditionsPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          The current manual payment options are QRIS and
-          credit or debit card payment through a PayPal
-          payment link. The customer selects a payment
-          method on the booking page and sends the
-          prepared request to the Nusa Gili Boat admin
-          through WhatsApp.
+          Online payments are processed through iPaymu.
+          Available payment methods are presented on the
+          secure payment page and may vary depending on
+          transaction eligibility and provider availability.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Payment remains pending until the Nusa Gili Boat
-          admin receives and verifies the payment. The
-          payment status and booking status will be
-          updated after manual verification.
+          Payment remains pending until the transaction is
+          successfully verified. Booking and payment status
+          may be updated automatically from payment-provider
+          transaction information. Transactions requiring
+          additional review may be handled manually by
+          Nusa Gili Boat.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -889,8 +889,8 @@ export default function TermsAndConditionsPage() {
           Refund processing times may vary depending on
           operator verification, admin review, the
           original payment method, the receiving bank,
-          the card issuer, and PayPal processing where
-          applicable.
+          the card issuer, and the applicable payment
+          provider.
         </p>
 
         <Link

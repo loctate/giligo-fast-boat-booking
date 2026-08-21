@@ -11,7 +11,7 @@ export const metadata: Metadata = createPublicPageMetadata({
   locale: "en",
   path: "/contact",
   title: "Contact Us | Nusa Gili Boat",
-  description: "Contact Nusa Gili Boat for fast boat booking assistance, schedules, passenger details, manual QRIS payments, PayPal card payment links, confirmation, changes, and cancellations.",
+  description: "Contact Nusa Gili Boat for fast boat booking assistance, schedules, passenger details, online payment assistance, confirmation, changes, and cancellations.",
 })
 
 const businessEmail =
@@ -56,7 +56,7 @@ export default function ContactPage() {
       locale="en"
       eyebrow="Customer Support"
       title="Contact Us"
-      description="Contact Nusa Gili Boat for assistance with fast boat searches, bookings, passenger information, manual payments, confirmation, schedule updates, changes, cancellations, and refunds."
+      description="Contact Nusa Gili Boat for assistance with fast boat searches, bookings, passenger information, online payments, confirmation, schedule updates, changes, cancellations, and refunds."
       lastUpdated="July 24, 2026"
     >
       <section className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
@@ -106,9 +106,10 @@ export default function ContactPage() {
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use WhatsApp for booking assistance, QRIS
-            payment instructions, PayPal card payment-link
-            requests, and time-sensitive travel questions.
+            Use WhatsApp for booking assistance, payment
+            support, and time-sensitive travel questions.
+            Online payments are completed through the secure
+            iPaymu payment page.
           </p>
 
           <a
@@ -215,10 +216,9 @@ export default function ContactPage() {
           Never send your PIN, OTP, CVV, banking
           password, complete card number, or other
           confidential financial credentials through
-          WhatsApp, email, or a contact form. QRIS
-          information and PayPal payment links must be
-          provided through the official Nusa Gili Boat
-          support channel.
+          WhatsApp, email, or a contact form. Complete
+          online payments only through the secure payment
+          page provided for your Nusa Gili Boat booking.
         </p>
       </section>
 

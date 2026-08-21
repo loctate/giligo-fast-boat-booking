@@ -53,7 +53,12 @@ export function isPaymentVerificationAllowed(
   if (
     !isPaymentVerificationModeEnabled()
   ) {
-    return false
+    /*
+     * Direct-payment mode:
+     * every otherwise eligible booking is
+     * authorized for online payment.
+     */
+    return true
   }
 
   const code =

@@ -11,7 +11,7 @@ export const metadata: Metadata = createPublicPageMetadata({
   locale: "id",
   path: "/contact",
   title: "Hubungi Kami | Nusa Gili Boat",
-  description: "Hubungi Nusa Gili Boat untuk bantuan booking fast boat, jadwal, data penumpang, pembayaran manual QRIS, payment link kartu melalui PayPal, konfirmasi, perubahan, dan pembatalan.",
+  description: "Hubungi Nusa Gili Boat untuk bantuan booking fast boat, jadwal, data penumpang, pembayaran online, konfirmasi, perubahan, dan pembatalan.",
 })
 
 const businessEmail =
@@ -56,7 +56,7 @@ export default function ContactPage() {
       locale="id"
       eyebrow="Layanan Pelanggan"
       title="Hubungi Kami"
-      description="Hubungi Nusa Gili Boat untuk bantuan pencarian fast boat, booking, data penumpang, pembayaran manual, konfirmasi, perubahan jadwal, pembatalan, dan refund."
+      description="Hubungi Nusa Gili Boat untuk bantuan pencarian fast boat, booking, data penumpang, pembayaran online, konfirmasi, perubahan jadwal, pembatalan, dan refund."
       lastUpdated="24 Juli 2026"
     >
       <section className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
@@ -108,9 +108,9 @@ export default function ContactPage() {
 
           <p className="mt-3 leading-7 text-slate-600">
             Gunakan WhatsApp untuk bantuan booking,
-            permintaan instruksi pembayaran QRIS,
-            permintaan payment link kartu melalui PayPal,
-            dan pertanyaan perjalanan yang mendesak.
+            dukungan pembayaran, dan pertanyaan perjalanan
+            yang mendesak. Pembayaran online diselesaikan
+            melalui halaman pembayaran aman iPaymu.
           </p>
 
           <a
@@ -219,9 +219,9 @@ export default function ContactPage() {
           Jangan pernah mengirim PIN, OTP, CVV, kata
           sandi perbankan, nomor kartu lengkap, atau
           kredensial finansial rahasia melalui WhatsApp,
-          email, maupun formulir kontak. Informasi QRIS
-          dan payment link PayPal harus diberikan melalui
-          saluran resmi Nusa Gili Boat.
+          email, maupun formulir kontak. Selesaikan
+          pembayaran online hanya melalui halaman pembayaran
+          aman yang diberikan untuk booking Nusa Gili Boat.
         </p>
       </section>
 

@@ -290,20 +290,21 @@ export default function TermsAndConditionsPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Metode pembayaran manual yang tersedia saat ini
-          adalah QRIS serta kartu kredit atau debit
-          melalui payment link PayPal. Pelanggan memilih
-          metode pembayaran pada halaman booking dan
-          mengirimkan permintaan yang telah disiapkan
-          kepada admin Nusa Gili Boat melalui WhatsApp.
+          Pembayaran online diproses melalui iPaymu.
+          Metode pembayaran yang tersedia ditampilkan pada
+          halaman pembayaran aman dan dapat berbeda sesuai
+          kelayakan transaksi serta ketersediaan penyedia
+          pembayaran.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Pembayaran tetap berstatus Pending sampai admin
-          Nusa Gili Boat menerima dan memverifikasi
-          pembayaran. Status pembayaran dan status
-          booking akan diperbarui setelah verifikasi
-          manual.
+          Pembayaran tetap berstatus Pending sampai transaksi
+          berhasil diverifikasi. Status pembayaran dan
+          booking dapat diperbarui secara otomatis
+          berdasarkan informasi transaksi dari penyedia
+          pembayaran. Transaksi yang memerlukan pemeriksaan
+          tambahan dapat ditangani secara manual oleh
+          Nusa Gili Boat.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -886,7 +887,7 @@ export default function TermsAndConditionsPage() {
           Waktu penyelesaian refund dapat berbeda bergantung
           pada verifikasi operator, pemeriksaan admin,
           metode pembayaran semula, bank penerima,
-          penerbit kartu, dan proses PayPal apabila
+          penerbit kartu, dan penyedia pembayaran yang
           berlaku.
         </p>
 

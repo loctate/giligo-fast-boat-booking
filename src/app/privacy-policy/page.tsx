@@ -249,7 +249,7 @@ export default function PrivacyPolicyPage() {
             "Directly from customers when they search for a journey, make a booking, or contact us.",
             "From a person making a booking on behalf of another passenger.",
             "From the fast boat operator responsible for the journey.",
-            "From PayPal, a card issuer, a bank, a QRIS payment recipient, or another payment or refund service involved in a transaction.",
+            "From iPaymu, a bank, card issuer, payment network, or another payment or refund service involved in a transaction.",
             "From technical systems, server logs, cookies, and security tools.",
             "From service providers that support our website and booking operations.",
           ]}
@@ -363,27 +363,27 @@ export default function PrivacyPolicyPage() {
         title="Payment processing"
       >
         <p className="leading-8 text-slate-600">
-          The current payment flow is handled manually.
-          Customers may request official QRIS payment
-          instructions or a PayPal payment link through
-          the Nusa Gili Boat WhatsApp support channel.
+          Online payments are processed through iPaymu.
+          Customers are directed to a secure payment page
+          where the payment methods available for the
+          transaction are presented.
         </p>
 
         <p className="leading-8 text-slate-600">
-          For a QRIS payment, Nusa Gili Boat may receive
-          payment proof, a transaction reference, payer
-          information, the payment amount, payment time,
-          and other information required to verify the
-          payment manually.
+          Nusa Gili Boat may receive transaction information
+          from the payment provider, including a reference
+          number, transaction ID, payment method, payment
+          amount, transaction status, payment time, and
+          information reasonably required to reconcile
+          the booking and payment.
         </p>
 
         <p className="leading-8 text-slate-600">
-          For a card payment made through a PayPal
-          payment link, PayPal, the card issuer, and
-          related financial service providers may
-          collect and process the information required
-          to authorize, complete, cancel, dispute, or
-          refund the transaction.
+          iPaymu and the applicable bank, card issuer,
+          payment network, or financial service provider
+          may collect and process information required to
+          authorize, complete, cancel, dispute, or refund
+          the transaction.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -391,9 +391,10 @@ export default function PrivacyPolicyPage() {
           information such as a reference number,
           transaction ID, payment method, payment
           amount, transaction status, payment time, and
-          refund status. Payment and booking
-          confirmation are reviewed manually by the
-          admin before the booking is marked Confirmed.
+          refund status. Payment and booking status may be updated from
+          verified payment-provider transaction
+          information. Transactions requiring additional
+          review may be handled manually by the admin.
         </p>
 
         <p className="leading-8 text-slate-600">
@@ -401,9 +402,10 @@ export default function PrivacyPolicyPage() {
           or intend to store complete card numbers, CVV
           codes, PINs, banking passwords, or OTP codes
           through WhatsApp, email, or a customer support
-          form. Card credentials entered on PayPal are
-          processed through PayPal and the relevant
-          financial service providers.
+          form. Sensitive payment credentials entered on a
+          hosted payment page are processed by the
+          applicable payment and financial service
+          providers.
         </p>
       </PolicySection>
 
@@ -423,7 +425,7 @@ export default function PrivacyPolicyPage() {
             "Security, monitoring, and fraud prevention providers.",
             "Analytics and website performance measurement providers.",
             "Accounting, audit, tax, or professional service providers.",
-            "Banks, PayPal, card issuers, QRIS payment recipients, and other payment or refund service providers.",
+            "iPaymu, banks, card issuers, payment networks, and other payment or refund service providers.",
             "Government agencies, regulators, courts, or law enforcement authorities where required.",
             "Other parties acting on the user's instructions or with the user's consent.",
           ]}
@@ -783,17 +785,17 @@ export default function PrivacyPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Under the current manual QRIS and PayPal-link
-          payment flow, Nusa Gili Boat does not mark a
-          booking Confirmed solely through an automated
-          payment decision. Payment evidence and the
-          applicable transaction status are reviewed by
-          the admin.
+          Payment and booking status may be updated
+          automatically using verified transaction
+          information received through the payment
+          integration. Transactions that cannot be safely
+          reconciled automatically may require manual
+          review.
         </p>
 
         <p className="leading-8 text-slate-600">
-          PayPal, card issuers, banks, and other
-          financial service providers may use automated
+          iPaymu, card issuers, banks, payment networks,
+          and other financial service providers may use automated
           systems to assess risk, authorize
           transactions, and prevent fraud according to
           their own policies.

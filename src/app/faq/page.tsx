@@ -11,7 +11,7 @@ export const metadata: Metadata = createPublicPageMetadata({
   locale: "en",
   path: "/faq",
   title: "Frequently Asked Questions | Nusa Gili Boat",
-  description: "Answers about fast boat booking, routes, schedules, payment, QRIS, PayPal card payments, confirmation, tickets, cancellations, refunds, baggage, and customer support.",
+  description: "Answers about fast boat booking, routes, schedules, secure online payment through iPaymu, confirmation, tickets, cancellations, refunds, baggage, and customer support.",
 })
 
 type FaqItem = {
@@ -50,7 +50,7 @@ const faqItems: FaqItem[] = [
   },
   {
     question: "Which payment methods are currently available?",
-    answer: "The current manual payment options are QRIS and credit or debit card payment through a PayPal payment link. The customer selects a method on the booking page and contacts the admin through the prepared WhatsApp message.",
+    answer: "Available online payment methods are presented securely through iPaymu after a booking is created. Complete the payment using one of the methods available on the iPaymu payment page.",
   },
   {
     question: "How does QRIS payment work?",
@@ -58,7 +58,7 @@ const faqItems: FaqItem[] = [
   },
   {
     question: "How do I pay by credit or debit card?",
-    answer: "Select Pay by Credit Card via PayPal. WhatsApp will open with a request for a PayPal payment link. The admin will send the payment link. Review the recipient, amount, currency, and payment details before completing the payment.",
+    answer: "If card payment is available for your transaction, select the applicable option on the secure iPaymu payment page and follow the instructions provided there.",
   },
   {
     question: "Should I send my card or banking details through WhatsApp?",
@@ -100,7 +100,7 @@ export default function FrequentlyAskedQuestionsPage() {
       locale="en"
       eyebrow="Customer Support"
       title="Frequently Asked Questions"
-      description="Find answers about searching for trips, booking fast boat tickets, manual QRIS and PayPal card payments, booking confirmation, schedules, tickets, cancellations, and customer support."
+      description="Find answers about searching for trips, booking fast boat tickets, secure online payment through iPaymu, booking confirmation, schedules, tickets, cancellations, and customer support."
       lastUpdated="July 24, 2026"
     >
       <section className="space-y-4">

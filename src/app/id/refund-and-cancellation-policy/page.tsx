@@ -630,7 +630,7 @@ export default function RefundAndCancellationPolicyPage() {
             "Biaya administrasi atau layanan yang telah diinformasikan.",
             "Premi asuransi yang telah aktif.",
             "Biaya layanan pihak ketiga yang telah digunakan atau tidak dapat dibatalkan.",
-            "Biaya pemrosesan pembayaran pihak ketiga yang benar-benar telah ditagihkan dan dinyatakan tidak dapat dikembalikan oleh PayPal, penerbit kartu, bank, atau layanan pembayaran terkait.",
+            "Biaya pemrosesan pembayaran pihak ketiga yang benar-benar telah ditagihkan dan dinyatakan tidak dapat dikembalikan oleh penyedia pembayaran, penerbit kartu, bank, atau layanan pembayaran terkait.",
           ]}
         />
 
@@ -689,9 +689,9 @@ export default function RefundAndCancellationPolicyPage() {
         </p>
 
         <p className="leading-8 text-slate-600">
-          Untuk pembayaran kartu melalui payment link
-          PayPal, refund dapat diproses melalui PayPal,
-          penerbit kartu, atau metode lain yang
+          Bergantung pada metode pembayaran semula, refund
+          dapat diproses melalui penyedia pembayaran,
+          penerbit kartu, bank, atau metode lain yang
           disepakati sesuai prosedur terkait.
         </p>
 
@@ -734,7 +734,7 @@ export default function RefundAndCancellationPolicyPage() {
         <p className="leading-8 text-slate-600">
           Waktu tersebut merupakan perkiraan dan dapat
           berbeda bergantung pada bank penerima,
-          penerbit kartu, PayPal, jaringan pembayaran,
+          penerbit kartu, penyedia pembayaran, jaringan pembayaran,
           hari libur, konversi mata uang, dan verifikasi
           tambahan yang diperlukan untuk refund.
         </p>
@@ -817,7 +817,7 @@ export default function RefundAndCancellationPolicyPage() {
 
         <p className="leading-8 text-slate-600">
           Pelanggan juga bertanggung jawab memastikan
-          rekening bank, kartu, akun PayPal, atau metode
+          rekening bank, kartu, akun pembayaran, atau metode
           pembayaran lain yang digunakan berada dalam
           kewenangannya.
         </p>

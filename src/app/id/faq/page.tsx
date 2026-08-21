@@ -11,7 +11,7 @@ export const metadata: Metadata = createPublicPageMetadata({
   locale: "id",
   path: "/faq",
   title: "Pertanyaan yang Sering Diajukan | Nusa Gili Boat",
-  description: "Jawaban mengenai pemesanan tiket fast boat, rute, jadwal, pembayaran QRIS, kartu melalui PayPal, konfirmasi, tiket, pembatalan, refund, bagasi, dan layanan pelanggan.",
+  description: "Jawaban mengenai pemesanan tiket fast boat, rute, jadwal, pembayaran online aman melalui iPaymu, konfirmasi, tiket, pembatalan, refund, bagasi, dan layanan pelanggan.",
 })
 
 type FaqItem = {
@@ -50,15 +50,15 @@ const faqItems: FaqItem[] = [
   },
   {
     question: "Metode pembayaran apa yang tersedia saat ini?",
-    answer: "Metode pembayaran manual yang tersedia adalah QRIS serta kartu kredit atau debit melalui payment link PayPal. Pelanggan memilih metode pada halaman booking, lalu menghubungi admin melalui pesan WhatsApp yang telah disiapkan.",
+    answer: "Metode pembayaran online yang tersedia ditampilkan melalui halaman pembayaran aman iPaymu setelah booking dibuat. Selesaikan pembayaran menggunakan salah satu metode yang tersedia untuk transaksi Anda.",
   },
   {
     question: "Bagaimana proses pembayaran melalui QRIS?",
-    answer: "Pilih Bayar dengan QRIS pada halaman booking. WhatsApp akan terbuka dengan data booking dan permintaan instruksi QRIS. Admin akan mengirimkan informasi QRIS resmi dan memverifikasi pembayaran setelah transaksi selesai.",
+    answer: "Jika QRIS tersedia untuk transaksi Anda, pilih metode tersebut pada halaman pembayaran aman iPaymu dan ikuti instruksi pembayaran yang ditampilkan.",
   },
   {
     question: "Bagaimana pembayaran menggunakan kartu kredit atau debit?",
-    answer: "Pilih pembayaran kartu melalui PayPal. WhatsApp akan terbuka dengan permintaan payment link PayPal. Admin akan mengirimkan tautan pembayaran. Periksa penerima, jumlah, mata uang, dan detail transaksi sebelum membayar.",
+    answer: "Jika pembayaran kartu tersedia untuk transaksi Anda, pilih opsi yang sesuai pada halaman pembayaran aman iPaymu dan ikuti instruksi yang ditampilkan.",
   },
   {
     question: "Apakah saya harus mengirimkan data kartu atau perbankan melalui WhatsApp?",
@@ -100,7 +100,7 @@ export default function FrequentlyAskedQuestionsPage() {
       locale="id"
       eyebrow="Layanan Pelanggan"
       title="Pertanyaan yang Sering Diajukan"
-      description="Temukan jawaban mengenai pencarian perjalanan, pemesanan tiket fast boat, pembayaran manual melalui QRIS dan kartu via PayPal, konfirmasi booking, jadwal, tiket, pembatalan, dan layanan pelanggan."
+      description="Temukan jawaban mengenai pencarian perjalanan, pemesanan tiket fast boat, pembayaran online aman melalui iPaymu, konfirmasi booking, jadwal, tiket, pembatalan, dan layanan pelanggan."
       lastUpdated="24 Juli 2026"
     >
       <section className="space-y-4">

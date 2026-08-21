@@ -10,6 +10,10 @@ import {
   getCurrentBaliDate,
 } from "@/lib/bali-date"
 
+import {
+  isPaymentVerificationModeEnabled,
+} from "@/lib/payment-verification"
+
 import AdminShell from "./AdminShell"
 
 export const dynamic = "force-dynamic"
@@ -951,14 +955,20 @@ export default async function AdminPage({
 
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
-                              booking.paymentVerificationAllowed === true
+                              (
+                                !isPaymentVerificationModeEnabled() ||
+                                booking.paymentVerificationAllowed === true
+                              )
                                 ? "bg-sky-100 text-sky-700"
                                 : "bg-amber-100 text-amber-700"
                             }`}
                           >
-                            {booking.paymentVerificationAllowed === true
-                              ? "iPaymu Verification"
-                              : "Manual Assistance"}
+                            {
+                              !isPaymentVerificationModeEnabled() ||
+                              booking.paymentVerificationAllowed === true
+                                ? "iPaymu Online Payment"
+                                : "Manual Assistance"
+                            }
                           </span>
                         </div>
                       </td>

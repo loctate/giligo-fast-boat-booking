@@ -57,7 +57,7 @@ const bookingSteps = [
   {
     number: "03",
     title: "Complete payment verification",
-    text: "Request QRIS or a PayPal payment link through WhatsApp. Your booking is confirmed after admin verification.",
+    text: "Complete your payment securely through iPaymu. Your booking is confirmed after the payment is successfully verified.",
   },
 ]
 

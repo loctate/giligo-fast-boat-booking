@@ -334,13 +334,6 @@ export default function CheckoutForm({
       formData.get("notes") ?? ""
     ).trim()
 
-    const verificationCode =
-      String(
-        formData.get(
-          "verificationCode"
-        ) ?? ""
-      ).trim()
-
     if (
       !fullName ||
       !email ||
@@ -387,8 +380,6 @@ export default function CheckoutForm({
 
       passengers,
       notes,
-
-      verificationCode,
     }
 
     try {
@@ -711,45 +702,6 @@ export default function CheckoutForm({
               />
             </label>
 
-            <details className="group mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-100">
-                <div>
-                  <p className="text-sm font-black text-slate-800">
-                    Have a payment verification code?
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Open this section only if Nusa Gili Boat provided you with a code.
-                  </p>
-                </div>
-
-                <span
-                  aria-hidden="true"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-cyan-700 shadow-sm transition group-open:rotate-180"
-                >
-                  ↓
-                </span>
-              </summary>
-
-              <div className="border-t border-slate-200 bg-cyan-50/70 p-5">
-                <label className="block text-sm font-black text-slate-800">
-                  Payment verification code
-
-                  <input
-                    type="password"
-                    name="verificationCode"
-                    maxLength={200}
-                    autoComplete="off"
-                    placeholder="Enter the code provided to you"
-                    className="mt-2 w-full rounded-xl border border-cyan-200 bg-white px-4 py-3.5 font-medium outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                  />
-                </label>
-
-                <p className="mt-3 text-xs leading-5 text-slate-600">
-                  Optional. This code is used only for authorized payment verification and does not affect standard bookings when left blank.
-                </p>
-              </div>
-            </details>
           </section>
         </div>
 
