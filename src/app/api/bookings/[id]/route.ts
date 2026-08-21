@@ -5,6 +5,11 @@ import {
   tablesDB,
 } from "@/lib/appwrite-server"
 
+import {
+  PaymentReviewResolutionError,
+  resolvePaymentReview,
+} from "@/lib/payment-review-resolution"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -35,6 +40,7 @@ type JourneyLabel =
 type UpdateBookingRequest = {
   bookingStatus?: unknown
   paymentStatus?: unknown
+  resolvePaymentReview?: unknown
 }
 
 type RouteContext = {
@@ -814,6 +820,9 @@ export async function PATCH(
         body.paymentStatus
       )
 
+    const resolvePaymentReviewRequested =
+      body.resolvePaymentReview === true
+
     if (
       !isBookingStatus(
         nextBookingStatus
@@ -868,6 +877,40 @@ export async function PATCH(
       cleanText(
         booking.bookingStatus
       )
+
+    const paymentReviewIsRequired =
+      booking.paymentReviewRequired === true
+
+    let paymentReviewResolution
+
+    try {
+      paymentReviewResolution =
+        resolvePaymentReview({
+          reviewRequired:
+            paymentReviewIsRequired,
+
+          resolveRequested:
+            resolvePaymentReviewRequested,
+
+          bookingStatus:
+            nextBookingStatus,
+
+          paymentStatus:
+            nextPaymentStatus,
+        })
+    } catch (error) {
+      if (
+        error instanceof
+        PaymentReviewResolutionError
+      ) {
+        throw new StatusUpdateError(
+          409,
+          error.message
+        )
+      }
+
+      throw error
+    }
 
     if (
       !isBookingStatus(
@@ -1057,6 +1100,11 @@ export async function PATCH(
 
           paymentStatus:
             nextPaymentStatus,
+
+          ...(
+            paymentReviewResolution
+              .bookingUpdate ?? {}
+          ),
         },
 
         transactionId,
@@ -1097,6 +1145,10 @@ export async function PATCH(
 
         paymentStatus:
           nextPaymentStatus,
+
+        paymentReviewResolved:
+          paymentReviewResolution
+            .resolved,
       },
 
       /*

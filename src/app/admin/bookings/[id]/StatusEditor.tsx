@@ -111,6 +111,16 @@ export default function StatusEditor({
   const callbackPaymentNeedsReview =
     paymentReviewRequired === true
 
+  const paymentReviewCanResolve =
+    (
+      bookingStatus === "Confirmed" &&
+      paymentStatus === "Paid"
+    ) ||
+    (
+      bookingStatus === "Cancelled" &&
+      paymentStatus === "Refunded"
+    )
+
   const reviewReasonLabel =
     paymentReviewReason ===
     "LATE_SUCCESS_AFTER_SEAT_RELEASE"
@@ -131,6 +141,100 @@ export default function StatusEditor({
           new Date(paymentReviewAt)
         )
       : null
+
+  async function handleResolvePaymentReview() {
+    if (
+      isSaving ||
+      !callbackPaymentNeedsReview
+    ) {
+      return
+    }
+
+    if (!statusPairIsValid) {
+      setIsError(true)
+      setMessage(
+        statusPairMessage
+      )
+      return
+    }
+
+    if (!paymentReviewCanResolve) {
+      setIsError(true)
+      setMessage(
+        "Resolve the review as Confirmed + Paid or Cancelled + Refunded."
+      )
+      return
+    }
+
+    const confirmed =
+      window.confirm(
+        bookingStatus === "Confirmed"
+          ? "Resolve this payment review and reactivate the booking? Seat availability will be checked before the change is committed."
+          : "Mark this payment review as resolved using the currently selected booking and payment statuses?"
+      )
+
+    if (!confirmed) {
+      return
+    }
+
+    setIsSaving(true)
+    setMessage("")
+    setIsError(false)
+
+    try {
+      const response = await fetch(
+        "/api/bookings/" + rowId,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            bookingStatus,
+            paymentStatus,
+            resolvePaymentReview:
+              true,
+          }),
+        }
+      )
+
+      const result =
+        (await response.json()) as
+          UpdateResponse
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Payment review could not be resolved."
+        )
+      }
+
+      setMessage(
+        "Payment review resolved successfully."
+      )
+
+      router.refresh()
+    } catch (error) {
+      console.error(
+        "Payment review resolution error:",
+        error
+      )
+
+      setIsError(true)
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Payment review could not be resolved."
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   async function handleSave() {
     if (isSaving) {
@@ -293,9 +397,25 @@ export default function StatusEditor({
             </p>
 
             <p className="mt-2 font-semibold leading-6">
-              Verify the payment first, then check seat availability before reactivating this booking.
-              Otherwise process the appropriate refund or manual resolution.
+              Resolve this review only as Confirmed + Paid after verifying seats, or Cancelled + Refunded after the refund is completed.
             </p>
+
+            <button
+              type="button"
+              onClick={
+                handleResolvePaymentReview
+              }
+              disabled={
+                isSaving ||
+                !statusPairIsValid ||
+                !paymentReviewCanResolve
+              }
+              className="mt-4 rounded-lg bg-amber-900 px-4 py-2 font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving
+                ? "Processing..."
+                : "Mark payment review resolved"}
+            </button>
           </div>
         )}
 
