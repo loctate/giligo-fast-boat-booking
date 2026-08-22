@@ -360,6 +360,61 @@ Jika masih memiliki Held Seats, tunggu booking expired atau selesaikan status bo
 4. hubungi pelanggan terdampak;
 5. catat seluruh tindakan.
 
+### iPaymu bridge atau callback bermasalah
+
+Jika halaman pembayaran, callback, atau bridge iPaymu diduga bermasalah:
+
+1. jangan mengubah Payment Status menjadi Paid secara manual hanya untuk
+   melewati gangguan;
+2. catat booking code, waktu kejadian, dan pesan error;
+3. periksa apakah masalah hanya terjadi pada satu booking atau seluruh
+   pembayaran;
+4. arahkan pelanggan untuk menunggu apabila status pembayaran belum
+   dapat dipastikan;
+5. eskalasi pemeriksaan bridge kepada penanggung jawab teknis;
+6. setelah layanan normal, periksa kembali Booking Detail dan Payment
+   Review sebelum mengambil tindakan lanjutan.
+
+### Seat cleanup scheduler bermasalah
+
+Jika booking yang sudah melewati masa hold tetap berada pada Pending
+dengan Held Seats, atau scheduler cleanup dilaporkan gagal:
+
+1. jangan mengurangi Held Seats secara manual tanpa mengetahui booking
+   sumbernya;
+2. catat booking dan inventory terkait;
+3. jika risiko overselling ada, ubah inventory menjadi CLOSED;
+4. eskalasi pemeriksaan scheduler dan cleanup service kepada penanggung
+   jawab teknis;
+5. setelah recovery, pastikan booking expired diproses dan Available
+   Seats kembali konsisten.
+
+### Held Seats atau inventory tidak konsisten
+
+Jika angka Booked, Held, Available, dan Capacity terlihat tidak sesuai:
+
+1. jangan menebak atau mengubah counter kursi secara spekulatif;
+2. identifikasi booking yang menggunakan inventory tersebut;
+3. hentikan penjualan dengan status CLOSED apabila ketersediaan tidak
+   dapat dipastikan;
+4. cocokkan booking Pending, Confirmed, Cancelled, dan status pembayaran;
+5. eskalasi jika sumber selisih tidak dapat dijelaskan dari booking yang
+   ada;
+6. buka kembali penjualan hanya setelah angka inventory konsisten.
+
+### Manifest tidak sesuai
+
+Jika jumlah booking atau penumpang di manifest tidak sesuai dengan data
+operasional:
+
+1. jangan kirim manifest yang diketahui tidak akurat kepada provider;
+2. periksa apakah booking terkait berstatus Confirmed atau Completed;
+3. pastikan Payment Status = Paid;
+4. cocokkan jumlah penumpang dan data penumpang pada Booking Detail;
+5. selesaikan Payment Review terlebih dahulu apabila masih aktif;
+6. setelah data sumber benar, buka kembali manifest dan periksa hasil
+   sebelum Print / Save as PDF.
+
 ## 14. Ringkasan Alur Admin
 
 ```text
