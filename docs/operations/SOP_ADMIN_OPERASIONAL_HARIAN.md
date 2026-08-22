@@ -113,6 +113,24 @@ Payment Status = Pending
 Seats = Held
 ```
 
+Pada flow Production, kursi booking Pending berada pada posisi **Held**
+selama masa pembayaran. Durasi seat hold default adalah **30 menit**.
+
+Admin tidak perlu membatalkan booking Pending normal hanya karena
+pelanggan belum langsung membayar. Sistem expiry otomatis akan
+memproses booking yang melewati masa hold.
+
+Jika masa hold berakhir dan pembayaran belum berhasil, hasil normalnya:
+
+```text
+Booking Status = Cancelled
+Payment Status = Pending
+Held Seats dilepaskan
+Available Seats bertambah kembali
+```
+
+Scheduler Production memeriksa expired held booking secara berkala.
+
 Periksa booking code, pelanggan, kontak, rute, tanggal, jumlah penumpang, total, metode pembayaran, batas waktu pembayaran, dan posisi kursi.
 
 Hubungi pelanggan bila pembayaran belum selesai, ada kendala, data belum lengkap, jadwal semakin dekat, atau inventory provider berubah.
@@ -135,13 +153,19 @@ Jika booking expired atau dibatalkan, pastikan Held Seats berkurang dan Availabl
 
 ### Pembayaran iPaymu
 
+Flow pembayaran Production normal menggunakan pembayaran online langsung
+melalui **iPaymu**.
+
 Alur normal:
 
-1. pelanggan menyelesaikan pembayaran;
-2. iPaymu mengirim callback;
-3. sistem memverifikasi callback;
-4. booking berubah menjadi Confirmed dan Paid;
-5. kursi berpindah dari Held ke Booked.
+1. booking dibuat sebagai Pending + Pending;
+2. kursi berada pada posisi Held;
+3. pelanggan membuka halaman pembayaran aman iPaymu;
+4. pelanggan menyelesaikan pembayaran;
+5. iPaymu mengirim callback;
+6. sistem memverifikasi callback;
+7. booking berubah menjadi Confirmed + Paid;
+8. kursi berpindah dari Held ke Booked.
 
 Target:
 
@@ -152,20 +176,48 @@ Held Seats berkurang
 Booked Seats bertambah
 ```
 
-### Pembayaran manual
+Admin **tidak boleh** mengubah booking menjadi Paid hanya berdasarkan
+pengakuan pelanggan, screenshot, atau pesan pembayaran tanpa verifikasi
+yang memadai.
 
-Sebelum mengonfirmasi booking:
+Jika pelanggan mengalami kendala pembayaran, admin boleh memberikan
+bantuan operasional dan komunikasi kepada pelanggan. Bantuan tersebut
+tidak menggantikan status pembayaran yang berasal dari sistem.
 
-1. cocokkan nama, nominal, waktu, dan referensi;
-2. pastikan dana benar-benar diterima;
-3. periksa kembali ketersediaan kursi;
-4. baru perbarui status booking.
+### Payment Review
 
-Jangan mengonfirmasi booking hanya berdasarkan screenshot bukti transfer.
+Beberapa kondisi pembayaran dapat membutuhkan pemeriksaan manual,
+misalnya pembayaran diterima setelah kursi sebelumnya sudah dilepaskan.
+
+Jika Booking Detail menampilkan **Payment Review Required**:
+
+1. jangan abaikan tanda review;
+2. periksa booking dan status pembayaran;
+3. periksa inventory dan ketersediaan kursi;
+4. jangan memasukkan booking ke manifest sebelum status final valid;
+5. tentukan penyelesaian yang benar.
+
+Payment Review hanya boleh diselesaikan dalam salah satu kondisi final:
+
+- **Confirmed + Paid** setelah pembayaran diverifikasi dan kursi aman;
+- **Cancelled + Refunded** setelah refund benar-benar selesai.
+
+Jangan menandai Payment Review sebagai resolved jika booking masih dalam
+kondisi antara seperti Cancelled + Paid atau Cancelled + Pending.
 
 ### Pembayaran setelah pembatalan
 
-Jika pembayaran diterima setelah booking dibatalkan, periksa kursi, hubungi pelanggan, lalu putuskan aktivasi ulang atau refund. Catat seluruh tindakan admin.
+Jika pembayaran diterima setelah booking dibatalkan:
+
+1. jangan langsung mengubah booking menjadi Confirmed;
+2. periksa Payment Review;
+3. periksa apakah kursi masih tersedia;
+4. hubungi pelanggan bila diperlukan;
+5. pilih salah satu hasil final:
+   - Confirmed + Paid jika pembayaran valid dan kursi tersedia; atau
+   - Cancelled + Refunded jika booking tidak dapat dipenuhi dan refund
+     telah selesai;
+6. catat tindakan admin yang relevan.
 
 ## 7. Perubahan Status Booking
 
@@ -236,6 +288,7 @@ Sebelum selesai bekerja:
 
 - periksa booking Pending;
 - tindak lanjuti pembayaran bermasalah;
+- pastikan tidak ada Payment Review Required yang terlewat;
 - pastikan inventory beberapa hari ke depan tersedia;
 - tutup inventory yang belum dikonfirmasi provider;
 - periksa keberangkatan hari berikutnya;
@@ -248,6 +301,7 @@ Checklist:
 [ ] Inventory berikutnya tersedia
 [ ] Pending booking diperiksa
 [ ] Pembayaran bermasalah ditindaklanjuti
+[ ] Payment Review Required diperiksa
 [ ] Paid booking masuk manifest
 [ ] Manifest keberangkatan berikutnya siap
 [ ] Data test tidak tampil sebagai inventory normal
