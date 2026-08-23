@@ -95,7 +95,7 @@ function createManualPaymentUrl({
   const message = [
     "Hello Nusa Gili Boat Support,",
     "",
-    "I would like to request manual payment instructions for this booking.",
+    "I need assistance with payment for this booking.",
     "",
     `Booking code: ${bookingCode}`,
     `Passenger: ${customerFullName}`,
@@ -104,7 +104,7 @@ function createManualPaymentUrl({
     `Departure: ${departureLabel}`,
     `Total: ${totalLabel}`,
     "",
-    "I understand that my booking will be confirmed after payment verification by the admin.",
+    "Please help me with the available payment options for this booking.",
   ].join("\n")
 
   return `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(
@@ -310,17 +310,17 @@ export default function PaymentActions({
       <div className="space-y-4">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-sm font-black uppercase tracking-wider text-amber-700">
-            Manual payment assistance
+            Payment support
           </p>
 
           <h3 className="mt-2 text-lg font-black text-amber-950">
-            Request payment instructions
+            Need help with payment?
           </h3>
 
           <p className="mt-2 text-sm leading-6 text-amber-800">
-            Our support team will provide the available
-            payment instructions for this booking and
-            help you complete the payment securely.
+            Online payment is not currently available for
+            this booking. Please contact our support team
+            for assistance before making any payment.
           </p>
         </div>
 
@@ -331,12 +331,12 @@ export default function PaymentActions({
             rel="noreferrer"
             className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Request Payment Instructions
+            Contact Payment Support
           </a>
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-sm leading-6 text-slate-700">
-              Please use the Contact Us page to request
+              Please use the Contact Us page for
               payment assistance.
             </p>
           </div>

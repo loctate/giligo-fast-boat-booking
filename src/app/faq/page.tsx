@@ -54,7 +54,7 @@ const faqItems: FaqItem[] = [
   },
   {
     question: "How does QRIS payment work?",
-    answer: "Select Pay with QRIS on the booking page. WhatsApp will open with the booking information and a request for QRIS payment instructions. The admin will send the official QRIS information and verify the payment after it is completed.",
+    answer: "If QRIS is available for your transaction, select it on the secure iPaymu payment page and follow the payment instructions provided.",
   },
   {
     question: "How do I pay by credit or debit card?",
