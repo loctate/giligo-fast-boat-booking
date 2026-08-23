@@ -60,7 +60,7 @@ const translations = {
     footerDescription:
       "Nusa Gili Boat helps travelers search for and book fast boat journeys between Bali, Lombok, the Gili Islands, and Nusa Penida more easily.",
     footerOperations:
-      "Registered business address: Jl. Gelong Baru Selatan V No. 37, RT 008/RW 001, Tomang, Grogol Petamburan, West Jakarta 11440, DKI Jakarta, Indonesia.",
+      "Business location: Jakarta, Indonesia.",
     copyright: "© 2026 Nusa Gili Boat. All rights reserved.",
     footerTagline:
       "Fast boat booking for Bali and the Gili Islands.",
@@ -73,7 +73,7 @@ const translations = {
     footerDescription:
       "Nusa Gili Boat membantu pelanggan mencari dan memesan perjalanan fast boat antara Bali, Lombok, Kepulauan Gili, dan Nusa Penida dengan lebih mudah dan terstruktur.",
     footerOperations:
-      "Alamat bisnis terdaftar: Jl. Gelong Baru Selatan V No. 37, RT 008/RW 001, Kelurahan Tomang, Kecamatan Grogol Petamburan, Jakarta Barat 11440, DKI Jakarta, Indonesia.",
+      "Lokasi bisnis: Jakarta, Indonesia.",
     copyright: "© 2026 Nusa Gili Boat. Seluruh hak dilindungi.",
     footerTagline:
       "Pemesanan fast boat untuk Bali dan Kepulauan Gili.",
