@@ -128,20 +128,12 @@ export default function ContactPage() {
           </p>
 
           <h2 className="mt-3 text-xl font-black text-slate-950">
-            Registered business address
+            Business location
           </h2>
 
-          <address className="mt-3 not-italic leading-7 text-slate-600">
-            Jl. Gelong Baru Selatan V No. 37
-            <br />
-            RT 008/RW 001
-            <br />
-            Tomang, Grogol Petamburan
-            <br />
-            West Jakarta 11440
-            <br />
-            DKI Jakarta, Indonesia
-          </address>
+          <p className="mt-3 leading-7 text-slate-600">
+            Jakarta, Indonesia
+          </p>
 
           <p className="mt-4 text-sm leading-6 text-slate-500">
             Nusa Gili Boat is an online booking service.
