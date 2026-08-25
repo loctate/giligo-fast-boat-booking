@@ -973,11 +973,7 @@ export default function RefundAndCancellationPolicyPage() {
               </dt>
 
               <dd className="mt-1">
-                Tomang, Grogol Petamburan
-                <br />
-                Jakarta Barat, DKI Jakarta
-                <br />
-                Indonesia
+                Jakarta, Indonesia
               </dd>
             </div>
 

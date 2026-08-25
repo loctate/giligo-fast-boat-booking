@@ -986,9 +986,8 @@ export default function TermsAndConditionsPage() {
           bookings, payments, e-tickets, travel changes,
           or complaints may be submitted through our
           contact page. Our public operating location is
-          Tomang, Grogol Petamburan, Jakarta Barat, DKI
-          Jakarta, Indonesia. This location is not a
-          public walk-in ticket counter.
+          Jakarta, Indonesia. This location is not a public
+          walk-in ticket counter.
         </p>
 
         <Link

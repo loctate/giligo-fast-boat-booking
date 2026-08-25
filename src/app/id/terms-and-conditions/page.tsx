@@ -981,10 +981,9 @@ export default function TermsAndConditionsPage() {
           booking, pembayaran, e-ticket, perubahan
           perjalanan, atau keluhan dapat disampaikan
           melalui halaman kontak. Lokasi operasional
-          publik kami berada di Tomang, Grogol
-          Petamburan, Jakarta Barat, DKI Jakarta,
-          Indonesia. Lokasi tersebut bukan loket tiket
-          yang menerima kunjungan pelanggan.
+          publik kami berada di Jakarta, Indonesia.
+          Lokasi tersebut bukan loket tiket yang menerima
+          kunjungan pelanggan.
         </p>
 
         <Link

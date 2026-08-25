@@ -577,11 +577,7 @@ export default function Home() {
                 </p>
 
                 <p className="mt-1 font-semibold leading-6 text-slate-200">
-                  Tomang, Grogol Petamburan
-                  <br />
-                  Jakarta Barat, DKI Jakarta
-                  <br />
-                  Indonesia
+                  Jakarta, Indonesia
                 </p>
               </div>
 
