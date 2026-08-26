@@ -355,7 +355,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           <div className="text-center">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-700">
-              Why GiliGo
+              Why Nusa Gili Boat
             </p>
 
             <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">

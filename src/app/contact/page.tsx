@@ -11,7 +11,7 @@ export const metadata: Metadata = createPublicPageMetadata({
   locale: "en",
   path: "/contact",
   title: "Contact Us | Nusa Gili Boat",
-  description: "Contact Nusa Gili Boat for fast boat booking assistance, schedules, passenger details, online payment assistance, confirmation, changes, and cancellations.",
+  description: "Contact Nusa Gili Boat customer support for booking guidance, payment issues, schedules, passenger details, confirmations, changes, and cancellations.",
 })
 
 const businessEmail =
@@ -102,14 +102,15 @@ export default function ContactPage() {
           </p>
 
           <h2 className="mt-3 text-xl font-black text-slate-950">
-            Booking and payment assistance
+            Customer support & booking guidance
           </h2>
 
           <p className="mt-3 leading-7 text-slate-600">
-            Use WhatsApp for booking assistance, payment
-            support, and time-sensitive travel questions.
-            Online payments are completed through the secure
-            iPaymu payment page.
+            Use WhatsApp if you need help with the booking
+            process, payment issues, or time-sensitive travel
+            questions. All bookings and online payments are
+            completed through the Nusa Gili Boat website and
+            secure iPaymu payment page.
           </p>
 
           <a
