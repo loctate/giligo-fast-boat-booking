@@ -66,7 +66,7 @@ export default function TermsAndConditionsPage() {
       eyebrow="Informasi Hukum"
       title="Syarat dan Ketentuan"
       description="Syarat dan Ketentuan ini mengatur penggunaan situs, pencarian perjalanan, pemesanan tiket, pembayaran, perubahan, pembatalan, dan layanan fast boat yang dipesan melalui Nusa Gili Boat."
-      lastUpdated="24 Juli 2026"
+      lastUpdated="26 Agustus 2026"
     >
       <PolicySection
         number={1}
@@ -373,17 +373,29 @@ export default function TermsAndConditionsPage() {
         title="Kewajiban penumpang dan check-in"
       >
         <p className="leading-8 text-slate-600">
-          Penumpang wajib mengikuti waktu check-in yang
-          ditentukan oleh operator atau tercantum dalam
-          konfirmasi perjalanan maupun e-ticket.
+          Penumpang wajib mengikuti prosedur check-in
+          dan boarding yang berlaku sesuai ketentuan
+          operator atau yang tercantum dalam konfirmasi
+          perjalanan maupun e-ticket.
         </p>
 
         <p className="leading-8 text-slate-600">
-          Sebagai pedoman umum, penumpang dianjurkan
-          berada di lokasi check-in sekurang-kurangnya
-          60 menit sebelum keberangkatan, kecuali
-          operator memberikan instruksi waktu yang
-          berbeda.
+          Seluruh penumpang wajib tiba di lokasi
+          check-in yang telah ditentukan minimal
+          60 menit sebelum waktu keberangkatan yang
+          dijadwalkan. Ketentuan ini merupakan
+          persyaratan wajib bagi seluruh penumpang yang
+          telah membeli tiket melalui Nusa Gili Boat.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          Apabila operator mewajibkan waktu kedatangan
+          yang lebih awal, ketentuan operator tersebut
+          juga wajib dipatuhi. Penumpang yang tiba
+          melewati batas waktu check-in dapat tidak
+          diperbolehkan menyelesaikan proses check-in
+          atau boarding dan dapat kehilangan
+          keberangkatan yang telah dijadwalkan.
         </p>
 
         <BulletList

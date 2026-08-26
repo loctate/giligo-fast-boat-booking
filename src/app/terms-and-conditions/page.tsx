@@ -66,7 +66,7 @@ export default function TermsAndConditionsPage() {
       eyebrow="Legal Information"
       title="Terms and Conditions"
       description="These Terms and Conditions govern the use of our website, trip searches, ticket bookings, payments, changes, cancellations, and fast boat services booked through Nusa Gili Boat."
-      lastUpdated="July 24, 2026"
+      lastUpdated="August 26, 2026"
     >
       <PolicySection
         number={1}
@@ -372,16 +372,27 @@ export default function TermsAndConditionsPage() {
         title="Passenger responsibilities and check-in"
       >
         <p className="leading-8 text-slate-600">
-          Passengers must comply with the check-in time
-          specified by the operator or shown in the
-          travel confirmation or e-ticket.
+          Passengers must comply with the applicable
+          check-in and boarding procedures specified by
+          the operator or shown in the travel
+          confirmation or e-ticket.
         </p>
 
         <p className="leading-8 text-slate-600">
-          As a general guideline, passengers should
-          arrive at the check-in location at least 60
-          minutes before departure unless the operator
-          provides different instructions.
+          All passengers must arrive at the designated
+          check-in location at least 60 minutes before
+          the scheduled departure time. This is a
+          mandatory requirement for all passengers who
+          have purchased a ticket through Nusa Gili Boat.
+        </p>
+
+        <p className="leading-8 text-slate-600">
+          If an operator requires passengers to arrive
+          earlier, the earlier operator requirement must
+          also be followed. Passengers who arrive later
+          than the required check-in time may be unable
+          to complete check-in or boarding and may miss
+          the scheduled departure.
         </p>
 
         <BulletList
