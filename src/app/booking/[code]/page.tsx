@@ -39,6 +39,7 @@ type BookingData = {
   bookingStatus: string
   paymentStatus: string
   paymentVerificationAllowed: boolean
+  policyAcceptanceCurrent: boolean
 
   tripType: string
   departureDate: string
@@ -1160,6 +1161,9 @@ export default function BookingConfirmationPage() {
                     }
                     paymentVerificationAllowed={
                       booking.paymentVerificationAllowed
+                    }
+                    policyAcceptanceCurrent={
+                      booking.policyAcceptanceCurrent
                     }
                     customerFullName={
                       booking.customer.fullName

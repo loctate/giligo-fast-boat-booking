@@ -13,6 +13,7 @@ type PaymentActionsProps = {
   bookingStatus: string
   paymentStatus: string
   paymentVerificationAllowed: boolean
+  policyAcceptanceCurrent: boolean
   customerFullName: string
   customerEmail: string
   routeFrom: string
@@ -127,6 +128,7 @@ export default function PaymentActions({
   bookingStatus,
   paymentStatus,
   paymentVerificationAllowed,
+  policyAcceptanceCurrent,
   customerFullName,
   customerEmail,
   routeFrom,
@@ -144,6 +146,20 @@ export default function PaymentActions({
     isCreatingPayment,
     setIsCreatingPayment,
   ] = useState(false)
+
+  const [
+    termsAccepted,
+    setTermsAccepted,
+  ] = useState(
+    policyAcceptanceCurrent
+  )
+
+  const [
+    refundPolicyAccepted,
+    setRefundPolicyAccepted,
+  ] = useState(
+    policyAcceptanceCurrent
+  )
 
   const [
     errorMessage,
@@ -188,6 +204,8 @@ export default function PaymentActions({
               bookingCode,
               email:
                 customerEmail,
+              termsAccepted,
+              refundPolicyAccepted,
             }),
           }
         )
@@ -507,10 +525,75 @@ export default function PaymentActions({
           </div>
         </dl>
 
+        <div className="mt-5 space-y-3">
+          <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(event) =>
+                setTermsAccepted(
+                  event.target.checked
+                )
+              }
+              disabled={isCreatingPayment}
+              className="mt-1 h-4 w-4 shrink-0 accent-cyan-700"
+            />
+
+            <span className="text-xs leading-5 text-slate-600">
+              I have read and accept the{" "}
+              <a
+                href="/terms-and-conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-cyan-700 underline underline-offset-2 hover:text-cyan-800"
+              >
+                Terms &amp; Conditions
+              </a>
+              .
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <input
+              type="checkbox"
+              checked={refundPolicyAccepted}
+              onChange={(event) =>
+                setRefundPolicyAccepted(
+                  event.target.checked
+                )
+              }
+              disabled={isCreatingPayment}
+              className="mt-1 h-4 w-4 shrink-0 accent-cyan-700"
+            />
+
+            <span className="text-xs leading-5 text-slate-600">
+              I have read and accept the{" "}
+              <a
+                href="/refund-and-cancellation-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-cyan-700 underline underline-offset-2 hover:text-cyan-800"
+              >
+                Refund &amp; Cancellation Policy
+              </a>
+              .
+            </span>
+          </label>
+
+          <p className="text-xs leading-5 text-slate-500">
+            Both policies must be accepted before
+            online payment can be started.
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={handlePayment}
-          disabled={isCreatingPayment}
+          disabled={
+            isCreatingPayment ||
+            !termsAccepted ||
+            !refundPolicyAccepted
+          }
           className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-cyan-700 px-5 py-3.5 text-sm font-black text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
           {isCreatingPayment

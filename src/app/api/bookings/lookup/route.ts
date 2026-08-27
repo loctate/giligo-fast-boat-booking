@@ -1,3 +1,7 @@
+import {
+  hasCurrentBookingPolicyAcceptance,
+} from "@/lib/booking-policy"
+
 import { Query } from "node-appwrite"
 
 import {
@@ -569,6 +573,11 @@ export async function POST(
       )
     }
 
+    const policyAcceptanceCurrent =
+      hasCurrentBookingPolicyAcceptance(
+        booking
+      )
+
     return noStoreJson({
       success: true,
 
@@ -594,6 +603,7 @@ export async function POST(
           ),
 
         paymentVerificationAllowed,
+        policyAcceptanceCurrent,
 
         tripType,
 

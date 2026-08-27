@@ -1,6 +1,12 @@
 import { Query } from "node-appwrite"
 
 import {
+  hasCurrentBookingPolicyAcceptance,
+  REFUND_POLICY_VERSION,
+  TERMS_POLICY_VERSION,
+} from "@/lib/booking-policy"
+
+import {
   appwriteConfig,
   tablesDB,
 } from "@/lib/appwrite-server"
@@ -15,6 +21,8 @@ export const dynamic = "force-dynamic"
 type PaymentRequest = {
   bookingCode?: unknown
   email?: unknown
+  termsAccepted?: unknown
+  refundPolicyAccepted?: unknown
 }
 
 type AppwriteRow = Record<
@@ -255,6 +263,12 @@ export async function POST(
         body.email
       ).toLowerCase()
 
+    const termsAccepted =
+      body.termsAccepted === true
+
+    const refundPolicyAccepted =
+      body.refundPolicyAccepted === true
+
     if (!bookingCode || !email) {
       throw new PaymentError(
         400,
@@ -320,6 +334,11 @@ export async function POST(
 
     const booking = rows[0]
 
+    const policyAcceptanceCurrent =
+      hasCurrentBookingPolicyAcceptance(
+        booking
+      )
+
     const storedEmail =
       cleanText(
         booking.customerEmail
@@ -332,6 +351,19 @@ export async function POST(
       throw new PaymentError(
         404,
         "Booking could not be verified."
+      )
+    }
+
+    if (
+      !policyAcceptanceCurrent &&
+      (
+        !termsAccepted ||
+        !refundPolicyAccepted
+      )
+    ) {
+      throw new PaymentError(
+        400,
+        "Terms & Conditions and Refund & Cancellation Policy must be accepted before payment."
       )
     }
 
@@ -399,6 +431,48 @@ export async function POST(
         500,
         "The stored booking data is incomplete."
       )
+    }
+
+    const bookingRowId =
+      cleanText(
+        booking.$id
+      )
+
+    if (!bookingRowId) {
+      throw new PaymentError(
+        500,
+        "The booking record could not be identified."
+      )
+    }
+
+    if (!policyAcceptanceCurrent) {
+      const policyAcceptedAt =
+        new Date().toISOString()
+
+      await tablesDB.updateRow({
+        databaseId:
+          appwriteConfig.databaseId,
+
+        tableId:
+          appwriteConfig.bookingsTableId,
+
+        rowId:
+          bookingRowId,
+
+        data: {
+          termsAcceptedAt:
+            policyAcceptedAt,
+
+          refundPolicyAcceptedAt:
+            policyAcceptedAt,
+
+          termsVersion:
+            TERMS_POLICY_VERSION,
+
+          refundPolicyVersion:
+            REFUND_POLICY_VERSION,
+        },
+      })
     }
 
     const publicBaseUrl =
