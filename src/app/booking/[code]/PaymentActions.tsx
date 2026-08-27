@@ -4,6 +4,10 @@ import {
   useState,
 } from "react"
 
+import {
+  pushAnalyticsEvent,
+} from "@/lib/analytics"
+
 type PaymentActionsProps = {
   bookingCode: string
   bookingStatus: string
@@ -15,6 +19,12 @@ type PaymentActionsProps = {
   routeTo: string
   departureLabel: string
   totalLabel: string
+
+  travelDate: string
+  tripType: string
+  passengerCount: number
+  totalValue: number
+  currency: string
 }
 
 type PaymentApiResponse = {
@@ -123,6 +133,12 @@ export default function PaymentActions({
   routeTo,
   departureLabel,
   totalLabel,
+
+  travelDate,
+  tripType,
+  passengerCount,
+  totalValue,
+  currency,
 }: PaymentActionsProps) {
   const [
     isCreatingPayment,
@@ -256,8 +272,69 @@ export default function PaymentActions({
         )
       }
 
-      window.location.assign(
+      const paymentDestination =
         parsedPaymentUrl.toString()
+
+      let hasRedirected =
+        false
+
+      const redirectToPayment =
+        () => {
+          if (hasRedirected) {
+            return
+          }
+
+          hasRedirected = true
+
+          window.location.assign(
+            paymentDestination
+          )
+        }
+
+      const analyticsQueued =
+        pushAnalyticsEvent(
+          "payment_redirect",
+          {
+            payment_provider:
+              "ipaymu",
+
+            currency:
+              currency || "IDR",
+
+            value:
+              totalValue,
+
+            route_from:
+              routeFrom,
+
+            route_to:
+              routeTo,
+
+            travel_date:
+              travelDate,
+
+            trip_type:
+              tripType,
+
+            passenger_count:
+              passengerCount,
+
+            eventCallback:
+              redirectToPayment,
+
+            eventTimeout:
+              800,
+          }
+        )
+
+      if (!analyticsQueued) {
+        redirectToPayment()
+        return
+      }
+
+      window.setTimeout(
+        redirectToPayment,
+        900
       )
     } catch (error) {
       console.error(

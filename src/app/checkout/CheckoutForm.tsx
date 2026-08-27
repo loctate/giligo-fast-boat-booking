@@ -1,5 +1,7 @@
 ﻿"use client"
 
+import { pushAnalyticsEvent } from "@/lib/analytics"
+
 import { useRouter } from "next/navigation"
 import {
   useState,
@@ -347,6 +349,79 @@ export default function CheckoutForm({
       setIsSubmitting(false)
       return
     }
+
+    pushAnalyticsEvent(
+      "begin_checkout",
+      {
+        currency,
+        value: totalPrice,
+
+        route_from:
+          trip.from,
+
+        route_to:
+          trip.to,
+
+        trip_type:
+          tripType,
+
+        passenger_count:
+          passengerCount,
+
+        items: [
+          {
+            item_id:
+              trip.id,
+
+            item_name:
+              `${trip.from} to ${trip.to}`,
+
+            item_brand:
+              trip.operator,
+
+            item_category:
+              "Fast Boat",
+
+            item_variant:
+              trip.departureTime,
+
+            price:
+              trip.price,
+
+            quantity:
+              passengerCount,
+          },
+
+          ...(isRoundTrip &&
+          returnTrip
+            ? [
+                {
+                  item_id:
+                    returnTrip.id,
+
+                  item_name:
+                    `${returnTrip.from} to ${returnTrip.to}`,
+
+                  item_brand:
+                    returnTrip.operator,
+
+                  item_category:
+                    "Fast Boat",
+
+                  item_variant:
+                    returnTrip.departureTime,
+
+                  price:
+                    returnTrip.price,
+
+                  quantity:
+                    passengerCount,
+                },
+              ]
+            : []),
+        ],
+      }
+    )
 
     const bookingRequest = {
       /*

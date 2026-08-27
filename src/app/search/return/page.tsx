@@ -1,4 +1,5 @@
 import Link from "next/link"
+import TrackedTripLink from "@/components/TrackedTripLink"
 import { headers } from "next/headers"
 
 export const dynamic = "force-dynamic"
@@ -747,7 +748,7 @@ export default async function ReturnSearchPage({
                             )}
                           </p>
 
-                          <Link
+                          <TrackedTripLink
                             href={{
                               pathname: "/checkout",
                               query: {
@@ -770,9 +771,24 @@ export default async function ReturnSearchPage({
                               },
                             }}
                             className="mt-6 block w-full rounded-xl bg-cyan-600 px-5 py-3.5 text-center font-black text-white transition hover:bg-cyan-700"
-                          >
+
+  itemId={trip.tripInventoryId}
+  itemName={`${trip.fromPort} to ${trip.toPort}`}
+  operatorName={trip.operatorName}
+  price={trip.adultPrice}
+  currency={trip.currency || "IDR"}
+  vesselName={trip.vesselName}
+  scheduleCode={trip.scheduleCode}
+  routeFrom={trip.fromPort}
+  routeTo={trip.toPort}
+  travelDate={trip.travelDate}
+  tripType="round-trip"
+  passengerCount={passengerCount}
+  itemListId="fast_boat_return_results"
+  itemListName="Fast boat return results"
+>
                             Select Return Trip
-                          </Link>
+                          </TrackedTripLink>
                         </aside>
                       </div>
                     </article>

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import PaymentActions from "./PaymentActions"
 import { useParams } from "next/navigation"
+import { pushAnalyticsEventOnce } from "@/lib/analytics"
 import {
   useCallback,
   useEffect,
@@ -66,6 +67,17 @@ type LookupApiResponse = {
   booking?: BookingData
   error?: string
 }
+
+const PURCHASE_PAYMENT_STATUSES =
+  new Set([
+    "paid",
+    "settlement",
+    "settled",
+    "capture",
+    "captured",
+    "success",
+    "completed",
+  ])
 
 function formatCurrency(
   value: number,
@@ -589,6 +601,147 @@ export default function BookingConfirmationPage() {
     void verifyBooking(email)
   }
 
+  useEffect(() => {
+    if (!booking) {
+      return
+    }
+
+    const normalizedPaymentStatus =
+      booking.paymentStatus
+        .trim()
+        .toLowerCase()
+
+    const normalizedBookingStatus =
+      booking.bookingStatus
+        .trim()
+        .toLowerCase()
+
+    const paymentIsSuccessful =
+      PURCHASE_PAYMENT_STATUSES.has(
+        normalizedPaymentStatus
+      ) ||
+      (
+        normalizedPaymentStatus ===
+          "confirmed" &&
+        (
+          normalizedBookingStatus ===
+            "confirmed" ||
+          normalizedBookingStatus ===
+            "completed"
+        )
+      )
+
+    if (
+      !paymentIsSuccessful ||
+      !booking.bookingCode.trim() ||
+      booking.totalPrice <= 0
+    ) {
+      return
+    }
+
+    const purchaseCurrency =
+      booking.currency ||
+      booking.trip.currency ||
+      booking.returnTrip?.currency ||
+      "IDR"
+
+    const hasReturnTrip =
+      booking.tripType ===
+        "round-trip" &&
+      Boolean(booking.returnTrip)
+
+    pushAnalyticsEventOnce(
+      "purchase",
+      booking.bookingCode,
+      {
+        transaction_id:
+          booking.bookingCode,
+
+        affiliation:
+          "Nusa Gili Boat",
+
+        value:
+          booking.totalPrice,
+
+        currency:
+          purchaseCurrency,
+
+        route_from:
+          booking.trip.from,
+
+        route_to:
+          booking.trip.to,
+
+        travel_date:
+          booking.departureDate,
+
+        trip_type:
+          booking.tripType,
+
+        passenger_count:
+          booking.passengerCount,
+
+        items: [
+          {
+            item_id:
+              booking.trip.id,
+
+            item_name:
+              `${booking.trip.from} to ${booking.trip.to}`,
+
+            item_brand:
+              booking.trip.operator,
+
+            item_category:
+              "Fast Boat",
+
+            item_variant:
+              booking.trip.vesselName ||
+              booking.trip.departureTime,
+
+            price:
+              booking.trip.price,
+
+            quantity:
+              booking.passengerCount,
+          },
+
+          ...(hasReturnTrip &&
+          booking.returnTrip
+            ? [
+                {
+                  item_id:
+                    booking.returnTrip.id,
+
+                  item_name:
+                    `${booking.returnTrip.from} to ${booking.returnTrip.to}`,
+
+                  item_brand:
+                    booking.returnTrip.operator,
+
+                  item_category:
+                    "Fast Boat",
+
+                  item_variant:
+                    booking.returnTrip
+                      .vesselName ||
+                    booking.returnTrip
+                      .departureTime,
+
+                  price:
+                    booking.returnTrip
+                      .price,
+
+                  quantity:
+                    booking.passengerCount,
+                },
+              ]
+            : []),
+        ],
+      }
+    )
+  }, [booking])
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 px-5">
@@ -1030,6 +1183,21 @@ export default function BookingConfirmationPage() {
                         booking.totalPrice,
                         currency
                       )
+                    }
+                    travelDate={
+                      booking.departureDate
+                    }
+                    tripType={
+                      booking.tripType
+                    }
+                    passengerCount={
+                      booking.passengerCount
+                    }
+                    totalValue={
+                      booking.totalPrice
+                    }
+                    currency={
+                      currency
                     }
                   />
 

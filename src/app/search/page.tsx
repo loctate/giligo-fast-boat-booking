@@ -1,5 +1,8 @@
 import Link from "next/link"
+import TrackedTripLink from "@/components/TrackedTripLink"
 import { headers } from "next/headers"
+
+import SearchResultsAnalytics from "@/components/SearchResultsAnalytics"
 
 export const dynamic = "force-dynamic"
 
@@ -368,8 +371,43 @@ export default async function SearchPage({
       ? searchResult.trips
       : []
 
+  const analyticsItems =
+    results.map((trip) => ({
+      itemId:
+        trip.tripInventoryId,
+
+      itemName:
+        `${trip.fromPort} to ${trip.toPort}`,
+
+      operatorName:
+        trip.operatorName,
+
+      vesselName:
+        trip.vesselName,
+
+      scheduleCode:
+        trip.scheduleCode,
+
+      price:
+        trip.adultPrice,
+
+      currency:
+        trip.currency || "IDR",
+    }))
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
+      {searchResult.success ? (
+        <SearchResultsAnalytics
+          from={from}
+          to={to}
+          travelDate={departureDate}
+          tripType={tripType}
+          passengerCount={passengerCount}
+          items={analyticsItems}
+        />
+      ) : null}
+
       <header className="bg-slate-950 text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8">
           <Link
@@ -688,7 +726,7 @@ export default async function SearchPage({
                         </p>
                       </div>
 
-                      <Link
+                      <TrackedTripLink
   href={
     tripType === "round-trip"
       ? {
@@ -719,11 +757,24 @@ export default async function SearchPage({
         }
   }
   className="mt-6 block w-full rounded-xl bg-cyan-600 px-5 py-3.5 text-center font-black text-white transition hover:bg-cyan-700"
+
+  itemId={trip.tripInventoryId}
+  itemName={`${trip.fromPort} to ${trip.toPort}`}
+  operatorName={trip.operatorName}
+  price={trip.adultPrice}
+  currency={trip.currency || "IDR"}
+  vesselName={trip.vesselName}
+  scheduleCode={trip.scheduleCode}
+  routeFrom={trip.fromPort}
+  routeTo={trip.toPort}
+  travelDate={trip.travelDate}
+  tripType={tripType}
+  passengerCount={passengerCount}
 >
   {tripType === "round-trip"
     ? "Choose Outbound Trip"
     : "Select Trip"}
-</Link>
+</TrackedTripLink>
                     </div>
                   </div>
                 </article>
