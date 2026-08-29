@@ -1021,6 +1021,77 @@ export default function BookingConfirmationPage() {
                   />
                 )}
 
+              <section className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-6">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
+                  Before you travel
+                </p>
+
+                <h2 className="mt-2 text-xl font-black text-slate-950">
+                  Important Travel Information
+                </h2>
+
+                <div className="mt-5 space-y-5">
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Arrive early
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Please arrive at least 60 minutes before the
+                      scheduled departure time. If your operator
+                      requires an earlier check-in time, the earlier
+                      requirement applies.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Identification &amp; travel documents
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Bring the identification and travel documents
+                      required for your journey.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Check-in &amp; boarding
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Follow the operator&apos;s check-in location,
+                      boarding time, and departure instructions.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Schedule changes
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Departure time, vessel, check-in location, port,
+                      or route may change due to weather, sea conditions,
+                      safety, technical, port, or operational requirements.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Operator conditions
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Additional operator-specific travel conditions may
+                      apply. Please review your booking information and
+                      operator instructions before departure.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
               <section className="rounded-3xl border border-slate-200 p-6">
                 <h2 className="text-xl font-black">
                   Passenger details
