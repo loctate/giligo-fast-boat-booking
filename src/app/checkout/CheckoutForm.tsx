@@ -224,6 +224,9 @@ export default function CheckoutForm({
   const [errorMessage, setErrorMessage] =
     useState("")
 
+  const [agreementAccepted, setAgreementAccepted] =
+    useState(false)
+
   const isRoundTrip =
     tripType === "round-trip"
 
@@ -253,6 +256,13 @@ export default function CheckoutForm({
     }
 
     setErrorMessage("")
+
+    if (!agreementAccepted) {
+      setErrorMessage(
+        "Please read and agree to the Terms & Conditions and Refund & Cancellation Policy before continuing."
+      )
+      return
+    }
 
     if (isRoundTrip && !returnTrip) {
       setErrorMessage(
@@ -885,19 +895,47 @@ export default function CheckoutForm({
                 </div>
               </div>
 
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <input
+                  id="legalAgreement"
+                  name="legalAgreement"
                   type="checkbox"
                   required
-                  className="mt-1 h-4 w-4 accent-cyan-600"
+                  checked={agreementAccepted}
+                  onChange={(event) =>
+                    setAgreementAccepted(
+                      event.target.checked
+                    )
+                  }
+                  className="mt-1 h-4 w-4 shrink-0 accent-cyan-600"
                 />
 
-                <span className="text-xs leading-5 text-slate-600">
-                  I confirm that the passenger
-                  information is correct and agree
-                  to the booking terms.
-                </span>
-              </label>
+                <label
+                  htmlFor="legalAgreement"
+                  className="text-xs leading-5 text-slate-600"
+                >
+                  I confirm that the passenger information
+                  is correct and I have read and agree to the{" "}
+                  <a
+                    href="/terms-and-conditions"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-cyan-700 underline underline-offset-2 hover:text-cyan-800"
+                  >
+                    Terms &amp; Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/refund-and-cancellation-policy"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-cyan-700 underline underline-offset-2 hover:text-cyan-800"
+                  >
+                    Refund &amp; Cancellation Policy
+                  </a>
+                  .
+                </label>
+              </div>
 
               {isRoundTrip &&
                 !roundTripSubmissionEnabled && (
@@ -930,6 +968,7 @@ export default function CheckoutForm({
                 type="submit"
                 disabled={
                   isSubmitting ||
+                  !agreementAccepted ||
                   (isRoundTrip &&
                     !roundTripSubmissionEnabled)
                 }
