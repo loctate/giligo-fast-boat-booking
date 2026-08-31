@@ -931,8 +931,278 @@ export default function BookingConfirmationPage() {
     )}`
 
   return (
-    <main className="min-h-screen bg-slate-100 px-5 py-10 text-slate-900">
-      <section className="mx-auto max-w-6xl">
+    <main className="booking-print-page min-h-screen bg-slate-100 px-5 py-10 text-slate-900">
+      <section className="booking-print-document hidden print:block">
+        <header className="booking-print-header">
+          <div>
+            <p className="booking-print-brand">
+              Nusa Gili Boat
+            </p>
+
+            <h1>
+              Booking Confirmation
+            </h1>
+
+            <p className="booking-print-subtitle">
+              Fast boat booking and travel summary
+            </p>
+          </div>
+
+          <div className="booking-print-code">
+            <p>
+              Booking code
+            </p>
+
+            <strong>
+              {booking.bookingCode}
+            </strong>
+          </div>
+        </header>
+
+        <section className="booking-print-status">
+          <dl>
+            <div>
+              <dt>Booking status</dt>
+              <dd>{booking.bookingStatus}</dd>
+            </div>
+
+            <div>
+              <dt>Payment status</dt>
+              <dd>{booking.paymentStatus}</dd>
+            </div>
+
+            <div>
+              <dt>Trip type</dt>
+              <dd>
+                {isRoundTrip
+                  ? "Round Trip"
+                  : "One Way"}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Passengers</dt>
+              <dd>{booking.passengerCount}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="booking-print-trip">
+          <p className="booking-print-label">
+            Outbound journey
+          </p>
+
+          <h2>
+            {booking.trip.from}
+            {" → "}
+            {booking.trip.to}
+          </h2>
+
+          <p className="booking-print-date">
+            {formatDate(
+              booking.departureDate
+            )}
+          </p>
+
+          <dl className="booking-print-trip-grid">
+            <div>
+              <dt>Departure</dt>
+              <dd>
+                {booking.trip.departureTime}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Arrival</dt>
+              <dd>
+                {booking.trip.arrivalTime}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Operator</dt>
+              <dd>
+                {booking.trip.operator}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Vessel</dt>
+              <dd>
+                {booking.trip.vesselName ||
+                  "As assigned by operator"}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="booking-print-checkin">
+            <p>
+              Check-in location
+            </p>
+
+            <strong>
+              {booking.trip.checkInLocation}
+            </strong>
+          </div>
+        </section>
+
+        {isRoundTrip &&
+          booking.returnTrip && (
+            <section className="booking-print-trip">
+              <p className="booking-print-label">
+                Return journey
+              </p>
+
+              <h2>
+                {booking.returnTrip.from}
+                {" → "}
+                {booking.returnTrip.to}
+              </h2>
+
+              <p className="booking-print-date">
+                {formatDate(
+                  booking.returnDate ||
+                    ""
+                )}
+              </p>
+
+              <dl className="booking-print-trip-grid">
+                <div>
+                  <dt>Departure</dt>
+                  <dd>
+                    {
+                      booking.returnTrip
+                        .departureTime
+                    }
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Arrival</dt>
+                  <dd>
+                    {
+                      booking.returnTrip
+                        .arrivalTime
+                    }
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Operator</dt>
+                  <dd>
+                    {
+                      booking.returnTrip
+                        .operator
+                    }
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Vessel</dt>
+                  <dd>
+                    {booking.returnTrip
+                      .vesselName ||
+                      "As assigned by operator"}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="booking-print-checkin">
+                <p>
+                  Check-in location
+                </p>
+
+                <strong>
+                  {
+                    booking.returnTrip
+                      .checkInLocation
+                  }
+                </strong>
+              </div>
+            </section>
+          )}
+
+        <section className="booking-print-passengers">
+          <h2>
+            Passenger details
+          </h2>
+
+          <ol>
+            {booking.passengers.map(
+              (passenger) => (
+                <li
+                  key={`print-${passenger.number}-${passenger.name}`}
+                >
+                  <span>
+                    Passenger{" "}
+                    {passenger.number}
+                  </span>
+
+                  <strong>
+                    {passenger.name}
+                  </strong>
+                </li>
+              )
+            )}
+          </ol>
+        </section>
+
+        <section className="booking-print-travel-info">
+          <h2>
+            Important Travel Information
+          </h2>
+
+          <ul>
+            <li>
+              Please arrive at least 60 minutes before
+              the scheduled departure time. If your
+              operator requires an earlier check-in time,
+              the earlier requirement applies.
+            </li>
+
+            <li>
+              Bring the identification and travel
+              documents required for your journey.
+            </li>
+
+            <li>
+              Follow the operator&apos;s check-in
+              location, boarding time, and departure
+              instructions.
+            </li>
+
+            <li>
+              Departure time, vessel, check-in location,
+              port, or route may change due to weather,
+              sea conditions, safety, technical, port,
+              or operational requirements.
+            </li>
+          </ul>
+        </section>
+
+        <footer className="booking-print-footer">
+          <strong>
+            Booking Confirmation
+          </strong>
+
+          <p>
+            This Booking Confirmation is not the official
+            fast boat ticket. Present it to the assigned
+            fast boat agent or provider for verification.
+            The official travel ticket will be issued by
+            the fast boat provider.
+          </p>
+
+          <p>
+            Konfirmasi booking ini bukan tiket resmi fast
+            boat. Tunjukkan kepada agen atau provider fast
+            boat terkait untuk verifikasi dan penerbitan
+            tiket perjalanan resmi.
+          </p>
+        </footer>
+      </section>
+
+      <section className="mx-auto max-w-6xl print:hidden">
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/"

@@ -503,3 +503,269 @@ a {
     margin: 0;
   }
 }
+
+/* NUSAGILIBOAT BOOKING CONFIRMATION PRINT */
+@media print {
+  .booking-print-page {
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .booking-print-document {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: #0f172a;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    line-height: 1.35;
+  }
+
+  .booking-print-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: 9px;
+    border-bottom: 2px solid #0891b2;
+  }
+
+  .booking-print-brand,
+  .booking-print-header h1,
+  .booking-print-subtitle,
+  .booking-print-code p,
+  .booking-print-code strong {
+    margin: 0;
+  }
+
+  .booking-print-brand {
+    color: #0e7490;
+    font-size: 8pt;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .booking-print-header h1 {
+    margin-top: 2px;
+    font-size: 19pt;
+    line-height: 1.1;
+  }
+
+  .booking-print-subtitle {
+    margin-top: 3px;
+    color: #64748b;
+  }
+
+  .booking-print-code {
+    min-width: 145px;
+    text-align: right;
+  }
+
+  .booking-print-code p {
+    color: #64748b;
+    font-size: 7pt;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .booking-print-code strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 12pt;
+    overflow-wrap: anywhere;
+  }
+
+  .booking-print-status {
+    margin-top: 8px;
+    padding: 7px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+  }
+
+  .booking-print-status dl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+  }
+
+  .booking-print-status dt,
+  .booking-print-trip-grid dt {
+    color: #64748b;
+    font-size: 6.5pt;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .booking-print-status dd,
+  .booking-print-trip-grid dd {
+    margin: 1px 0 0;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .booking-print-trip {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .booking-print-label,
+  .booking-print-trip h2,
+  .booking-print-date {
+    margin: 0;
+  }
+
+  .booking-print-label {
+    color: #0e7490;
+    font-size: 7pt;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .booking-print-trip h2 {
+    margin-top: 2px;
+    font-size: 14pt;
+    line-height: 1.15;
+  }
+
+  .booking-print-date {
+    margin-top: 2px;
+    color: #475569;
+    font-weight: 700;
+  }
+
+  .booking-print-trip-grid {
+    display: grid;
+    grid-template-columns:
+      0.65fr 0.65fr 1.35fr 1.35fr;
+    gap: 7px;
+    margin: 7px 0 0;
+  }
+
+  .booking-print-checkin {
+    margin-top: 7px;
+    padding-top: 6px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .booking-print-checkin p,
+  .booking-print-checkin strong {
+    margin: 0;
+  }
+
+  .booking-print-checkin p {
+    color: #64748b;
+    font-size: 6.5pt;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .booking-print-checkin strong {
+    display: block;
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  .booking-print-passengers,
+  .booking-print-travel-info {
+    margin-top: 9px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .booking-print-passengers h2,
+  .booking-print-travel-info h2 {
+    margin: 0 0 5px;
+    font-size: 11pt;
+  }
+
+  .booking-print-passengers ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .booking-print-passengers li {
+    padding: 5px 7px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+  }
+
+  .booking-print-passengers span,
+  .booking-print-passengers strong {
+    display: block;
+  }
+
+  .booking-print-passengers span {
+    color: #64748b;
+    font-size: 6.5pt;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .booking-print-passengers strong {
+    margin-top: 1px;
+  }
+
+  .booking-print-travel-info {
+    padding: 8px;
+    border: 1px solid #a5f3fc;
+    border-radius: 6px;
+    background: #ecfeff !important;
+  }
+
+  .booking-print-travel-info ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  .booking-print-travel-info li + li {
+    margin-top: 3px;
+  }
+
+  .booking-print-footer {
+    margin-top: 9px;
+    padding-top: 7px;
+    border-top: 1px solid #94a3b8;
+    color: #475569;
+    font-size: 7.5pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .booking-print-footer strong,
+  .booking-print-footer p {
+    margin: 0;
+  }
+
+  .booking-print-footer strong {
+    display: block;
+    color: #0f172a;
+    font-size: 8pt;
+  }
+
+  .booking-print-footer p {
+    margin-top: 3px;
+  }
+
+  .booking-print-document a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}
