@@ -410,7 +410,9 @@ function sortTripInventory(
   )
 }
 
-export async function GET() {
+export async function GET(
+  request: Request
+) {
   try {
     const admin = await getCurrentAdmin()
 
@@ -427,6 +429,48 @@ export async function GET() {
       )
     }
 
+    const url = new URL(request.url)
+
+    const requestedInventoryCodes =
+      Array.from(
+        new Set(
+          url.searchParams
+            .getAll("inventoryCode")
+            .map((value) =>
+              value
+                .trim()
+                .toUpperCase()
+            )
+            .filter(Boolean)
+        )
+      )
+
+    if (
+      requestedInventoryCodes.length > 90
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error:
+            "Bulk inventory preflight supports a maximum of 90 inventory codes per request.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const inventoryQueries =
+      requestedInventoryCodes.length > 0
+        ? [
+            Query.equal(
+              "inventoryCode",
+              requestedInventoryCodes
+            ),
+            Query.limit(90),
+          ]
+        : [Query.limit(200)]
+
     const [
       inventoryResponse,
       schedulesResponse,
@@ -442,7 +486,7 @@ export async function GET() {
           appwriteConfig
             .tripInventoryTableId,
 
-        queries: [Query.limit(200)],
+        queries: inventoryQueries,
       }),
 
       tablesDB.listRows({
