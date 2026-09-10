@@ -30,3 +30,6 @@ Thumbs.db
 
 # TypeScript cache
 *.tsbuildinfo
+/dist/
+.vinext/
+.wrangler/
