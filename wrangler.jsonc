@@ -23,7 +23,14 @@
   "kv_namespaces": [
     {
       "binding": "VINEXT_KV_CACHE",
-      "id": "<your-kv-namespace-id>"
+      "id": "adec0773116c4217a86716c2339a2342"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nusagiliboat-dev",
+      "database_id": "ef4e62c5-ac17-4ccc-bbab-108382020024"
     }
   ]
 }
