@@ -1,10 +1,5 @@
-import { Query } from "node-appwrite"
-
 import { requireAdmin } from "@/lib/admin-auth"
-import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+import { listOperatorsD1 } from "@/lib/d1-operators"
 
 import AdminShell from "../AdminShell"
 import OperatorsManager, {
@@ -13,78 +8,10 @@ import OperatorsManager, {
 
 export const dynamic = "force-dynamic"
 
-function optionalString(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null
-  }
-
-  const normalizedValue = String(value).trim()
-
-  return normalizedValue || null
-}
-
-function toPlainOperator(
-  row: Record<string, unknown>
-): OperatorRow {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    operatorCode: String(
-      row.operatorCode ?? ""
-    ),
-
-    operatorName: String(
-      row.operatorName ?? ""
-    ),
-
-    contactPerson: optionalString(
-      row.contactPerson
-    ),
-
-    phone: optionalString(row.phone),
-    whatsapp: optionalString(row.whatsapp),
-    email: optionalString(row.email),
-    address: optionalString(row.address),
-    logoUrl: optionalString(row.logoUrl),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalString(row.notes),
-    createdBy: optionalString(row.createdBy),
-    updatedBy: optionalString(row.updatedBy),
-  }
-}
-
 async function getOperators(): Promise<OperatorRow[]> {
-  const response = await tablesDB.listRows({
-    databaseId: appwriteConfig.databaseId,
-    tableId: appwriteConfig.operatorsTableId,
-    queries: [Query.limit(200)],
-  })
+  const response = await listOperatorsD1()
 
   return response.rows
-    .map((row) =>
-      toPlainOperator(
-        row as unknown as Record<string, unknown>
-      )
-    )
-    .sort((firstOperator, secondOperator) =>
-      firstOperator.operatorName.localeCompare(
-        secondOperator.operatorName,
-        "en",
-        {
-          sensitivity: "base",
-        }
-      )
-    )
 }
 
 export default async function OperatorsPage() {

@@ -1,6 +1,7 @@
-import { ID, Query } from "node-appwrite"
+import { ID } from "node-appwrite"
 
 import { getCurrentAdmin } from "@/lib/admin-auth"
+import { listOperatorsD1 } from "@/lib/d1-operators"
 import {
   appwriteConfig,
   tablesDB,
@@ -61,35 +62,11 @@ export async function GET() {
       )
     }
 
-    const response = await tablesDB.listRows({
-      databaseId: appwriteConfig.databaseId,
-      tableId: appwriteConfig.operatorsTableId,
-      queries: [Query.limit(200)],
-    })
-
-    const operators = [...response.rows].sort(
-      (firstOperator, secondOperator) => {
-        const firstName = String(
-          firstOperator.operatorName ?? ""
-        )
-
-        const secondName = String(
-          secondOperator.operatorName ?? ""
-        )
-
-        return firstName.localeCompare(
-          secondName,
-          "en",
-          {
-            sensitivity: "base",
-          }
-        )
-      }
-    )
+    const response = await listOperatorsD1()
 
     return Response.json({
       success: true,
-      operators,
+      operators: response.rows,
       total: response.total,
     })
   } catch (error) {
