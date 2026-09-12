@@ -1,12 +1,10 @@
-import { ID } from "node-appwrite"
-
 import { getCurrentAdmin } from "@/lib/admin-auth"
-import { listVesselsD1 } from "@/lib/d1-vessels"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
-
+  createVesselD1,
+  listVesselsD1,
+  VesselOperatorInactiveError,
+  VesselOperatorNotFoundError,
+} from "@/lib/d1-vessels"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -23,54 +21,10 @@ type CreateVesselRequest = {
   notes?: string
 }
 
-type PlainOperator = {
-  $id: string
-  operatorCode: string
-  operatorName: string
-  isActive: boolean
-}
-
-type PlainVessel = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  vesselCode: string
-  operatorId: string
-  operatorCode: string
-  operatorName: string
-  vesselName: string
-  vesselType: string | null
-  registrationNumber: string | null
-  totalCapacity: number
-  activeCapacity: number
-  imageUrl: string | null
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-}
-
 function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 function toInteger(value: unknown): number | null {
@@ -101,75 +55,6 @@ function validateHttpUrl(value: string): boolean {
     )
   } catch {
     return false
-  }
-}
-
-function toPlainOperator(
-  row: Record<string, unknown>
-): PlainOperator {
-  return {
-    $id: String(row.$id ?? ""),
-    operatorCode: String(
-      row.operatorCode ?? ""
-    ),
-    operatorName: String(
-      row.operatorName ?? ""
-    ),
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-  }
-}
-
-function toPlainVessel(
-  row: Record<string, unknown>,
-  operator?: PlainOperator
-): PlainVessel {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    vesselCode: String(row.vesselCode ?? ""),
-    operatorId: String(row.operatorId ?? ""),
-
-    operatorCode:
-      operator?.operatorCode ?? "",
-
-    operatorName:
-      operator?.operatorName ??
-      "Unknown operator",
-
-    vesselName: String(row.vesselName ?? ""),
-
-    vesselType: optionalText(row.vesselType),
-
-    registrationNumber: optionalText(
-      row.registrationNumber
-    ),
-
-    totalCapacity: Number(
-      row.totalCapacity ?? 0
-    ),
-
-    activeCapacity: Number(
-      row.activeCapacity ?? 0
-    ),
-
-    imageUrl: optionalText(row.imageUrl),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(row.createdBy),
-    updatedBy: optionalText(row.updatedBy),
   }
 }
 
@@ -464,58 +349,8 @@ export async function POST(request: Request) {
       )
     }
 
-    let operatorRow
-
     try {
-      operatorRow = await tablesDB.getRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.operatorsTableId,
-
-        rowId: operatorId,
-      })
-    } catch (error) {
-      if (getErrorCode(error) === 404) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Selected operator could not be found.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      throw error
-    }
-
-    if (operatorRow.isActive !== true) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected operator is currently inactive.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    const vessel = await tablesDB.createRow({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId:
-        appwriteConfig.vesselsTableId,
-
-      rowId: ID.unique(),
-
-      data: {
+      const vessel = await createVesselD1({
         vesselCode,
         operatorId,
         vesselName,
@@ -531,50 +366,42 @@ export async function POST(request: Request) {
         notes,
         createdBy: admin.email,
         updatedBy: admin.email,
-      },
-    })
+      })
 
-    const plainOperator = toPlainOperator(
-      operatorRow as unknown as Record<
-        string,
-        unknown
-      >
-    )
-
-    return Response.json(
-      {
-        success: true,
-
-        vessel: toPlainVessel(
-          vessel as unknown as Record<
-            string,
-            unknown
-          >,
-          plainOperator
-        ),
-      },
-      {
-        status: 201,
+      return Response.json(
+        {
+          success: true,
+          vessel,
+        },
+        {
+          status: 201,
+        }
+      )
+    } catch (error) {
+      if (
+        error instanceof
+          VesselOperatorNotFoundError ||
+        error instanceof
+          VesselOperatorInactiveError
+      ) {
+        return Response.json(
+          {
+            success: false,
+            error: error.message,
+          },
+          {
+            status: 400,
+          }
+        )
       }
-    )
+
+      throw error
+    }
   } catch (error) {
     console.error(
       "Vessel creation error:",
       error
     )
-
-    if (getErrorCode(error) === 409) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Vessel code already exists. Please use another code.",
-        },
-        {
-          status: 409,
-        }
-      )
-    }
 
     return Response.json(
       {
