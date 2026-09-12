@@ -1,8 +1,10 @@
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  OperatorCodeConflictError,
+  OperatorNotFoundError,
+  type UpdateOperatorD1Input,
+  updateOperatorD1,
+} from "@/lib/d1-operators"
 
 export const runtime = "nodejs"
 
@@ -29,22 +31,6 @@ function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 export async function PATCH(
@@ -84,7 +70,10 @@ export async function PATCH(
     const body =
       (await request.json()) as UpdateOperatorRequest
 
-    const data: Record<string, unknown> = {
+    const data: Omit<
+      UpdateOperatorD1Input,
+      "id"
+    > = {
       updatedBy: admin.email,
     }
 
@@ -329,11 +318,9 @@ export async function PATCH(
       data.isActive = body.isActive
     }
 
-    const operator = await tablesDB.updateRow({
-      databaseId: appwriteConfig.databaseId,
-      tableId: appwriteConfig.operatorsTableId,
-      rowId: id,
-      data,
+    const operator = await updateOperatorD1({
+      id,
+      ...data,
     })
 
     return Response.json({
@@ -343,7 +330,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Operator update error:", error)
 
-    if (getErrorCode(error) === 409) {
+    if (error instanceof OperatorCodeConflictError) {
       return Response.json(
         {
           success: false,
@@ -356,7 +343,7 @@ export async function PATCH(
       )
     }
 
-    if (getErrorCode(error) === 404) {
+    if (error instanceof OperatorNotFoundError) {
       return Response.json(
         {
           success: false,
