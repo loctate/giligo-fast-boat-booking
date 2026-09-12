@@ -122,3 +122,134 @@ export async function listOperatorsD1(): Promise<OperatorListResult> {
     total: Number(countRow?.total ?? 0),
   };
 }
+
+export type CreateOperatorD1Input = {
+  operatorCode: string;
+  operatorName: string;
+  contactPerson: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  address: string | null;
+  logoUrl: string | null;
+  isActive: boolean;
+  notes: string | null;
+  createdBy: string | null;
+  updatedBy: string | null;
+};
+
+export class OperatorCodeConflictError extends Error {
+  constructor() {
+    super("Operator code already exists.");
+    this.name = "OperatorCodeConflictError";
+  }
+}
+
+function isOperatorCodeConflict(
+  error: unknown
+): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : String(error);
+
+  return (
+    message.includes(
+      "UNIQUE constraint failed: operators.operatorCode"
+    ) ||
+    message.includes(
+      "uq_operators_operatorCode"
+    )
+  );
+}
+
+export async function createOperatorD1(
+  input: CreateOperatorD1Input
+): Promise<OperatorCompatRow> {
+  const db = getD1();
+  const id = crypto.randomUUID();
+
+  try {
+    const result = await db
+      .prepare(
+        `INSERT INTO operators (
+          id,
+          operatorCode,
+          operatorName,
+          contactPerson,
+          phone,
+          whatsapp,
+          email,
+          address,
+          logoUrl,
+          isActive,
+          notes,
+          createdBy,
+          updatedBy
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )`
+      )
+      .bind(
+        id,
+        input.operatorCode,
+        input.operatorName,
+        input.contactPerson,
+        input.phone,
+        input.whatsapp,
+        input.email,
+        input.address,
+        input.logoUrl,
+        input.isActive ? 1 : 0,
+        input.notes,
+        input.createdBy,
+        input.updatedBy
+      )
+      .run();
+
+    if (!result.success) {
+      throw new Error(
+        "Operator could not be created."
+      );
+    }
+  } catch (error) {
+    if (isOperatorCodeConflict(error)) {
+      throw new OperatorCodeConflictError();
+    }
+
+    throw error;
+  }
+
+  const row = await db
+    .prepare(
+      `SELECT
+        id,
+        createdAt,
+        updatedAt,
+        operatorCode,
+        operatorName,
+        contactPerson,
+        phone,
+        whatsapp,
+        email,
+        address,
+        logoUrl,
+        isActive,
+        notes,
+        createdBy,
+        updatedBy
+      FROM operators
+      WHERE id = ?
+      LIMIT 1`
+    )
+    .bind(id)
+    .first<D1OperatorRow>();
+
+  if (!row) {
+    throw new Error(
+      "Created operator could not be loaded."
+    );
+  }
+
+  return toOperatorCompatRow(row);
+}
