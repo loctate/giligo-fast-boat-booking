@@ -1,12 +1,9 @@
-import { ID } from "node-appwrite"
-
 import { getCurrentAdmin } from "@/lib/admin-auth"
-import { listOperatorsD1 } from "@/lib/d1-operators"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
-
+  createOperatorD1,
+  listOperatorsD1,
+  OperatorCodeConflictError,
+} from "@/lib/d1-operators"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -27,22 +24,6 @@ function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 export async function GET() {
@@ -315,28 +296,22 @@ export async function POST(request: Request) {
       )
     }
 
-    const operator = await tablesDB.createRow({
-      databaseId: appwriteConfig.databaseId,
-      tableId: appwriteConfig.operatorsTableId,
-      rowId: ID.unique(),
-
-      data: {
-        operatorCode,
-        operatorName,
-        contactPerson,
-        phone,
-        whatsapp,
-        email: email?.toLowerCase() ?? null,
-        address,
-        logoUrl,
-        isActive:
-          typeof body.isActive === "boolean"
-            ? body.isActive
-            : true,
-        notes,
-        createdBy: admin.email,
-        updatedBy: admin.email,
-      },
+    const operator = await createOperatorD1({
+      operatorCode,
+      operatorName,
+      contactPerson,
+      phone,
+      whatsapp,
+      email: email?.toLowerCase() ?? null,
+      address,
+      logoUrl,
+      isActive:
+        typeof body.isActive === "boolean"
+          ? body.isActive
+          : true,
+      notes,
+      createdBy: admin.email,
+      updatedBy: admin.email,
     })
 
     return Response.json(
@@ -354,7 +329,7 @@ export async function POST(request: Request) {
       error
     )
 
-    if (getErrorCode(error) === 409) {
+    if (error instanceof OperatorCodeConflictError) {
       return Response.json(
         {
           success: false,
