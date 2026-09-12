@@ -69,6 +69,7 @@ export type D1VesselOperatorRow = {
 export type VesselListResult = {
   vessels: VesselCompatRow[]
   operators: VesselOperatorOption[]
+  total: number
 }
 
 function toBoolean(value: number): boolean {
@@ -129,6 +130,7 @@ Promise<VesselListResult> {
   const [
     vesselsResult,
     operatorsResult,
+    totalRow,
   ] = await Promise.all([
     db.prepare(
       `SELECT
@@ -172,6 +174,11 @@ Promise<VesselListResult> {
       WHERE isActive = 1
       LIMIT 200`
     ).all<D1VesselOperatorRow>(),
+
+    db.prepare(
+      `SELECT COUNT(*) AS total
+      FROM vessels`
+    ).first<{ total: number }>(),
   ])
 
   const vessels =
@@ -203,5 +210,6 @@ Promise<VesselListResult> {
   return {
     vessels,
     operators,
+    total: Number(totalRow?.total ?? 0),
   }
 }
