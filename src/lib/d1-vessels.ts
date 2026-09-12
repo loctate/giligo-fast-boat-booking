@@ -72,6 +72,10 @@ export type VesselListResult = {
   total: number
 }
 
+export type ListVesselsD1Options = {
+  includeInactiveOperators?: boolean
+}
+
 function toBoolean(value: number): boolean {
   if (value !== 0 && value !== 1) {
     throw new Error(
@@ -123,9 +127,15 @@ export function toVesselOperatorOption(
   }
 }
 
-export async function listVesselsD1():
-Promise<VesselListResult> {
+export async function listVesselsD1(
+  options: ListVesselsD1Options = {}
+): Promise<VesselListResult> {
   const db = getD1()
+
+  const operatorWhereClause =
+    options.includeInactiveOperators
+      ? ""
+      : "WHERE isActive = 1"
 
   const [
     vesselsResult,
@@ -171,7 +181,7 @@ Promise<VesselListResult> {
         operatorName,
         isActive
       FROM operators
-      WHERE isActive = 1
+      ${operatorWhereClause}
       LIMIT 200`
     ).all<D1VesselOperatorRow>(),
 
