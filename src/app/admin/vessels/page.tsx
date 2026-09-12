@@ -1,10 +1,5 @@
-import { Query } from "node-appwrite"
-
 import { requireAdmin } from "@/lib/admin-auth"
-import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+import { listVesselsD1 } from "@/lib/d1-vessels"
 
 import AdminShell from "../AdminShell"
 import VesselsManager, {
@@ -14,188 +9,20 @@ import VesselsManager, {
 
 export const dynamic = "force-dynamic"
 
-function optionalString(
-  value: unknown
-): string | null {
-  if (value === null || value === undefined) {
-    return null
-  }
-
-  const normalizedValue = String(value).trim()
-
-  return normalizedValue || null
-}
-
-function toPlainOperator(
-  row: Record<string, unknown>
-): OperatorOption {
-  return {
-    $id: String(row.$id ?? ""),
-
-    operatorCode: String(
-      row.operatorCode ?? ""
-    ),
-
-    operatorName: String(
-      row.operatorName ?? ""
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-  }
-}
-
-function toPlainVessel(
-  row: Record<string, unknown>,
-  operator?: OperatorOption
-): VesselRow {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    vesselCode: String(
-      row.vesselCode ?? ""
-    ),
-
-    operatorId: String(
-      row.operatorId ?? ""
-    ),
-
-    operatorCode:
-      operator?.operatorCode ?? "",
-
-    operatorName:
-      operator?.operatorName ??
-      "Unknown operator",
-
-    vesselName: String(
-      row.vesselName ?? ""
-    ),
-
-    vesselType: optionalString(
-      row.vesselType
-    ),
-
-    registrationNumber: optionalString(
-      row.registrationNumber
-    ),
-
-    totalCapacity: Number(
-      row.totalCapacity ?? 0
-    ),
-
-    activeCapacity: Number(
-      row.activeCapacity ?? 0
-    ),
-
-    imageUrl: optionalString(row.imageUrl),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalString(row.notes),
-    createdBy: optionalString(row.createdBy),
-    updatedBy: optionalString(row.updatedBy),
-  }
-}
-
 async function getVesselData(): Promise<{
   vessels: VesselRow[]
   operators: OperatorOption[]
 }> {
-  const [
-    vesselsResponse,
-    operatorsResponse,
-  ] = await Promise.all([
-    tablesDB.listRows({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId:
-        appwriteConfig.vesselsTableId,
-
-      queries: [Query.limit(200)],
-    }),
-
-    tablesDB.listRows({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId:
-        appwriteConfig.operatorsTableId,
-
-      queries: [Query.limit(200)],
-    }),
-  ])
-
-  const operators =
-    operatorsResponse.rows
-      .map((row) =>
-        toPlainOperator(
-          row as unknown as Record<
-            string,
-            unknown
-          >
-        )
-      )
-      .sort((firstOperator, secondOperator) =>
-        firstOperator.operatorName.localeCompare(
-          secondOperator.operatorName,
-          "en",
-          {
-            sensitivity: "base",
-          }
-        )
-      )
-
-  const operatorMap = new Map(
-    operators.map((operator) => [
-      operator.$id,
-      operator,
-    ])
-  )
-
-  const vessels =
-    vesselsResponse.rows
-      .map((row) => {
-        const plainRow =
-          row as unknown as Record<
-            string,
-            unknown
-          >
-
-        const operatorId = String(
-          plainRow.operatorId ?? ""
-        )
-
-        return toPlainVessel(
-          plainRow,
-          operatorMap.get(operatorId)
-        )
-      })
-      .sort((firstVessel, secondVessel) =>
-        firstVessel.vesselName.localeCompare(
-          secondVessel.vesselName,
-          "en",
-          {
-            sensitivity: "base",
-          }
-        )
-      )
+  const result = await listVesselsD1({
+    includeInactiveOperators: true,
+  })
 
   return {
-    vessels,
-    operators,
+    vessels: result.vessels,
+    operators: result.operators,
   }
 }
+
 
 export default async function VesselsPage() {
   const admin = await requireAdmin()
