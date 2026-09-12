@@ -1,9 +1,12 @@
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
-
+  getVesselByIdD1,
+  updateVesselD1,
+  VesselActiveOperatorRequiredError,
+  VesselNotFoundError,
+  VesselOperatorNotFoundError,
+  type UpdateVesselD1Input,
+} from "@/lib/d1-vessels"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -26,54 +29,10 @@ type RouteContext = {
   }>
 }
 
-type PlainOperator = {
-  $id: string
-  operatorCode: string
-  operatorName: string
-  isActive: boolean
-}
-
-type PlainVessel = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  vesselCode: string
-  operatorId: string
-  operatorCode: string
-  operatorName: string
-  vesselName: string
-  vesselType: string | null
-  registrationNumber: string | null
-  totalCapacity: number
-  activeCapacity: number
-  imageUrl: string | null
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-}
-
 function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 function toInteger(value: unknown): number | null {
@@ -104,74 +63,6 @@ function validateHttpUrl(value: string): boolean {
     )
   } catch {
     return false
-  }
-}
-
-function toPlainOperator(
-  row: Record<string, unknown>
-): PlainOperator {
-  return {
-    $id: String(row.$id ?? ""),
-
-    operatorCode: String(
-      row.operatorCode ?? ""
-    ),
-
-    operatorName: String(
-      row.operatorName ?? ""
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-  }
-}
-
-function toPlainVessel(
-  row: Record<string, unknown>,
-  operator: PlainOperator
-): PlainVessel {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    vesselCode: String(row.vesselCode ?? ""),
-    operatorId: String(row.operatorId ?? ""),
-
-    operatorCode: operator.operatorCode,
-    operatorName: operator.operatorName,
-
-    vesselName: String(row.vesselName ?? ""),
-
-    vesselType: optionalText(row.vesselType),
-
-    registrationNumber: optionalText(
-      row.registrationNumber
-    ),
-
-    totalCapacity: Number(
-      row.totalCapacity ?? 0
-    ),
-
-    activeCapacity: Number(
-      row.activeCapacity ?? 0
-    ),
-
-    imageUrl: optionalText(row.imageUrl),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(row.createdBy),
-    updatedBy: optionalText(row.updatedBy),
   }
 }
 
@@ -210,44 +101,26 @@ export async function PATCH(
       )
     }
 
-    let existingVessel
+    const existingVessel =
+      await getVesselByIdD1(vesselId)
 
-    try {
-      existingVessel = await tablesDB.getRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.vesselsTableId,
-
-        rowId: vesselId,
-      })
-    } catch (error) {
-      if (getErrorCode(error) === 404) {
-        return Response.json(
-          {
-            success: false,
-            error: "Vessel could not be found.",
-          },
-          {
-            status: 404,
-          }
-        )
-      }
-
-      throw error
+    if (!existingVessel) {
+      return Response.json(
+        {
+          success: false,
+          error: "Vessel could not be found.",
+        },
+        {
+          status: 404,
+        }
+      )
     }
-
-    const existingRow =
-      existingVessel as unknown as Record<
-        string,
-        unknown
-      >
 
     const body =
       (await request.json()) as UpdateVesselRequest
 
-    const data: Record<string, unknown> = {
+    const data: UpdateVesselD1Input = {
+      id: vesselId,
       updatedBy: admin.email,
     }
 
@@ -290,10 +163,6 @@ export async function PATCH(
       data.vesselCode = vesselCode
     }
 
-    let effectiveOperatorId = String(
-      existingRow.operatorId ?? ""
-    )
-
     if (body.operatorId !== undefined) {
       const operatorId = String(
         body.operatorId
@@ -311,7 +180,6 @@ export async function PATCH(
         )
       }
 
-      effectiveOperatorId = operatorId
       data.operatorId = operatorId
     }
 
@@ -400,11 +268,11 @@ export async function PATCH(
     }
 
     let effectiveTotalCapacity = Number(
-      existingRow.totalCapacity ?? 0
+      existingVessel.totalCapacity ?? 0
     )
 
     let effectiveActiveCapacity = Number(
-      existingRow.activeCapacity ?? 0
+      existingVessel.activeCapacity ?? 0
     )
 
     if (body.totalCapacity !== undefined) {
@@ -536,37 +404,29 @@ export async function PATCH(
       data.notes = notes
     }
 
-    const currentIsActive =
-      existingRow.isActive === true
-
-    const effectiveIsActive =
-      typeof body.isActive === "boolean"
-        ? body.isActive
-        : currentIsActive
-
     if (typeof body.isActive === "boolean") {
       data.isActive = body.isActive
     }
 
-    let operatorRow
-
     try {
-      operatorRow = await tablesDB.getRow({
-        databaseId:
-          appwriteConfig.databaseId,
+      const vessel =
+        await updateVesselD1(data)
 
-        tableId:
-          appwriteConfig.operatorsTableId,
-
-        rowId: effectiveOperatorId,
+      return Response.json({
+        success: true,
+        vessel,
       })
     } catch (error) {
-      if (getErrorCode(error) === 404) {
+      if (
+        error instanceof
+          VesselOperatorNotFoundError ||
+        error instanceof
+          VesselActiveOperatorRequiredError
+      ) {
         return Response.json(
           {
             success: false,
-            error:
-              "Selected operator could not be found.",
+            error: error.message,
           },
           {
             status: 400,
@@ -574,85 +434,27 @@ export async function PATCH(
         )
       }
 
+      if (
+        error instanceof VesselNotFoundError
+      ) {
+        return Response.json(
+          {
+            success: false,
+            error: error.message,
+          },
+          {
+            status: 404,
+          }
+        )
+      }
+
       throw error
     }
-
-    const plainOperator = toPlainOperator(
-      operatorRow as unknown as Record<
-        string,
-        unknown
-      >
-    )
-
-    if (
-      !plainOperator.isActive &&
-      effectiveIsActive
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "An active vessel must belong to an active operator. Deactivate the vessel or select an active operator.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    const updatedVessel =
-      await tablesDB.updateRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.vesselsTableId,
-
-        rowId: vesselId,
-        data,
-      })
-
-    return Response.json({
-      success: true,
-
-      vessel: toPlainVessel(
-        updatedVessel as unknown as Record<
-          string,
-          unknown
-        >,
-        plainOperator
-      ),
-    })
   } catch (error) {
     console.error(
       "Vessel update error:",
       error
     )
-
-    if (getErrorCode(error) === 409) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Vessel code already exists. Please use another code.",
-        },
-        {
-          status: 409,
-        }
-      )
-    }
-
-    if (getErrorCode(error) === 404) {
-      return Response.json(
-        {
-          success: false,
-          error: "Vessel could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
 
     return Response.json(
       {
