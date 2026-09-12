@@ -1,8 +1,10 @@
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  getRouteByIdD1,
+  RouteNotFoundError,
+  type UpdateRouteD1Input,
+  updateRouteD1,
+} from "@/lib/d1-routes"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -24,43 +26,10 @@ type RouteContext = {
   }>
 }
 
-type PlainRoute = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  routeCode: string
-  fromPort: string
-  toPort: string
-  fromIsland: string | null
-  toIsland: string | null
-  estimatedDurationMinutes: number
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-}
-
 function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 function toInteger(value: unknown): number | null {
@@ -77,39 +46,6 @@ function toInteger(value: unknown): number | null {
   return Number.isInteger(parsedValue)
     ? parsedValue
     : null
-}
-
-function toPlainRoute(
-  row: Record<string, unknown>
-): PlainRoute {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    routeCode: String(row.routeCode ?? ""),
-    fromPort: String(row.fromPort ?? ""),
-    toPort: String(row.toPort ?? ""),
-
-    fromIsland: optionalText(row.fromIsland),
-    toIsland: optionalText(row.toIsland),
-
-    estimatedDurationMinutes: Number(
-      row.estimatedDurationMinutes ?? 0
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(row.createdBy),
-    updatedBy: optionalText(row.updatedBy),
-  }
 }
 
 export async function PATCH(
@@ -147,42 +83,28 @@ export async function PATCH(
       )
     }
 
-    let existingRoute
+    const existingRoute =
+      await getRouteByIdD1(routeId)
 
-    try {
-      existingRoute = await tablesDB.getRow({
-        databaseId: appwriteConfig.databaseId,
-        tableId: appwriteConfig.routesTableId,
-        rowId: routeId,
-      })
-    } catch (error) {
-      if (getErrorCode(error) === 404) {
-        return Response.json(
-          {
-            success: false,
-            error: "Route could not be found.",
-          },
-          {
-            status: 404,
-          }
-        )
-      }
-
-      throw error
+    if (!existingRoute) {
+      return Response.json(
+        {
+          success: false,
+          error: "Route could not be found.",
+        },
+        {
+          status: 404,
+        }
+      )
     }
-
-    const existingRow =
-      existingRoute as unknown as Record<
-        string,
-        unknown
-      >
 
     const body =
       (await request.json()) as UpdateRouteRequest
 
-    const data: Record<string, unknown> = {
-      updatedBy: admin.email,
-    }
+    const data: Omit<
+      UpdateRouteD1Input,
+      "id" | "updatedBy"
+    > = {}
 
     if (body.routeCode !== undefined) {
       const routeCode = String(body.routeCode)
@@ -221,16 +143,15 @@ export async function PATCH(
       data.routeCode = routeCode
     }
 
-    let effectiveFromPort = String(
-      existingRow.fromPort ?? ""
-    ).trim()
+    let effectiveFromPort =
+      existingRoute.fromPort
 
-    let effectiveToPort = String(
-      existingRow.toPort ?? ""
-    ).trim()
+    let effectiveToPort =
+      existingRoute.toPort
 
     if (body.fromPort !== undefined) {
-      const fromPort = String(body.fromPort).trim()
+      const fromPort =
+        String(body.fromPort).trim()
 
       if (!fromPort) {
         return Response.json(
@@ -262,7 +183,8 @@ export async function PATCH(
     }
 
     if (body.toPort !== undefined) {
-      const toPort = String(body.toPort).trim()
+      const toPort =
+        String(body.toPort).trim()
 
       if (!toPort) {
         return Response.json(
@@ -312,30 +234,6 @@ export async function PATCH(
           status: 400,
         }
       )
-    }
-
-    if (body.fromIsland !== undefined) {
-      const fromIsland = optionalText(
-        body.fromIsland
-      )
-
-      if (
-        fromIsland &&
-        fromIsland.length > 80
-      ) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Departure island cannot exceed 80 characters.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      data.fromIsland = fromIsland
     }
 
     if (body.fromIsland !== undefined) {
@@ -417,9 +315,13 @@ export async function PATCH(
     }
 
     if (body.notes !== undefined) {
-      const notes = optionalText(body.notes)
+      const notes =
+        optionalText(body.notes)
 
-      if (notes && notes.length > 1000) {
+      if (
+        notes &&
+        notes.length > 1000
+      ) {
         return Response.json(
           {
             success: false,
@@ -435,45 +337,29 @@ export async function PATCH(
       data.notes = notes
     }
 
-    if (typeof body.isActive === "boolean") {
+    if (
+      typeof body.isActive === "boolean"
+    ) {
       data.isActive = body.isActive
     }
 
-    const updatedRoute =
-      await tablesDB.updateRow({
-        databaseId: appwriteConfig.databaseId,
-        tableId: appwriteConfig.routesTableId,
-        rowId: routeId,
-        data,
+    const route =
+      await updateRouteD1({
+        id: routeId,
+        ...data,
+        updatedBy: admin.email,
       })
 
     return Response.json({
       success: true,
-
-      route: toPlainRoute(
-        updatedRoute as unknown as Record<
-          string,
-          unknown
-        >
-      ),
+      route,
     })
   } catch (error) {
     console.error("Route update error:", error)
 
-    if (getErrorCode(error) === 409) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Route code already exists. Please use another code.",
-        },
-        {
-          status: 409,
-        }
-      )
-    }
-
-    if (getErrorCode(error) === 404) {
+    if (
+      error instanceof RouteNotFoundError
+    ) {
       return Response.json(
         {
           success: false,

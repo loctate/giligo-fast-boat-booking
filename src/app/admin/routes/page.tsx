@@ -1,11 +1,5 @@
-import { Query } from "node-appwrite"
-
 import { requireAdmin } from "@/lib/admin-auth"
-import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
-
+import { listRoutesD1 } from "@/lib/d1-routes"
 import AdminShell from "../AdminShell"
 import RoutesManager, {
   type RouteRow,
@@ -13,102 +7,12 @@ import RoutesManager, {
 
 export const dynamic = "force-dynamic"
 
-function optionalString(
-  value: unknown
-): string | null {
-  if (value === null || value === undefined) {
-    return null
-  }
-
-  const normalizedValue = String(value).trim()
-
-  return normalizedValue || null
-}
-
-function toPlainRoute(
-  row: Record<string, unknown>
-): RouteRow {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    routeCode: String(row.routeCode ?? ""),
-    fromPort: String(row.fromPort ?? ""),
-    toPort: String(row.toPort ?? ""),
-
-    fromIsland: optionalString(
-      row.fromIsland
-    ),
-
-    toIsland: optionalString(
-      row.toIsland
-    ),
-
-    estimatedDurationMinutes: Number(
-      row.estimatedDurationMinutes ?? 0
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalString(row.notes),
-    createdBy: optionalString(row.createdBy),
-    updatedBy: optionalString(row.updatedBy),
-  }
-}
-
-function sortRoutes(
-  routes: RouteRow[]
-): RouteRow[] {
-  return [...routes].sort(
-    (firstRoute, secondRoute) => {
-      const originComparison =
-        firstRoute.fromPort.localeCompare(
-          secondRoute.fromPort,
-          "en",
-          {
-            sensitivity: "base",
-          }
-        )
-
-      if (originComparison !== 0) {
-        return originComparison
-      }
-
-      return firstRoute.toPort.localeCompare(
-        secondRoute.toPort,
-        "en",
-        {
-          sensitivity: "base",
-        }
-      )
-    }
-  )
-}
-
 async function getRoutes(): Promise<RouteRow[]> {
-  const response = await tablesDB.listRows({
-    databaseId: appwriteConfig.databaseId,
-    tableId: appwriteConfig.routesTableId,
-    queries: [Query.limit(200)],
-  })
+  const {
+    routes,
+  } = await listRoutesD1()
 
-  const routes = response.rows.map((row) =>
-    toPlainRoute(
-      row as unknown as Record<
-        string,
-        unknown
-      >
-    )
-  )
-
-  return sortRoutes(routes)
+  return routes
 }
 
 export default async function RoutesPage() {

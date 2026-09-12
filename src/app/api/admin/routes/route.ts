@@ -1,10 +1,8 @@
-import { ID, Query } from "node-appwrite"
-
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  createRouteD1,
+  listRoutesD1,
+} from "@/lib/d1-routes"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -20,43 +18,10 @@ type CreateRouteRequest = {
   notes?: string
 }
 
-type PlainRoute = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  routeCode: string
-  fromPort: string
-  toPort: string
-  fromIsland: string | null
-  toIsland: string | null
-  estimatedDurationMinutes: number
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-}
-
 function optionalText(value: unknown): string | null {
   const normalizedValue = String(value ?? "").trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(error: unknown): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code) ? code : null
-  }
-
-  return null
 }
 
 function toInteger(value: unknown): number | null {
@@ -73,64 +38,6 @@ function toInteger(value: unknown): number | null {
   return Number.isInteger(parsedValue)
     ? parsedValue
     : null
-}
-
-function toPlainRoute(
-  row: Record<string, unknown>
-): PlainRoute {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(row.$createdAt ?? ""),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    routeCode: String(row.routeCode ?? ""),
-    fromPort: String(row.fromPort ?? ""),
-    toPort: String(row.toPort ?? ""),
-
-    fromIsland: optionalText(row.fromIsland),
-    toIsland: optionalText(row.toIsland),
-
-    estimatedDurationMinutes: Number(
-      row.estimatedDurationMinutes ?? 0
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(row.createdBy),
-    updatedBy: optionalText(row.updatedBy),
-  }
-}
-
-function sortRoutes(routes: PlainRoute[]) {
-  return [...routes].sort((firstRoute, secondRoute) => {
-    const fromComparison =
-      firstRoute.fromPort.localeCompare(
-        secondRoute.fromPort,
-        "en",
-        {
-          sensitivity: "base",
-        }
-      )
-
-    if (fromComparison !== 0) {
-      return fromComparison
-    }
-
-    return firstRoute.toPort.localeCompare(
-      secondRoute.toPort,
-      "en",
-      {
-        sensitivity: "base",
-      }
-    )
-  })
 }
 
 export async function GET() {
@@ -150,27 +57,15 @@ export async function GET() {
       )
     }
 
-    const response = await tablesDB.listRows({
-      databaseId: appwriteConfig.databaseId,
-      tableId: appwriteConfig.routesTableId,
-      queries: [Query.limit(200)],
-    })
-
-    const routes = sortRoutes(
-      response.rows.map((row) =>
-        toPlainRoute(
-          row as unknown as Record<
-            string,
-            unknown
-          >
-        )
-      )
-    )
+    const {
+      routes,
+      total,
+    } = await listRoutesD1()
 
     return Response.json({
       success: true,
       routes,
-      total: response.total,
+      total,
     })
   } catch (error) {
     console.error("Route list error:", error)
@@ -397,40 +292,29 @@ export async function POST(request: Request) {
       )
     }
 
-    const route = await tablesDB.createRow({
-      databaseId: appwriteConfig.databaseId,
-      tableId: appwriteConfig.routesTableId,
-      rowId: ID.unique(),
+    const route = await createRouteD1({
+      routeCode,
+      fromPort,
+      toPort,
+      fromIsland,
+      toIsland,
+      estimatedDurationMinutes,
 
-      data: {
-        routeCode,
-        fromPort,
-        toPort,
-        fromIsland,
-        toIsland,
-        estimatedDurationMinutes,
+      isActive:
+        typeof body.isActive === "boolean"
+          ? body.isActive
+          : true,
 
-        isActive:
-          typeof body.isActive === "boolean"
-            ? body.isActive
-            : true,
-
-        notes,
-        createdBy: admin.email,
-        updatedBy: admin.email,
-      },
+      notes,
+      createdBy: admin.email,
+      updatedBy: admin.email,
     })
 
     return Response.json(
       {
         success: true,
 
-        route: toPlainRoute(
-          route as unknown as Record<
-            string,
-            unknown
-          >
-        ),
+        route,
       },
       {
         status: 201,
@@ -439,18 +323,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Route creation error:", error)
 
-    if (getErrorCode(error) === 409) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Route code already exists. Please use another code.",
-        },
-        {
-          status: 409,
-        }
-      )
-    }
+
 
     return Response.json(
       {
