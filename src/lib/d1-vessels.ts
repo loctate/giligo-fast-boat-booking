@@ -641,3 +641,51 @@ export async function updateVesselD1(
 
   return toVesselCompatRow(updated)
 }
+
+export async function getVesselByIdD1(
+  id: string
+): Promise<VesselCompatRow | null> {
+  const db = getD1()
+
+  const row = await db
+    .prepare(
+      `SELECT
+        v.id,
+        v.createdAt,
+        v.updatedAt,
+
+        v.vesselCode,
+        v.operatorId,
+
+        o.operatorCode AS operatorCode,
+        o.operatorName AS operatorName,
+        o.isActive AS operatorIsActive,
+
+        v.vesselName,
+        v.vesselType,
+        v.registrationNumber,
+
+        v.totalCapacity,
+        v.activeCapacity,
+
+        v.imageUrl,
+        v.isActive,
+        v.notes,
+
+        v.createdBy,
+        v.updatedBy
+      FROM vessels AS v
+      LEFT JOIN operators AS o
+        ON o.id = v.operatorId
+      WHERE v.id = ?
+      LIMIT 1`
+    )
+    .bind(id)
+    .first<D1VesselJoinedRow>()
+
+  if (!row) {
+    return null
+  }
+
+  return toVesselCompatRow(row)
+}
