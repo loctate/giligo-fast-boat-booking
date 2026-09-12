@@ -1,6 +1,7 @@
-import { ID, Query } from "node-appwrite"
+import { ID } from "node-appwrite"
 
 import { getCurrentAdmin } from "@/lib/admin-auth"
+import { listVesselsD1 } from "@/lib/d1-vessels"
 import {
   appwriteConfig,
   tablesDB,
@@ -189,90 +190,17 @@ export async function GET() {
       )
     }
 
-    const [
-      vesselsResponse,
-      operatorsResponse,
-    ] = await Promise.all([
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.vesselsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.operatorsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-    ])
-
-    const operators =
-      operatorsResponse.rows.map((row) =>
-        toPlainOperator(
-          row as unknown as Record<
-            string,
-            unknown
-          >
-        )
-      )
-
-    const operatorMap = new Map(
-      operators.map((operator) => [
-        operator.$id,
-        operator,
-      ])
-    )
-
-    const vessels = vesselsResponse.rows
-      .map((row) => {
-        const plainRow =
-          row as unknown as Record<
-            string,
-            unknown
-          >
-
-        const operatorId = String(
-          plainRow.operatorId ?? ""
-        )
-
-        return toPlainVessel(
-          plainRow,
-          operatorMap.get(operatorId)
-        )
-      })
-      .sort((firstVessel, secondVessel) =>
-        firstVessel.vesselName.localeCompare(
-          secondVessel.vesselName,
-          "en",
-          {
-            sensitivity: "base",
-          }
-        )
-      )
+    const {
+      vessels,
+      operators,
+      total,
+    } = await listVesselsD1()
 
     return Response.json({
       success: true,
       vessels,
-      operators: operators
-        .filter((operator) => operator.isActive)
-        .sort((firstOperator, secondOperator) =>
-          firstOperator.operatorName.localeCompare(
-            secondOperator.operatorName,
-            "en",
-            {
-              sensitivity: "base",
-            }
-          )
-        ),
-      total: vesselsResponse.total,
+      operators,
+      total,
     })
   } catch (error) {
     console.error("Vessel list error:", error)
@@ -291,6 +219,7 @@ export async function GET() {
     )
   }
 }
+
 
 export async function POST(request: Request) {
   try {
