@@ -138,10 +138,32 @@ export type CreateOperatorD1Input = {
   updatedBy: string | null;
 };
 
+export type UpdateOperatorD1Input = {
+  id: string;
+  operatorCode?: string;
+  operatorName?: string;
+  contactPerson?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  address?: string | null;
+  logoUrl?: string | null;
+  isActive?: boolean;
+  notes?: string | null;
+  updatedBy: string | null;
+};
+
 export class OperatorCodeConflictError extends Error {
   constructor() {
     super("Operator code already exists.");
     this.name = "OperatorCodeConflictError";
+  }
+}
+
+export class OperatorNotFoundError extends Error {
+  constructor() {
+    super("Operator could not be found.");
+    this.name = "OperatorNotFoundError";
   }
 }
 
@@ -249,6 +271,139 @@ export async function createOperatorD1(
     throw new Error(
       "Created operator could not be loaded."
     );
+  }
+
+  return toOperatorCompatRow(row);
+}
+
+export async function updateOperatorD1(
+  input: UpdateOperatorD1Input
+): Promise<OperatorCompatRow> {
+  const db = getD1();
+
+  const assignments: string[] = [
+    "updatedBy = ?",
+  ];
+
+  const values: Array<string | number | null> = [
+    input.updatedBy,
+  ];
+
+  if (input.operatorCode !== undefined) {
+    assignments.push("operatorCode = ?");
+    values.push(input.operatorCode);
+  }
+
+  if (input.operatorName !== undefined) {
+    assignments.push("operatorName = ?");
+    values.push(input.operatorName);
+  }
+
+  if (input.contactPerson !== undefined) {
+    assignments.push("contactPerson = ?");
+    values.push(input.contactPerson);
+  }
+
+  if (input.phone !== undefined) {
+    assignments.push("phone = ?");
+    values.push(input.phone);
+  }
+
+  if (input.whatsapp !== undefined) {
+    assignments.push("whatsapp = ?");
+    values.push(input.whatsapp);
+  }
+
+  if (input.email !== undefined) {
+    assignments.push("email = ?");
+    values.push(input.email);
+  }
+
+  if (input.address !== undefined) {
+    assignments.push("address = ?");
+    values.push(input.address);
+  }
+
+  if (input.logoUrl !== undefined) {
+    assignments.push("logoUrl = ?");
+    values.push(input.logoUrl);
+  }
+
+  if (input.isActive !== undefined) {
+    assignments.push("isActive = ?");
+    values.push(input.isActive ? 1 : 0);
+  }
+
+  if (input.notes !== undefined) {
+    assignments.push("notes = ?");
+    values.push(input.notes);
+  }
+
+  try {
+    const result = await db
+      .prepare(
+        `UPDATE operators
+        SET ${assignments.join(", ")}
+        WHERE id = ?`
+      )
+      .bind(
+        ...values,
+        input.id
+      )
+      .run();
+
+    if (!result.success) {
+      throw new Error(
+        "Operator could not be updated."
+      );
+    }
+
+    const changes = Number(
+      result.meta.changes ?? 0
+    );
+
+    if (changes === 0) {
+      throw new OperatorNotFoundError();
+    }
+  } catch (error) {
+    if (error instanceof OperatorNotFoundError) {
+      throw error;
+    }
+
+    if (isOperatorCodeConflict(error)) {
+      throw new OperatorCodeConflictError();
+    }
+
+    throw error;
+  }
+
+  const row = await db
+    .prepare(
+      `SELECT
+        id,
+        createdAt,
+        updatedAt,
+        operatorCode,
+        operatorName,
+        contactPerson,
+        phone,
+        whatsapp,
+        email,
+        address,
+        logoUrl,
+        isActive,
+        notes,
+        createdBy,
+        updatedBy
+      FROM operators
+      WHERE id = ?
+      LIMIT 1`
+    )
+    .bind(input.id)
+    .first<D1OperatorRow>();
+
+  if (!row) {
+    throw new OperatorNotFoundError();
   }
 
   return toOperatorCompatRow(row);
