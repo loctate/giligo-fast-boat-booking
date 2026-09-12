@@ -379,3 +379,265 @@ export async function createVesselD1(
 
   return toVesselCompatRow(row)
 }
+
+export type UpdateVesselD1Input = {
+  id: string
+  vesselCode?: string
+  operatorId?: string
+  vesselName?: string
+  vesselType?: string | null
+  registrationNumber?: string | null
+  totalCapacity?: number
+  activeCapacity?: number
+  imageUrl?: string | null
+  isActive?: boolean
+  notes?: string | null
+  updatedBy: string | null
+}
+
+export class VesselNotFoundError extends Error {
+  constructor() {
+    super("Vessel could not be found.")
+    this.name = "VesselNotFoundError"
+  }
+}
+
+export class VesselActiveOperatorRequiredError
+  extends Error {
+  constructor() {
+    super(
+      "An active vessel must belong to an active operator. Deactivate the vessel or select an active operator."
+    )
+
+    this.name =
+      "VesselActiveOperatorRequiredError"
+  }
+}
+
+export async function updateVesselD1(
+  input: UpdateVesselD1Input
+): Promise<VesselCompatRow> {
+  const db = getD1()
+
+  const existing = await db
+    .prepare(
+      `SELECT
+        v.id,
+        v.createdAt,
+        v.updatedAt,
+
+        v.vesselCode,
+        v.operatorId,
+
+        o.operatorCode AS operatorCode,
+        o.operatorName AS operatorName,
+        o.isActive AS operatorIsActive,
+
+        v.vesselName,
+        v.vesselType,
+        v.registrationNumber,
+
+        v.totalCapacity,
+        v.activeCapacity,
+
+        v.imageUrl,
+        v.isActive,
+        v.notes,
+
+        v.createdBy,
+        v.updatedBy
+      FROM vessels AS v
+      LEFT JOIN operators AS o
+        ON o.id = v.operatorId
+      WHERE v.id = ?
+      LIMIT 1`
+    )
+    .bind(input.id)
+    .first<D1VesselJoinedRow>()
+
+  if (!existing) {
+    throw new VesselNotFoundError()
+  }
+
+  const effectiveOperatorId =
+    input.operatorId ?? existing.operatorId
+
+  const effectiveIsActive =
+    input.isActive ??
+    toBoolean(existing.isActive)
+
+  const operatorRow = await db
+    .prepare(
+      `SELECT
+        id,
+        operatorCode,
+        operatorName,
+        isActive
+      FROM operators
+      WHERE id = ?
+      LIMIT 1`
+    )
+    .bind(effectiveOperatorId)
+    .first<D1VesselOperatorRow>()
+
+  if (!operatorRow) {
+    throw new VesselOperatorNotFoundError()
+  }
+
+  if (
+    effectiveIsActive &&
+    !toBoolean(operatorRow.isActive)
+  ) {
+    throw new VesselActiveOperatorRequiredError()
+  }
+
+  const assignments: string[] = [
+    "updatedBy = ?",
+  ]
+
+  const values: Array<
+    string | number | null
+  > = [
+    input.updatedBy,
+  ]
+
+  const addAssignment = (
+    column: string,
+    value: string | number | null
+  ) => {
+    assignments.push(`${column} = ?`)
+    values.push(value)
+  }
+
+  if (input.vesselCode !== undefined) {
+    addAssignment(
+      "vesselCode",
+      input.vesselCode
+    )
+  }
+
+  if (input.operatorId !== undefined) {
+    addAssignment(
+      "operatorId",
+      input.operatorId
+    )
+  }
+
+  if (input.vesselName !== undefined) {
+    addAssignment(
+      "vesselName",
+      input.vesselName
+    )
+  }
+
+  if (input.vesselType !== undefined) {
+    addAssignment(
+      "vesselType",
+      input.vesselType
+    )
+  }
+
+  if (
+    input.registrationNumber !== undefined
+  ) {
+    addAssignment(
+      "registrationNumber",
+      input.registrationNumber
+    )
+  }
+
+  if (input.totalCapacity !== undefined) {
+    addAssignment(
+      "totalCapacity",
+      input.totalCapacity
+    )
+  }
+
+  if (input.activeCapacity !== undefined) {
+    addAssignment(
+      "activeCapacity",
+      input.activeCapacity
+    )
+  }
+
+  if (input.imageUrl !== undefined) {
+    addAssignment(
+      "imageUrl",
+      input.imageUrl
+    )
+  }
+
+  if (input.isActive !== undefined) {
+    addAssignment(
+      "isActive",
+      input.isActive ? 1 : 0
+    )
+  }
+
+  if (input.notes !== undefined) {
+    addAssignment(
+      "notes",
+      input.notes
+    )
+  }
+
+  values.push(input.id)
+
+  const result = await db
+    .prepare(
+      `UPDATE vessels
+      SET ${assignments.join(", ")}
+      WHERE id = ?`
+    )
+    .bind(...values)
+    .run()
+
+  if (
+    !result.success ||
+    Number(result.meta.changes ?? 0) === 0
+  ) {
+    throw new VesselNotFoundError()
+  }
+
+  const updated = await db
+    .prepare(
+      `SELECT
+        v.id,
+        v.createdAt,
+        v.updatedAt,
+
+        v.vesselCode,
+        v.operatorId,
+
+        o.operatorCode AS operatorCode,
+        o.operatorName AS operatorName,
+        o.isActive AS operatorIsActive,
+
+        v.vesselName,
+        v.vesselType,
+        v.registrationNumber,
+
+        v.totalCapacity,
+        v.activeCapacity,
+
+        v.imageUrl,
+        v.isActive,
+        v.notes,
+
+        v.createdBy,
+        v.updatedBy
+      FROM vessels AS v
+      LEFT JOIN operators AS o
+        ON o.id = v.operatorId
+      WHERE v.id = ?
+      LIMIT 1`
+    )
+    .bind(input.id)
+    .first<D1VesselJoinedRow>()
+
+  if (!updated) {
+    throw new VesselNotFoundError()
+  }
+
+  return toVesselCompatRow(updated)
+}
