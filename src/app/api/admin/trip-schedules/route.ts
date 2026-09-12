@@ -1,10 +1,15 @@
-import { ID, Query } from "node-appwrite"
-
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  createTripScheduleD1,
+  listTripSchedulesD1,
+  TripScheduleActiveOperatorRequiredError,
+  TripScheduleActiveRouteRequiredError,
+  TripScheduleActiveVesselRequiredError,
+  TripScheduleOperatorNotFoundError,
+  TripScheduleRouteNotFoundError,
+  TripScheduleVesselNotFoundError,
+  TripScheduleVesselOperatorMismatchError,
+} from "@/lib/d1-trip-schedules"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -33,38 +38,6 @@ type CreateTripScheduleRequest = {
   notes?: string
 }
 
-type PlainTripSchedule = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  scheduleCode: string
-  operatorId: string
-  vesselId: string
-  routeId: string
-
-  departureTime: string
-  arrivalTime: string
-  arrivalDayOffset: number
-  operatingDays: string
-  bookingCutoffMinutes: number
-
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-
-  operatorCode: string | null
-  operatorName: string | null
-  vesselCode: string | null
-  vesselName: string | null
-  routeCode: string | null
-  fromPort: string | null
-  toPort: string | null
-}
-
-type RelatedRow = Record<string, unknown>
-
 function optionalText(
   value: unknown
 ): string | null {
@@ -73,26 +46,6 @@ function optionalText(
   ).trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(
-  error: unknown
-): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code)
-      ? code
-      : null
-  }
-
-  return null
 }
 
 function toInteger(
@@ -172,144 +125,6 @@ function normalizeOperatingDays(
   ).join(",")
 }
 
-async function getRowOrNull(
-  tableId: string,
-  rowId: string
-): Promise<RelatedRow | null> {
-  try {
-    const row = await tablesDB.getRow({
-      databaseId: appwriteConfig.databaseId,
-      tableId,
-      rowId,
-    })
-
-    return row as unknown as RelatedRow
-  } catch (error) {
-    if (getErrorCode(error) === 404) {
-      return null
-    }
-
-    throw error
-  }
-}
-
-function toPlainTripSchedule(
-  row: RelatedRow,
-  operator?: RelatedRow,
-  vessel?: RelatedRow,
-  route?: RelatedRow
-): PlainTripSchedule {
-  return {
-    $id: String(row.$id ?? ""),
-    $createdAt: String(
-      row.$createdAt ?? ""
-    ),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    scheduleCode: String(
-      row.scheduleCode ?? ""
-    ),
-
-    operatorId: String(
-      row.operatorId ?? ""
-    ),
-
-    vesselId: String(
-      row.vesselId ?? ""
-    ),
-
-    routeId: String(row.routeId ?? ""),
-
-    departureTime: String(
-      row.departureTime ?? ""
-    ),
-
-    arrivalTime: String(
-      row.arrivalTime ?? ""
-    ),
-
-    arrivalDayOffset: Number(
-      row.arrivalDayOffset ?? 0
-    ),
-
-    operatingDays: String(
-      row.operatingDays ?? ""
-    ),
-
-    bookingCutoffMinutes: Number(
-      row.bookingCutoffMinutes ?? 0
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(row.createdBy),
-    updatedBy: optionalText(row.updatedBy),
-
-    operatorCode: operator
-      ? optionalText(operator.operatorCode)
-      : null,
-
-    operatorName: operator
-      ? optionalText(operator.operatorName)
-      : null,
-
-    vesselCode: vessel
-      ? optionalText(vessel.vesselCode)
-      : null,
-
-    vesselName: vessel
-      ? optionalText(vessel.vesselName)
-      : null,
-
-    routeCode: route
-      ? optionalText(route.routeCode)
-      : null,
-
-    fromPort: route
-      ? optionalText(route.fromPort)
-      : null,
-
-    toPort: route
-      ? optionalText(route.toPort)
-      : null,
-  }
-}
-
-function sortTripSchedules(
-  schedules: PlainTripSchedule[]
-): PlainTripSchedule[] {
-  return [...schedules].sort(
-    (firstSchedule, secondSchedule) => {
-      const routeComparison = String(
-        firstSchedule.routeCode ?? ""
-      ).localeCompare(
-        String(
-          secondSchedule.routeCode ?? ""
-        ),
-        "en",
-        {
-          sensitivity: "base",
-        }
-      )
-
-      if (routeComparison !== 0) {
-        return routeComparison
-      }
-
-      return firstSchedule.departureTime.localeCompare(
-        secondSchedule.departureTime
-      )
-    }
-  )
-}
-
 export async function GET() {
   try {
     const admin = await getCurrentAdmin()
@@ -327,136 +142,15 @@ export async function GET() {
       )
     }
 
-    const [
-      schedulesResponse,
-      operatorsResponse,
-      vesselsResponse,
-      routesResponse,
-    ] = await Promise.all([
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .tripSchedulesTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.operatorsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.vesselsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.routesTableId,
-
-        queries: [Query.limit(200)],
-      }),
-    ])
-
-    const operatorsById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const operator of
-      operatorsResponse.rows
-    ) {
-      const plainOperator =
-        operator as unknown as RelatedRow
-
-      operatorsById.set(
-        String(plainOperator.$id ?? ""),
-        plainOperator
-      )
-    }
-
-    const vesselsById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const vessel of vesselsResponse.rows
-    ) {
-      const plainVessel =
-        vessel as unknown as RelatedRow
-
-      vesselsById.set(
-        String(plainVessel.$id ?? ""),
-        plainVessel
-      )
-    }
-
-    const routesById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (const route of routesResponse.rows) {
-      const plainRoute =
-        route as unknown as RelatedRow
-
-      routesById.set(
-        String(plainRoute.$id ?? ""),
-        plainRoute
-      )
-    }
-
-    const schedules = sortTripSchedules(
-      schedulesResponse.rows.map(
-        (schedule) => {
-          const plainSchedule =
-            schedule as unknown as RelatedRow
-
-          const operatorId = String(
-            plainSchedule.operatorId ?? ""
-          )
-
-          const vesselId = String(
-            plainSchedule.vesselId ?? ""
-          )
-
-          const routeId = String(
-            plainSchedule.routeId ?? ""
-          )
-
-          return toPlainTripSchedule(
-            plainSchedule,
-            operatorsById.get(operatorId),
-            vesselsById.get(vesselId),
-            routesById.get(routeId)
-          )
-        }
-      )
-    )
+    const {
+      schedules,
+      total,
+    } = await listTripSchedulesD1()
 
     return Response.json({
       success: true,
       schedules,
-      total: schedulesResponse.total,
+      total,
     })
   } catch (error) {
     console.error(
@@ -726,164 +420,32 @@ export async function POST(
       )
     }
 
-    const [
-      operator,
-      vessel,
-      route,
-    ] = await Promise.all([
-      getRowOrNull(
-        appwriteConfig.operatorsTableId,
-        operatorId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.vesselsTableId,
-        vesselId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.routesTableId,
-        routeId
-      ),
-    ])
-
-    if (!operator) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected operator could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!vessel) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected vessel could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!route) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected route could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    const vesselOperatorId = String(
-      vessel.operatorId ?? ""
-    )
-
-    if (
-      vesselOperatorId !== operatorId
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected vessel does not belong to the selected operator.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    if (isActive) {
-      if (operator.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active operator.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (vessel.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active vessel.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (route.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active route.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-    }
-
     const createdSchedule =
-      await tablesDB.createRow({
-        databaseId:
-          appwriteConfig.databaseId,
+      await createTripScheduleD1({
+        scheduleCode,
 
-        tableId:
-          appwriteConfig
-            .tripSchedulesTableId,
+        operatorId,
+        vesselId,
+        routeId,
 
-        rowId: ID.unique(),
+        departureTime,
+        arrivalTime,
+        arrivalDayOffset,
 
-        data: {
-          scheduleCode,
-          operatorId,
-          vesselId,
-          routeId,
-          departureTime,
-          arrivalTime,
-          arrivalDayOffset,
-          operatingDays,
-          bookingCutoffMinutes,
-          isActive,
-          notes,
-          createdBy: admin.email,
-          updatedBy: admin.email,
-        },
+        operatingDays,
+        bookingCutoffMinutes,
+
+        isActive,
+        notes,
+
+        createdBy: admin.email,
+        updatedBy: admin.email,
       })
 
     return Response.json(
       {
         success: true,
-
-        schedule: toPlainTripSchedule(
-          createdSchedule as unknown as RelatedRow,
-          operator,
-          vessel,
-          route
-        ),
+        schedule: createdSchedule,
       },
       {
         status: 201,
@@ -895,15 +457,42 @@ export async function POST(
       error
     )
 
-    if (getErrorCode(error) === 409) {
+    if (
+      error instanceof
+        TripScheduleOperatorNotFoundError ||
+      error instanceof
+        TripScheduleVesselNotFoundError ||
+      error instanceof
+        TripScheduleRouteNotFoundError
+    ) {
       return Response.json(
         {
           success: false,
-          error:
-            "Schedule code already exists. Please use another code.",
+          error: error.message,
         },
         {
-          status: 409,
+          status: 404,
+        }
+      )
+    }
+
+    if (
+      error instanceof
+        TripScheduleVesselOperatorMismatchError ||
+      error instanceof
+        TripScheduleActiveOperatorRequiredError ||
+      error instanceof
+        TripScheduleActiveVesselRequiredError ||
+      error instanceof
+        TripScheduleActiveRouteRequiredError
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        {
+          status: 400,
         }
       )
     }

@@ -1,8 +1,17 @@
 import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  getTripScheduleByIdD1,
+  TripScheduleActiveOperatorRequiredError,
+  TripScheduleActiveRouteRequiredError,
+  TripScheduleActiveVesselRequiredError,
+  TripScheduleNotFoundError,
+  TripScheduleOperatorNotFoundError,
+  TripScheduleRouteNotFoundError,
+  TripScheduleVesselNotFoundError,
+  TripScheduleVesselOperatorMismatchError,
+  type UpdateTripScheduleD1Input,
+  updateTripScheduleD1,
+} from "@/lib/d1-trip-schedules"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -19,14 +28,18 @@ const OPERATING_DAYS = [
 
 type UpdateTripScheduleRequest = {
   scheduleCode?: string
+
   operatorId?: string
   vesselId?: string
   routeId?: string
+
   departureTime?: string
   arrivalTime?: string
   arrivalDayOffset?: number | string
+
   operatingDays?: string
   bookingCutoffMinutes?: number | string
+
   isActive?: boolean
   notes?: string | null
 }
@@ -37,38 +50,6 @@ type RouteContext = {
   }>
 }
 
-type RelatedRow = Record<string, unknown>
-
-type PlainTripSchedule = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  scheduleCode: string
-  operatorId: string
-  vesselId: string
-  routeId: string
-
-  departureTime: string
-  arrivalTime: string
-  arrivalDayOffset: number
-  operatingDays: string
-  bookingCutoffMinutes: number
-
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-
-  operatorCode: string | null
-  operatorName: string | null
-  vesselCode: string | null
-  vesselName: string | null
-  routeCode: string | null
-  fromPort: string | null
-  toPort: string | null
-}
-
 function optionalText(
   value: unknown
 ): string | null {
@@ -77,26 +58,6 @@ function optionalText(
   ).trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(
-  error: unknown
-): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code)
-      ? code
-      : null
-  }
-
-  return null
 }
 
 function toInteger(
@@ -150,8 +111,9 @@ function normalizeOperatingDays(
 ): string | null {
   const suppliedDays = String(value ?? "")
     .split(",")
-    .map((day) =>
-      day.trim().toUpperCase()
+    .map(
+      (day) =>
+        day.trim().toUpperCase()
     )
     .filter(Boolean)
 
@@ -175,131 +137,9 @@ function normalizeOperatingDays(
     suppliedDays
   )
 
-  return OPERATING_DAYS.filter((day) =>
-    uniqueDays.has(day)
+  return OPERATING_DAYS.filter(
+    (day) => uniqueDays.has(day)
   ).join(",")
-}
-
-async function getRowOrNull(
-  tableId: string,
-  rowId: string
-): Promise<RelatedRow | null> {
-  try {
-    const row = await tablesDB.getRow({
-      databaseId:
-        appwriteConfig.databaseId,
-      tableId,
-      rowId,
-    })
-
-    return row as unknown as RelatedRow
-  } catch (error) {
-    if (getErrorCode(error) === 404) {
-      return null
-    }
-
-    throw error
-  }
-}
-
-function toPlainTripSchedule(
-  row: RelatedRow,
-  operator?: RelatedRow,
-  vessel?: RelatedRow,
-  route?: RelatedRow
-): PlainTripSchedule {
-  return {
-    $id: String(row.$id ?? ""),
-
-    $createdAt: String(
-      row.$createdAt ?? ""
-    ),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    scheduleCode: String(
-      row.scheduleCode ?? ""
-    ),
-
-    operatorId: String(
-      row.operatorId ?? ""
-    ),
-
-    vesselId: String(
-      row.vesselId ?? ""
-    ),
-
-    routeId: String(
-      row.routeId ?? ""
-    ),
-
-    departureTime: String(
-      row.departureTime ?? ""
-    ),
-
-    arrivalTime: String(
-      row.arrivalTime ?? ""
-    ),
-
-    arrivalDayOffset: Number(
-      row.arrivalDayOffset ?? 0
-    ),
-
-    operatingDays: String(
-      row.operatingDays ?? ""
-    ),
-
-    bookingCutoffMinutes: Number(
-      row.bookingCutoffMinutes ?? 0
-    ),
-
-    isActive:
-      typeof row.isActive === "boolean"
-        ? row.isActive
-        : false,
-
-    notes: optionalText(row.notes),
-    createdBy: optionalText(
-      row.createdBy
-    ),
-    updatedBy: optionalText(
-      row.updatedBy
-    ),
-
-    operatorCode: operator
-      ? optionalText(
-          operator.operatorCode
-        )
-      : null,
-
-    operatorName: operator
-      ? optionalText(
-          operator.operatorName
-        )
-      : null,
-
-    vesselCode: vessel
-      ? optionalText(vessel.vesselCode)
-      : null,
-
-    vesselName: vessel
-      ? optionalText(vessel.vesselName)
-      : null,
-
-    routeCode: route
-      ? optionalText(route.routeCode)
-      : null,
-
-    fromPort: route
-      ? optionalText(route.fromPort)
-      : null,
-
-    toPort: route
-      ? optionalText(route.toPort)
-      : null,
-  }
 }
 
 export async function PATCH(
@@ -323,6 +163,7 @@ export async function PATCH(
     }
 
     const { id } = await context.params
+
     const scheduleId = String(
       id ?? ""
     ).trim()
@@ -341,9 +182,7 @@ export async function PATCH(
     }
 
     const existingSchedule =
-      await getRowOrNull(
-        appwriteConfig
-          .tripSchedulesTableId,
+      await getTripScheduleByIdD1(
         scheduleId
       )
 
@@ -363,61 +202,19 @@ export async function PATCH(
     const body =
       (await request.json()) as UpdateTripScheduleRequest
 
-    const data: Record<
-      string,
-      unknown
-    > = {
-      updatedBy: admin.email,
-    }
-
-    let effectiveScheduleCode =
-      String(
-        existingSchedule.scheduleCode ??
-          ""
-      ).trim()
-
-    let effectiveOperatorId = String(
-      existingSchedule.operatorId ?? ""
-    ).trim()
-
-    let effectiveVesselId = String(
-      existingSchedule.vesselId ?? ""
-    ).trim()
-
-    let effectiveRouteId = String(
-      existingSchedule.routeId ?? ""
-    ).trim()
+    const data: Omit<
+      UpdateTripScheduleD1Input,
+      "id" | "updatedBy"
+    > = {}
 
     let effectiveDepartureTime =
-      String(
-        existingSchedule.departureTime ??
-          ""
-      ).trim()
+      existingSchedule.departureTime
 
-    let effectiveArrivalTime = String(
-      existingSchedule.arrivalTime ?? ""
-    ).trim()
+    let effectiveArrivalTime =
+      existingSchedule.arrivalTime
 
     let effectiveArrivalDayOffset =
-      Number(
-        existingSchedule
-          .arrivalDayOffset ?? 0
-      )
-
-    let effectiveOperatingDays =
-      String(
-        existingSchedule.operatingDays ??
-          ""
-      ).trim()
-
-    let effectiveBookingCutoffMinutes =
-      Number(
-        existingSchedule
-          .bookingCutoffMinutes ?? 0
-      )
-
-    let effectiveIsActive =
-      existingSchedule.isActive === true
+      existingSchedule.arrivalDayOffset
 
     if (
       body.scheduleCode !== undefined
@@ -458,13 +255,13 @@ export async function PATCH(
         )
       }
 
-      effectiveScheduleCode =
+      data.scheduleCode =
         scheduleCode
-
-      data.scheduleCode = scheduleCode
     }
 
-    if (body.operatorId !== undefined) {
+    if (
+      body.operatorId !== undefined
+    ) {
       const operatorId = String(
         body.operatorId
       ).trim()
@@ -482,11 +279,12 @@ export async function PATCH(
         )
       }
 
-      effectiveOperatorId = operatorId
       data.operatorId = operatorId
     }
 
-    if (body.vesselId !== undefined) {
+    if (
+      body.vesselId !== undefined
+    ) {
       const vesselId = String(
         body.vesselId
       ).trim()
@@ -504,11 +302,12 @@ export async function PATCH(
         )
       }
 
-      effectiveVesselId = vesselId
       data.vesselId = vesselId
     }
 
-    if (body.routeId !== undefined) {
+    if (
+      body.routeId !== undefined
+    ) {
       const routeId = String(
         body.routeId
       ).trim()
@@ -526,7 +325,6 @@ export async function PATCH(
         )
       }
 
-      effectiveRouteId = routeId
       data.routeId = routeId
     }
 
@@ -582,7 +380,8 @@ export async function PATCH(
       effectiveArrivalTime =
         arrivalTime
 
-      data.arrivalTime = arrivalTime
+      data.arrivalTime =
+        arrivalTime
     }
 
     if (
@@ -666,9 +465,6 @@ export async function PATCH(
         )
       }
 
-      effectiveOperatingDays =
-        operatingDays
-
       data.operatingDays =
         operatingDays
     }
@@ -699,17 +495,13 @@ export async function PATCH(
         )
       }
 
-      effectiveBookingCutoffMinutes =
-        bookingCutoffMinutes
-
       data.bookingCutoffMinutes =
         bookingCutoffMinutes
     }
 
     if (body.notes !== undefined) {
-      const notes = optionalText(
-        body.notes
-      )
+      const notes =
+        optionalText(body.notes)
 
       if (
         notes &&
@@ -734,159 +526,20 @@ export async function PATCH(
       typeof body.isActive ===
       "boolean"
     ) {
-      effectiveIsActive =
+      data.isActive =
         body.isActive
-
-      data.isActive = body.isActive
-    }
-
-    const [
-      operator,
-      vessel,
-      route,
-    ] = await Promise.all([
-      getRowOrNull(
-        appwriteConfig.operatorsTableId,
-        effectiveOperatorId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.vesselsTableId,
-        effectiveVesselId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.routesTableId,
-        effectiveRouteId
-      ),
-    ])
-
-    if (!operator) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected operator could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!vessel) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected vessel could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!route) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected route could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    const vesselOperatorId = String(
-      vessel.operatorId ?? ""
-    )
-
-    if (
-      vesselOperatorId !==
-      effectiveOperatorId
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected vessel does not belong to the selected operator.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    if (effectiveIsActive) {
-      if (operator.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active operator.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (vessel.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active vessel.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (route.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "An active schedule requires an active route.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
     }
 
     const updatedSchedule =
-      await tablesDB.updateRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .tripSchedulesTableId,
-
-        rowId: scheduleId,
-        data,
+      await updateTripScheduleD1({
+        id: scheduleId,
+        ...data,
+        updatedBy: admin.email,
       })
-
-    void effectiveScheduleCode
-    void effectiveOperatingDays
-    void effectiveBookingCutoffMinutes
 
     return Response.json({
       success: true,
-
-      schedule: toPlainTripSchedule(
-        updatedSchedule as unknown as RelatedRow,
-        operator,
-        vessel,
-        route
-      ),
+      schedule: updatedSchedule,
     })
   } catch (error) {
     console.error(
@@ -894,28 +547,44 @@ export async function PATCH(
       error
     )
 
-    if (getErrorCode(error) === 409) {
+    if (
+      error instanceof
+        TripScheduleNotFoundError ||
+      error instanceof
+        TripScheduleOperatorNotFoundError ||
+      error instanceof
+        TripScheduleVesselNotFoundError ||
+      error instanceof
+        TripScheduleRouteNotFoundError
+    ) {
       return Response.json(
         {
           success: false,
-          error:
-            "Schedule code already exists. Please use another code.",
+          error: error.message,
         },
         {
-          status: 409,
+          status: 404,
         }
       )
     }
 
-    if (getErrorCode(error) === 404) {
+    if (
+      error instanceof
+        TripScheduleVesselOperatorMismatchError ||
+      error instanceof
+        TripScheduleActiveOperatorRequiredError ||
+      error instanceof
+        TripScheduleActiveVesselRequiredError ||
+      error instanceof
+        TripScheduleActiveRouteRequiredError
+    ) {
       return Response.json(
         {
           success: false,
-          error:
-            "Trip schedule could not be found.",
+          error: error.message,
         },
         {
-          status: 404,
+          status: 400,
         }
       )
     }
