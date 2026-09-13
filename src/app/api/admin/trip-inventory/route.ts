@@ -1,10 +1,22 @@
-import { ID, Query } from "node-appwrite"
-
-import { getCurrentAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  createTripInventoryD1,
+  listTripInventoryD1,
+  TripInventoryInvalidVesselActiveCapacityError,
+  TripInventoryOpenActiveOperatorRequiredError,
+  TripInventoryOpenActiveRouteRequiredError,
+  TripInventoryOpenActiveScheduleRequiredError,
+  TripInventoryOpenActiveVesselRequiredError,
+  TripInventoryOpenSeatRequiredError,
+  TripInventoryScheduleDateConflictError,
+  TripInventoryScheduleNotFoundError,
+  TripInventoryScheduleOperatingDayError,
+  TripInventoryScheduleOperatorNotFoundError,
+  TripInventoryScheduleRouteNotFoundError,
+  TripInventoryScheduleVesselNotFoundError,
+  TripInventoryScheduleVesselOperatorMismatchError,
+  TripInventorySeatCapacityExceedsVesselAllocationError,
+} from "@/lib/d1-trip-inventory"
+import { getCurrentAdmin } from "@/lib/admin-auth"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -14,16 +26,6 @@ const SALES_STATUSES = [
   "CLOSED",
   "CANCELLED",
   "SOLD_OUT",
-] as const
-
-const WEEKDAY_CODES = [
-  "SUN",
-  "MON",
-  "TUE",
-  "WED",
-  "THU",
-  "FRI",
-  "SAT",
 ] as const
 
 type CreateTripInventoryRequest = {
@@ -39,50 +41,6 @@ type CreateTripInventoryRequest = {
   notes?: string
 }
 
-type RelatedRow = Record<string, unknown>
-
-type PlainTripInventory = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
-
-  inventoryCode: string
-  scheduleId: string
-  operatorId: string
-  vesselId: string
-  routeId: string
-
-  travelDate: string
-  departureTime: string
-  arrivalTime: string
-  arrivalDayOffset: number
-
-  seatCapacity: number
-  bookedSeats: number
-  heldSeats: number
-  availableSeats: number
-
-  adultPrice: number
-  childPrice: number
-  infantPrice: number
-  currency: string
-
-  salesStatus: string
-  isActive: boolean
-  notes: string | null
-  createdBy: string | null
-  updatedBy: string | null
-
-  scheduleCode: string | null
-  operatorCode: string | null
-  operatorName: string | null
-  vesselCode: string | null
-  vesselName: string | null
-  routeCode: string | null
-  fromPort: string | null
-  toPort: string | null
-}
-
 function optionalText(
   value: unknown
 ): string | null {
@@ -91,26 +49,6 @@ function optionalText(
   ).trim()
 
   return normalizedValue || null
-}
-
-function getErrorCode(
-  error: unknown
-): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code)
-      ? code
-      : null
-  }
-
-  return null
 }
 
 function toInteger(
@@ -167,21 +105,6 @@ function normalizeDate(
   return normalizedValue
 }
 
-function getWeekdayCode(
-  travelDate: string
-): string {
-  const [year, month, day] =
-    travelDate.split("-").map(Number)
-
-  const parsedDate = new Date(
-    Date.UTC(year, month - 1, day)
-  )
-
-  return WEEKDAY_CODES[
-    parsedDate.getUTCDay()
-  ]
-}
-
 function normalizeCurrency(
   value: unknown
 ): string | null {
@@ -213,203 +136,6 @@ function normalizeSalesStatus(
     : null
 }
 
-async function getRowOrNull(
-  tableId: string,
-  rowId: string
-): Promise<RelatedRow | null> {
-  try {
-    const row = await tablesDB.getRow({
-      databaseId:
-        appwriteConfig.databaseId,
-      tableId,
-      rowId,
-    })
-
-    return row as unknown as RelatedRow
-  } catch (error) {
-    if (getErrorCode(error) === 404) {
-      return null
-    }
-
-    throw error
-  }
-}
-
-function toPlainTripInventory(
-  row: RelatedRow,
-  schedule?: RelatedRow,
-  operator?: RelatedRow,
-  vessel?: RelatedRow,
-  route?: RelatedRow
-): PlainTripInventory {
-  const seatCapacity = Number(
-    row.seatCapacity ?? 0
-  )
-
-  const bookedSeats = Number(
-    row.bookedSeats ?? 0
-  )
-
-  const heldSeats = Number(
-    row.heldSeats ?? 0
-  )
-
-  return {
-    $id: String(row.$id ?? ""),
-
-    $createdAt: String(
-      row.$createdAt ?? ""
-    ),
-
-    $updatedAt: row.$updatedAt
-      ? String(row.$updatedAt)
-      : undefined,
-
-    inventoryCode: String(
-      row.inventoryCode ?? ""
-    ),
-
-    scheduleId: String(
-      row.scheduleId ?? ""
-    ),
-
-    operatorId: String(
-      row.operatorId ?? ""
-    ),
-
-    vesselId: String(
-      row.vesselId ?? ""
-    ),
-
-    routeId: String(
-      row.routeId ?? ""
-    ),
-
-    travelDate: String(
-      row.travelDate ?? ""
-    ),
-
-    departureTime: String(
-      row.departureTime ?? ""
-    ),
-
-    arrivalTime: String(
-      row.arrivalTime ?? ""
-    ),
-
-    arrivalDayOffset: Number(
-      row.arrivalDayOffset ?? 0
-    ),
-
-    seatCapacity,
-    bookedSeats,
-    heldSeats,
-
-    availableSeats: Math.max(
-      0,
-      seatCapacity -
-        bookedSeats -
-        heldSeats
-    ),
-
-    adultPrice: Number(
-      row.adultPrice ?? 0
-    ),
-
-    childPrice: Number(
-      row.childPrice ?? 0
-    ),
-
-    infantPrice: Number(
-      row.infantPrice ?? 0
-    ),
-
-    currency: String(
-      row.currency ?? "IDR"
-    ),
-
-    salesStatus: String(
-      row.salesStatus ?? "CLOSED"
-    ),
-
-    isActive:
-      row.isActive === true,
-
-    notes: optionalText(row.notes),
-
-    createdBy: optionalText(
-      row.createdBy
-    ),
-
-    updatedBy: optionalText(
-      row.updatedBy
-    ),
-
-    scheduleCode: schedule
-      ? optionalText(
-          schedule.scheduleCode
-        )
-      : null,
-
-    operatorCode: operator
-      ? optionalText(
-          operator.operatorCode
-        )
-      : null,
-
-    operatorName: operator
-      ? optionalText(
-          operator.operatorName
-        )
-      : null,
-
-    vesselCode: vessel
-      ? optionalText(
-          vessel.vesselCode
-        )
-      : null,
-
-    vesselName: vessel
-      ? optionalText(
-          vessel.vesselName
-        )
-      : null,
-
-    routeCode: route
-      ? optionalText(route.routeCode)
-      : null,
-
-    fromPort: route
-      ? optionalText(route.fromPort)
-      : null,
-
-    toPort: route
-      ? optionalText(route.toPort)
-      : null,
-  }
-}
-
-function sortTripInventory(
-  inventory: PlainTripInventory[]
-): PlainTripInventory[] {
-  return [...inventory].sort(
-    (firstItem, secondItem) => {
-      const dateComparison =
-        firstItem.travelDate.localeCompare(
-          secondItem.travelDate
-        )
-
-      if (dateComparison !== 0) {
-        return dateComparison
-      }
-
-      return firstItem.departureTime.localeCompare(
-        secondItem.departureTime
-      )
-    }
-  )
-}
-
 export async function GET() {
   try {
     const admin = await getCurrentAdmin()
@@ -427,174 +153,15 @@ export async function GET() {
       )
     }
 
-    const [
-      inventoryResponse,
-      schedulesResponse,
-      operatorsResponse,
-      vesselsResponse,
-      routesResponse,
-    ] = await Promise.all([
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .tripInventoryTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .tripSchedulesTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.operatorsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.vesselsTableId,
-
-        queries: [Query.limit(200)],
-      }),
-
-      tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.routesTableId,
-
-        queries: [Query.limit(200)],
-      }),
-    ])
-
-    const schedulesById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const schedule of
-      schedulesResponse.rows
-    ) {
-      const plainSchedule =
-        schedule as unknown as RelatedRow
-
-      schedulesById.set(
-        String(plainSchedule.$id ?? ""),
-        plainSchedule
-      )
-    }
-
-    const operatorsById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const operator of
-      operatorsResponse.rows
-    ) {
-      const plainOperator =
-        operator as unknown as RelatedRow
-
-      operatorsById.set(
-        String(plainOperator.$id ?? ""),
-        plainOperator
-      )
-    }
-
-    const vesselsById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const vessel of vesselsResponse.rows
-    ) {
-      const plainVessel =
-        vessel as unknown as RelatedRow
-
-      vesselsById.set(
-        String(plainVessel.$id ?? ""),
-        plainVessel
-      )
-    }
-
-    const routesById = new Map<
-      string,
-      RelatedRow
-    >()
-
-    for (
-      const route of routesResponse.rows
-    ) {
-      const plainRoute =
-        route as unknown as RelatedRow
-
-      routesById.set(
-        String(plainRoute.$id ?? ""),
-        plainRoute
-      )
-    }
-
-    const inventory =
-      sortTripInventory(
-        inventoryResponse.rows.map(
-          (item) => {
-            const plainItem =
-              item as unknown as RelatedRow
-
-            const scheduleId = String(
-              plainItem.scheduleId ?? ""
-            )
-
-            const operatorId = String(
-              plainItem.operatorId ?? ""
-            )
-
-            const vesselId = String(
-              plainItem.vesselId ?? ""
-            )
-
-            const routeId = String(
-              plainItem.routeId ?? ""
-            )
-
-            return toPlainTripInventory(
-              plainItem,
-              schedulesById.get(scheduleId),
-              operatorsById.get(operatorId),
-              vesselsById.get(vesselId),
-              routesById.get(routeId)
-            )
-          }
-        )
-      )
+    const {
+      inventories,
+      total,
+    } = await listTripInventoryD1()
 
     return Response.json({
       success: true,
-      inventory,
-      total: inventoryResponse.total,
+      inventory: inventories,
+      total,
     })
   } catch (error) {
     console.error(
@@ -832,314 +399,32 @@ export async function POST(
       )
     }
 
-    const schedule = await getRowOrNull(
-      appwriteConfig
-        .tripSchedulesTableId,
-      scheduleId
-    )
-
-    if (!schedule) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "Selected trip schedule could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    const operatorId = String(
-      schedule.operatorId ?? ""
-    ).trim()
-
-    const vesselId = String(
-      schedule.vesselId ?? ""
-    ).trim()
-
-    const routeId = String(
-      schedule.routeId ?? ""
-    ).trim()
-
-    const [
-      operator,
-      vessel,
-      route,
-    ] = await Promise.all([
-      getRowOrNull(
-        appwriteConfig.operatorsTableId,
-        operatorId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.vesselsTableId,
-        vesselId
-      ),
-
-      getRowOrNull(
-        appwriteConfig.routesTableId,
-        routeId
-      ),
-    ])
-
-    if (!operator) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "The schedule operator could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!vessel) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "The schedule vessel could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (!route) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "The schedule route could not be found.",
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    if (
-      String(vessel.operatorId ?? "") !==
-      operatorId
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "The schedule vessel does not belong to its operator.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    const activeCapacity = Number(
-      vessel.activeCapacity ?? 0
-    )
-
-    if (
-      !Number.isInteger(activeCapacity) ||
-      activeCapacity < 0
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            "The selected vessel has an invalid active capacity.",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    if (
-      seatCapacity > activeCapacity
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            `Seat capacity cannot exceed the vessel allocation of ${activeCapacity} seats.`,
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    const operatingDays = String(
-      schedule.operatingDays ?? ""
-    )
-      .split(",")
-      .map((day) =>
-        day.trim().toUpperCase()
-      )
-      .filter(Boolean)
-
-    const travelDay =
-      getWeekdayCode(travelDate)
-
-    if (
-      !operatingDays.includes(travelDay)
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error:
-            `The selected schedule does not operate on ${travelDay}.`,
-        },
-        {
-          status: 400,
-        }
-      )
-    }
-
-    if (
-      isActive &&
-      salesStatus === "OPEN"
-    ) {
-      if (schedule.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Open inventory requires an active trip schedule.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (operator.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Open inventory requires an active operator.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (vessel.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Open inventory requires an active vessel.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (route.isActive !== true) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Open inventory requires an active route.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-
-      if (seatCapacity < 1) {
-        return Response.json(
-          {
-            success: false,
-            error:
-              "Open inventory must have at least one available seat.",
-          },
-          {
-            status: 400,
-          }
-        )
-      }
-    }
-
-    const scheduleCode = String(
-      schedule.scheduleCode ?? "SCHEDULE"
-    )
-      .trim()
-      .toUpperCase()
-
-    const inventoryCode =
-      `${scheduleCode}-${travelDate.replaceAll("-", "")}`
-
     const createdInventory =
-      await tablesDB.createRow({
-        databaseId:
-          appwriteConfig.databaseId,
+      await createTripInventoryD1({
+        scheduleId,
+        travelDate,
 
-        tableId:
-          appwriteConfig
-            .tripInventoryTableId,
+        seatCapacity,
 
-        rowId: ID.unique(),
+        adultPrice,
+        childPrice,
+        infantPrice,
 
-        data: {
-          inventoryCode,
-          scheduleId,
-          operatorId,
-          vesselId,
-          routeId,
-          travelDate,
+        currency,
+        salesStatus,
 
-          departureTime: String(
-            schedule.departureTime ?? ""
-          ),
+        isActive,
 
-          arrivalTime: String(
-            schedule.arrivalTime ?? ""
-          ),
+        notes,
 
-          arrivalDayOffset: Number(
-            schedule.arrivalDayOffset ?? 0
-          ),
-
-          seatCapacity,
-          bookedSeats: 0,
-          heldSeats: 0,
-
-          adultPrice,
-          childPrice,
-          infantPrice,
-          currency,
-
-          salesStatus,
-          isActive,
-          notes,
-
-          createdBy: admin.email,
-          updatedBy: admin.email,
-        },
+        createdBy: admin.email,
+        updatedBy: admin.email,
       })
 
     return Response.json(
       {
         success: true,
-
-        inventory: toPlainTripInventory(
-          createdInventory as unknown as RelatedRow,
-          schedule,
-          operator,
-          vessel,
-          route
-        ),
+        inventory: createdInventory,
       },
       {
         status: 201,
@@ -1151,12 +436,66 @@ export async function POST(
       error
     )
 
-    if (getErrorCode(error) === 409) {
+    if (
+      error instanceof
+        TripInventoryScheduleNotFoundError ||
+      error instanceof
+        TripInventoryScheduleOperatorNotFoundError ||
+      error instanceof
+        TripInventoryScheduleVesselNotFoundError ||
+      error instanceof
+        TripInventoryScheduleRouteNotFoundError
+    ) {
       return Response.json(
         {
           success: false,
-          error:
-            "Inventory for this schedule and travel date already exists.",
+          error: error.message,
+        },
+        {
+          status: 404,
+        }
+      )
+    }
+
+    if (
+      error instanceof
+        TripInventoryScheduleVesselOperatorMismatchError ||
+      error instanceof
+        TripInventoryInvalidVesselActiveCapacityError ||
+      error instanceof
+        TripInventorySeatCapacityExceedsVesselAllocationError ||
+      error instanceof
+        TripInventoryScheduleOperatingDayError ||
+      error instanceof
+        TripInventoryOpenActiveScheduleRequiredError ||
+      error instanceof
+        TripInventoryOpenActiveOperatorRequiredError ||
+      error instanceof
+        TripInventoryOpenActiveVesselRequiredError ||
+      error instanceof
+        TripInventoryOpenActiveRouteRequiredError ||
+      error instanceof
+        TripInventoryOpenSeatRequiredError
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (
+      error instanceof
+        TripInventoryScheduleDateConflictError
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error: error.message,
         },
         {
           status: 409,
