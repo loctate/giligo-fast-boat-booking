@@ -577,3 +577,683 @@ export function buildD1DeleteAssertion(
       ),
     );
 }
+
+export type D1BookingTripType =
+  | "one-way"
+  | "round-trip";
+
+export interface D1PendingBookingCreateInput {
+  id: string;
+  bookingCode: string;
+  seatHoldExpiresAt: string;
+  paymentVerificationAllowed: boolean;
+
+  tripType: D1BookingTripType;
+  departureDate: string;
+  returnDate: string | null;
+
+  passengerCount: number;
+  totalPrice: number;
+
+  customerFullName: string;
+  customerEmail: string;
+  customerWhatsapp: string;
+  customerCountry: string;
+
+  passengersJson: string;
+
+  tripId: string;
+  tripInventoryId: string;
+  returnTripInventoryId: string | null;
+
+  inventoryCode: string;
+  scheduleId: string;
+  operatorId: string;
+  vesselId: string;
+  routeId: string;
+
+  operatorName: string;
+  vesselName: string;
+  routeCode: string;
+
+  fromPort: string;
+  toPort: string;
+
+  departureTime: string;
+  arrivalTime: string;
+  arrivalDayOffset: number;
+  duration: string;
+
+  pricePerPassenger: number;
+  currency: string;
+  checkInLocation: string;
+
+  returnTripJson: string | null;
+  notes: string | null;
+}
+
+function nonNegativeInteger(
+  value: number,
+  label: string,
+): number {
+  if (
+    !Number.isSafeInteger(value) ||
+    value < 0
+  ) {
+    throw new D1BookingDalError(
+      "DATABASE",
+      `${label} must be a non-negative safe integer.`,
+    );
+  }
+
+  return value;
+}
+
+function normalizeNullableInputText(
+  value: string | null,
+): string | null {
+  return nullableText(value);
+}
+
+function validateD1PendingBookingCreateInput(
+  input: D1PendingBookingCreateInput,
+): D1PendingBookingCreateInput {
+  const id =
+    cleanRequiredText(
+      input.id,
+      "Booking ID",
+    );
+
+  const bookingCode =
+    cleanRequiredText(
+      input.bookingCode,
+      "Booking code",
+    );
+
+  const seatHoldExpiresAt =
+    cleanRequiredText(
+      input.seatHoldExpiresAt,
+      "Seat hold expiry",
+    );
+
+  const departureDate =
+    cleanRequiredText(
+      input.departureDate,
+      "Departure date",
+    );
+
+  const passengerCount =
+    positiveInteger(
+      input.passengerCount,
+      "Passenger count",
+    );
+
+  const totalPrice =
+    nonNegativeInteger(
+      input.totalPrice,
+      "Total price",
+    );
+
+  const tripId =
+    cleanRequiredText(
+      input.tripId,
+      "Trip ID",
+    );
+
+  const tripInventoryId =
+    cleanRequiredText(
+      input.tripInventoryId,
+      "Trip inventory ID",
+    );
+
+  if (
+    tripId !== tripInventoryId
+  ) {
+    throw new D1BookingDalError(
+      "DATABASE",
+      "Trip ID must match the outbound trip inventory ID.",
+    );
+  }
+
+  const returnTripInventoryId =
+    normalizeNullableInputText(
+      input.returnTripInventoryId,
+    );
+
+  const returnDate =
+    normalizeNullableInputText(
+      input.returnDate,
+    );
+
+  const returnTripJson =
+    normalizeNullableInputText(
+      input.returnTripJson,
+    );
+
+  if (
+    input.tripType === "round-trip"
+  ) {
+    if (
+      !returnTripInventoryId ||
+      !returnDate ||
+      !returnTripJson
+    ) {
+      throw new D1BookingDalError(
+        "DATABASE",
+        "Round-trip booking data is incomplete.",
+      );
+    }
+
+    if (
+      returnTripInventoryId ===
+      tripInventoryId
+    ) {
+      throw new D1BookingDalError(
+        "DATABASE",
+        "Return trip inventory must differ from outbound inventory.",
+      );
+    }
+  } else if (
+    input.tripType === "one-way"
+  ) {
+    if (
+      returnTripInventoryId ||
+      returnDate ||
+      returnTripJson
+    ) {
+      throw new D1BookingDalError(
+        "DATABASE",
+        "One-way booking must not contain return-trip data.",
+      );
+    }
+  } else {
+    throw new D1BookingDalError(
+      "DATABASE",
+      "Unsupported trip type.",
+    );
+  }
+
+  return {
+    ...input,
+
+    id,
+    bookingCode,
+    seatHoldExpiresAt,
+
+    departureDate,
+    passengerCount,
+    totalPrice,
+
+    customerFullName:
+      cleanRequiredText(
+        input.customerFullName,
+        "Customer full name",
+      ),
+
+    customerEmail:
+      cleanRequiredText(
+        input.customerEmail,
+        "Customer email",
+      ),
+
+    customerWhatsapp:
+      cleanRequiredText(
+        input.customerWhatsapp,
+        "Customer WhatsApp",
+      ),
+
+    customerCountry:
+      cleanRequiredText(
+        input.customerCountry,
+        "Customer country",
+      ),
+
+    passengersJson:
+      cleanRequiredText(
+        input.passengersJson,
+        "Passengers JSON",
+      ),
+
+    tripId,
+    tripInventoryId,
+    returnTripInventoryId,
+
+    inventoryCode:
+      cleanRequiredText(
+        input.inventoryCode,
+        "Inventory code",
+      ),
+
+    scheduleId:
+      cleanRequiredText(
+        input.scheduleId,
+        "Schedule ID",
+      ),
+
+    operatorId:
+      cleanRequiredText(
+        input.operatorId,
+        "Operator ID",
+      ),
+
+    vesselId:
+      cleanRequiredText(
+        input.vesselId,
+        "Vessel ID",
+      ),
+
+    routeId:
+      cleanRequiredText(
+        input.routeId,
+        "Route ID",
+      ),
+
+    operatorName:
+      cleanRequiredText(
+        input.operatorName,
+        "Operator name",
+      ),
+
+    vesselName:
+      cleanRequiredText(
+        input.vesselName,
+        "Vessel name",
+      ),
+
+    routeCode:
+      cleanRequiredText(
+        input.routeCode,
+        "Route code",
+      ),
+
+    fromPort:
+      cleanRequiredText(
+        input.fromPort,
+        "From port",
+      ),
+
+    toPort:
+      cleanRequiredText(
+        input.toPort,
+        "To port",
+      ),
+
+    departureTime:
+      cleanRequiredText(
+        input.departureTime,
+        "Departure time",
+      ),
+
+    arrivalTime:
+      cleanRequiredText(
+        input.arrivalTime,
+        "Arrival time",
+      ),
+
+    arrivalDayOffset:
+      nonNegativeInteger(
+        input.arrivalDayOffset,
+        "Arrival day offset",
+      ),
+
+    duration:
+      cleanRequiredText(
+        input.duration,
+        "Duration",
+      ),
+
+    pricePerPassenger:
+      nonNegativeInteger(
+        input.pricePerPassenger,
+        "Price per passenger",
+      ),
+
+    currency:
+      cleanRequiredText(
+        input.currency,
+        "Currency",
+      ),
+
+    checkInLocation:
+      cleanRequiredText(
+        input.checkInLocation,
+        "Check-in location",
+      ),
+
+    returnDate,
+    returnTripJson,
+
+    notes:
+      normalizeNullableInputText(
+        input.notes,
+      ),
+  };
+}
+
+export function buildD1PendingBookingInsert(
+  db: D1Database,
+  input: D1PendingBookingCreateInput,
+): D1PreparedStatement {
+  const booking =
+    validateD1PendingBookingCreateInput(
+      input,
+    );
+
+  return db
+    .prepare(`
+      INSERT INTO bookings (
+        id,
+        bookingCode,
+        bookingStatus,
+        paymentStatus,
+        seatHoldExpiresAt,
+        paymentVerificationAllowed,
+
+        tripType,
+        departureDate,
+        returnDate,
+
+        passengerCount,
+        totalPrice,
+
+        customerFullName,
+        customerEmail,
+        customerWhatsapp,
+        customerCountry,
+
+        passengersJson,
+
+        tripId,
+        tripInventoryId,
+        returnTripInventoryId,
+
+        inventoryCode,
+        scheduleId,
+        operatorId,
+        vesselId,
+        routeId,
+
+        operatorName,
+        vesselName,
+        routeCode,
+
+        fromPort,
+        toPort,
+
+        departureTime,
+        arrivalTime,
+        arrivalDayOffset,
+        duration,
+
+        pricePerPassenger,
+        currency,
+        checkInLocation,
+
+        returnTripJson,
+        notes
+      )
+      VALUES (
+        ?,
+        ?,
+        'Pending',
+        'Pending',
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?,
+        ?,
+
+        ?,
+        ?
+      )
+    `)
+    .bind(
+      booking.id,
+      booking.bookingCode,
+      booking.seatHoldExpiresAt,
+
+      booking.paymentVerificationAllowed
+        ? 1
+        : 0,
+
+      booking.tripType,
+      booking.departureDate,
+      booking.returnDate,
+
+      booking.passengerCount,
+      booking.totalPrice,
+
+      booking.customerFullName,
+      booking.customerEmail,
+      booking.customerWhatsapp,
+      booking.customerCountry,
+
+      booking.passengersJson,
+
+      booking.tripId,
+      booking.tripInventoryId,
+      booking.returnTripInventoryId,
+
+      booking.inventoryCode,
+      booking.scheduleId,
+      booking.operatorId,
+      booking.vesselId,
+      booking.routeId,
+
+      booking.operatorName,
+      booking.vesselName,
+      booking.routeCode,
+
+      booking.fromPort,
+      booking.toPort,
+
+      booking.departureTime,
+      booking.arrivalTime,
+      booking.arrivalDayOffset,
+      booking.duration,
+
+      booking.pricePerPassenger,
+      booking.currency,
+      booking.checkInLocation,
+
+      booking.returnTripJson,
+      booking.notes,
+    );
+}
+
+export function buildD1HoldInventorySeats(
+  db: D1Database,
+  inventoryId: string,
+  passengerCount: number,
+): D1PreparedStatement {
+  const id =
+    cleanRequiredText(
+      inventoryId,
+      "Trip inventory ID",
+    );
+
+  const seats =
+    positiveInteger(
+      passengerCount,
+      "Passenger count",
+    );
+
+  return db
+    .prepare(`
+      UPDATE trip_inventory
+      SET
+        heldSeats =
+          heldSeats + ?,
+
+        salesStatus =
+          CASE
+            WHEN
+              salesStatus = 'OPEN'
+              AND (
+                seatCapacity
+                - bookedSeats
+                - heldSeats
+                - ?
+              ) <= 0
+            THEN 'SOLD_OUT'
+            ELSE salesStatus
+          END
+
+      WHERE id = ?
+        AND isActive = 1
+        AND salesStatus = 'OPEN'
+    `)
+    .bind(
+      seats,
+      seats,
+      id,
+    );
+}
+
+export async function createD1PendingBookingWithSeatHold(
+  input: D1PendingBookingCreateInput,
+): Promise<void> {
+  const booking =
+    validateD1PendingBookingCreateInput(
+      input,
+    );
+
+  const db = getD1();
+
+  const outboundAssertionToken =
+    makeD1BookingAssertionToken(
+      "booking-create-outbound",
+    );
+
+  const returnAssertionToken =
+    booking.returnTripInventoryId
+      ? makeD1BookingAssertionToken(
+          "booking-create-return",
+        )
+      : null;
+
+  const statements: D1PreparedStatement[] = [
+    buildD1InventoryBookingAssertion(
+      db,
+      {
+        token:
+          outboundAssertionToken,
+
+        inventoryId:
+          booking.tripInventoryId,
+
+        passengerCount:
+          booking.passengerCount,
+      },
+    ),
+  ];
+
+  if (
+    booking.returnTripInventoryId &&
+    returnAssertionToken
+  ) {
+    statements.push(
+      buildD1InventoryBookingAssertion(
+        db,
+        {
+          token:
+            returnAssertionToken,
+
+          inventoryId:
+            booking.returnTripInventoryId,
+
+          passengerCount:
+            booking.passengerCount,
+        },
+      ),
+    );
+  }
+
+  statements.push(
+    buildD1PendingBookingInsert(
+      db,
+      booking,
+    ),
+
+    buildD1HoldInventorySeats(
+      db,
+      booking.tripInventoryId,
+      booking.passengerCount,
+    ),
+  );
+
+  if (
+    booking.returnTripInventoryId
+  ) {
+    statements.push(
+      buildD1HoldInventorySeats(
+        db,
+        booking.returnTripInventoryId,
+        booking.passengerCount,
+      ),
+    );
+  }
+
+  statements.push(
+    buildD1DeleteAssertion(
+      db,
+      outboundAssertionToken,
+    ),
+  );
+
+  if (returnAssertionToken) {
+    statements.push(
+      buildD1DeleteAssertion(
+        db,
+        returnAssertionToken,
+      ),
+    );
+  }
+
+  try {
+    await db.batch(
+      statements,
+    );
+  } catch (error) {
+    throw toD1BookingDalError(
+      error,
+    );
+  }
+}
