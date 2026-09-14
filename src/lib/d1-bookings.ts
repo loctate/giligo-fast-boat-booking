@@ -1,4 +1,8 @@
 import { getD1 } from "@/lib/d1-server";
+import {
+  PaymentReviewResolutionError,
+  resolvePaymentReview,
+} from "@/lib/payment-review-resolution";
 
 export type D1BookingStatus =
   | "Pending"
@@ -20,6 +24,7 @@ export type D1InventorySalesStatus =
 
 export type D1BookingWriteErrorKind =
   | "BUSINESS_ASSERTION"
+  | "BUSINESS_RULE"
   | "SEAT_CONSTRAINT"
   | "UNIQUE_CONSTRAINT"
   | "FOREIGN_KEY_CONSTRAINT"
@@ -44,6 +49,8 @@ export interface D1BookingMutationSnapshot {
   bookingCode: string;
   bookingStatus: D1BookingStatus;
   paymentStatus: D1PaymentStatus;
+  paymentReviewRequired: boolean;
+  tripType: D1BookingTripType;
   passengerCount: number;
   tripInventoryId: string;
   returnTripInventoryId: string | null;
@@ -74,6 +81,8 @@ export interface D1BookingStateAssertionInput {
   bookingId: string;
   bookingStatus: D1BookingStatus;
   paymentStatus: D1PaymentStatus;
+  paymentReviewRequired: boolean;
+  tripType: D1BookingTripType;
   passengerCount: number;
   tripInventoryId: string;
   returnTripInventoryId: string | null;
@@ -241,6 +250,8 @@ export async function getD1BookingMutationSnapshot(
           bookingCode,
           bookingStatus,
           paymentStatus,
+          paymentReviewRequired,
+          tripType,
           passengerCount,
           tripInventoryId,
           returnTripInventoryId,
@@ -279,12 +290,41 @@ export async function getD1BookingMutationSnapshot(
         row.paymentStatus ?? "",
       ) as D1PaymentStatus,
 
+    paymentReviewRequired:
+      (() => {
+        const value =
+          asInteger(
+            row.paymentReviewRequired,
+            "Payment review required",
+          );
+
+        if (
+          value !== 0 &&
+          value !== 1
+        ) {
+          throw new D1BookingDalError(
+            "DATABASE",
+            "Payment review required must be 0 or 1.",
+          );
+        }
+
+        return value === 1;
+      })(),
+
+    tripType:
+      String(
+        row.tripType ?? "",
+      ) as D1BookingTripType,
+
+    /*
+     * Identity-only here.
+     * Current Appwrite lifecycle requires
+     * passengerCount >= 1 only when
+     * seats actually move.
+     */
     passengerCount:
-      positiveInteger(
-        asInteger(
-          row.passengerCount,
-          "Passenger count",
-        ),
+      asInteger(
+        row.passengerCount,
         "Passenger count",
       ),
 
@@ -508,7 +548,7 @@ export function buildD1BookingStateAssertion(
     );
 
   const passengerCount =
-    positiveInteger(
+    asInteger(
       input.passengerCount,
       "Passenger count",
     );
@@ -533,6 +573,8 @@ export function buildD1BookingStateAssertion(
             WHERE b.id = ?
               AND b.bookingStatus = ?
               AND b.paymentStatus = ?
+              AND b.paymentReviewRequired = ?
+              AND b.tripType = ?
               AND b.passengerCount = ?
               AND b.tripInventoryId = ?
 
@@ -554,6 +596,10 @@ export function buildD1BookingStateAssertion(
       bookingId,
       input.bookingStatus,
       input.paymentStatus,
+      input.paymentReviewRequired
+        ? 1
+        : 0,
+      input.tripType,
       passengerCount,
       tripInventoryId,
       returnTripInventoryId,
@@ -1256,4 +1302,870 @@ export async function createD1PendingBookingWithSeatHold(
       error,
     );
   }
+}
+
+export type D1BookingSeatPosition =
+  | "held"
+  | "booked"
+  | "released";
+
+export type D1InventorySeatAction =
+  | "none"
+  | "release-held"
+  | "release-booked"
+  | "add-held"
+  | "add-booked"
+  | "held-to-booked"
+  | "booked-to-held";
+
+export interface D1BookingLifecycleUpdateInput {
+  bookingId: string;
+
+  currentBookingStatus:
+    D1BookingStatus;
+
+  currentPaymentStatus:
+    D1PaymentStatus;
+
+  currentPaymentReviewRequired:
+    boolean;
+
+  tripType:
+    D1BookingTripType;
+
+  passengerCount:
+    number;
+
+  tripInventoryId:
+    string;
+
+  returnTripInventoryId:
+    string | null;
+
+  nextBookingStatus:
+    D1BookingStatus;
+
+  nextPaymentStatus:
+    D1PaymentStatus;
+
+  resolvePaymentReview:
+    boolean;
+}
+
+export interface D1BookingLifecycleUpdateResult {
+  seatAction:
+    D1InventorySeatAction;
+
+  paymentReviewResolved:
+    boolean;
+}
+
+export function isD1AllowedBookingTransition(
+  currentStatus: D1BookingStatus,
+  nextStatus: D1BookingStatus,
+): boolean {
+  const transitions: Record<
+    D1BookingStatus,
+    D1BookingStatus[]
+  > = {
+    Pending: [
+      "Pending",
+      "Confirmed",
+      "Cancelled",
+    ],
+
+    Confirmed: [
+      "Pending",
+      "Confirmed",
+      "Completed",
+      "Cancelled",
+    ],
+
+    Completed: [
+      "Completed",
+    ],
+
+    Cancelled: [
+      "Cancelled",
+      "Pending",
+      "Confirmed",
+    ],
+  };
+
+  return transitions[
+    currentStatus
+  ].includes(
+    nextStatus,
+  );
+}
+
+export function isD1AllowedStatusPair(
+  bookingStatus: D1BookingStatus,
+  paymentStatus: D1PaymentStatus,
+): boolean {
+  if (
+    bookingStatus === "Pending"
+  ) {
+    return (
+      paymentStatus === "Pending"
+    );
+  }
+
+  if (
+    bookingStatus === "Confirmed" ||
+    bookingStatus === "Completed"
+  ) {
+    return (
+      paymentStatus === "Demo" ||
+      paymentStatus === "Paid" ||
+      paymentStatus === "Refunded"
+    );
+  }
+
+  /*
+   * Cancelled accepts every valid
+   * PaymentStatus in the authoritative
+   * Appwrite route.
+   */
+  return (
+    bookingStatus === "Cancelled"
+  );
+}
+
+export function getD1BookingSeatPosition(
+  bookingStatus: D1BookingStatus,
+): D1BookingSeatPosition {
+  if (
+    bookingStatus === "Pending"
+  ) {
+    return "held";
+  }
+
+  if (
+    bookingStatus === "Cancelled"
+  ) {
+    return "released";
+  }
+
+  return "booked";
+}
+
+export function determineD1InventorySeatAction({
+  currentStatus,
+  nextStatus,
+}: {
+  currentStatus:
+    D1BookingStatus;
+
+  nextStatus:
+    D1BookingStatus;
+}): D1InventorySeatAction {
+  const currentPosition =
+    getD1BookingSeatPosition(
+      currentStatus,
+    );
+
+  const nextPosition =
+    getD1BookingSeatPosition(
+      nextStatus,
+    );
+
+  if (
+    currentPosition ===
+    nextPosition
+  ) {
+    return "none";
+  }
+
+  if (
+    currentPosition === "held" &&
+    nextPosition === "booked"
+  ) {
+    return "held-to-booked";
+  }
+
+  if (
+    currentPosition === "held" &&
+    nextPosition === "released"
+  ) {
+    return "release-held";
+  }
+
+  if (
+    currentPosition === "booked" &&
+    nextPosition === "held"
+  ) {
+    return "booked-to-held";
+  }
+
+  if (
+    currentPosition === "booked" &&
+    nextPosition === "released"
+  ) {
+    return "release-booked";
+  }
+
+  if (
+    currentPosition === "released" &&
+    nextPosition === "held"
+  ) {
+    return "add-held";
+  }
+
+  if (
+    currentPosition === "released" &&
+    nextPosition === "booked"
+  ) {
+    return "add-booked";
+  }
+
+  throw new D1BookingDalError(
+    "BUSINESS_RULE",
+    "Unsupported booking seat transition.",
+  );
+}
+
+export function buildD1LifecycleInventoryAssertion(
+  db: D1Database,
+  {
+    token,
+    inventoryId,
+    passengerCount,
+    action,
+  }: {
+    token: string;
+
+    inventoryId: string;
+
+    passengerCount: number;
+
+    action: Exclude<
+      D1InventorySeatAction,
+      "none"
+    >;
+  },
+): D1PreparedStatement {
+  const assertionToken =
+    cleanRequiredText(
+      token,
+      "Assertion token",
+    );
+
+  const id =
+    cleanRequiredText(
+      inventoryId,
+      "Trip inventory ID",
+    );
+
+  const seats =
+    positiveInteger(
+      passengerCount,
+      "Passenger count",
+    );
+
+  let condition:
+    string;
+
+  if (
+    action === "release-held" ||
+    action === "held-to-booked"
+  ) {
+    condition =
+      "i.heldSeats >= ?";
+  } else if (
+    action === "release-booked" ||
+    action === "booked-to-held"
+  ) {
+    condition =
+      "i.bookedSeats >= ?";
+  } else {
+    /*
+     * add-held / add-booked create
+     * a new reservation from a
+     * released booking.
+     *
+     * Appwrite permits SOLD_OUT when
+     * its counters expose free seats;
+     * normalization below can reopen it.
+     */
+    condition = `
+      i.isActive = 1
+
+      AND i.salesStatus NOT IN (
+        'CLOSED',
+        'CANCELLED'
+      )
+
+      AND (
+        i.seatCapacity
+        - i.bookedSeats
+        - i.heldSeats
+      ) >= ?
+    `;
+  }
+
+  return db
+    .prepare(`
+      INSERT INTO d1_transaction_assertions (
+        token,
+        ok
+      )
+      VALUES (
+        ?,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM trip_inventory AS i
+            WHERE i.id = ?
+              AND ${condition}
+          )
+          THEN 1
+          ELSE 0
+        END
+      )
+    `)
+    .bind(
+      assertionToken,
+      id,
+      seats,
+    );
+}
+
+export function buildD1LifecycleSeatMutation(
+  db: D1Database,
+  inventoryId: string,
+  passengerCount: number,
+  action: Exclude<
+    D1InventorySeatAction,
+    "none"
+  >,
+): D1PreparedStatement {
+  const id =
+    cleanRequiredText(
+      inventoryId,
+      "Trip inventory ID",
+    );
+
+  const seats =
+    positiveInteger(
+      passengerCount,
+      "Passenger count",
+    );
+
+  if (
+    action === "release-held"
+  ) {
+    return db
+      .prepare(`
+        UPDATE trip_inventory
+        SET heldSeats =
+          heldSeats - ?
+        WHERE id = ?
+      `)
+      .bind(
+        seats,
+        id,
+      );
+  }
+
+  if (
+    action === "release-booked"
+  ) {
+    return db
+      .prepare(`
+        UPDATE trip_inventory
+        SET bookedSeats =
+          bookedSeats - ?
+        WHERE id = ?
+      `)
+      .bind(
+        seats,
+        id,
+      );
+  }
+
+  if (
+    action === "add-held"
+  ) {
+    return db
+      .prepare(`
+        UPDATE trip_inventory
+        SET heldSeats =
+          heldSeats + ?
+        WHERE id = ?
+      `)
+      .bind(
+        seats,
+        id,
+      );
+  }
+
+  if (
+    action === "add-booked"
+  ) {
+    return db
+      .prepare(`
+        UPDATE trip_inventory
+        SET bookedSeats =
+          bookedSeats + ?
+        WHERE id = ?
+      `)
+      .bind(
+        seats,
+        id,
+      );
+  }
+
+  if (
+    action === "held-to-booked"
+  ) {
+    return db
+      .prepare(`
+        UPDATE trip_inventory
+        SET
+          heldSeats =
+            heldSeats - ?,
+
+          bookedSeats =
+            bookedSeats + ?
+        WHERE id = ?
+      `)
+      .bind(
+        seats,
+        seats,
+        id,
+      );
+  }
+
+  /*
+   * The only remaining action is
+   * booked-to-held.
+   */
+  return db
+    .prepare(`
+      UPDATE trip_inventory
+      SET
+        bookedSeats =
+          bookedSeats - ?,
+
+        heldSeats =
+          heldSeats + ?
+      WHERE id = ?
+    `)
+    .bind(
+      seats,
+      seats,
+      id,
+    );
+}
+
+export function buildD1NormalizeLifecycleSalesStatus(
+  db: D1Database,
+  inventoryId: string,
+): D1PreparedStatement {
+  return db
+    .prepare(`
+      UPDATE trip_inventory
+      SET salesStatus =
+        CASE
+          WHEN
+            salesStatus = 'OPEN'
+            AND (
+              seatCapacity
+              - bookedSeats
+              - heldSeats
+            ) <= 0
+          THEN 'SOLD_OUT'
+
+          WHEN
+            salesStatus = 'SOLD_OUT'
+            AND (
+              seatCapacity
+              - bookedSeats
+              - heldSeats
+            ) > 0
+          THEN 'OPEN'
+
+          ELSE salesStatus
+        END
+      WHERE id = ?
+    `)
+    .bind(
+      cleanRequiredText(
+        inventoryId,
+        "Trip inventory ID",
+      ),
+    );
+}
+
+export function buildD1BookingLifecycleUpdate(
+  db: D1Database,
+  {
+    bookingId,
+    bookingStatus,
+    paymentStatus,
+    paymentReviewRequired,
+  }: {
+    bookingId: string;
+
+    bookingStatus:
+      D1BookingStatus;
+
+    paymentStatus:
+      D1PaymentStatus;
+
+    paymentReviewRequired:
+      boolean;
+  },
+): D1PreparedStatement {
+  return db
+    .prepare(`
+      UPDATE bookings
+      SET
+        bookingStatus = ?,
+        paymentStatus = ?,
+        paymentReviewRequired = ?
+      WHERE id = ?
+    `)
+    .bind(
+      bookingStatus,
+      paymentStatus,
+
+      paymentReviewRequired
+        ? 1
+        : 0,
+
+      cleanRequiredText(
+        bookingId,
+        "Booking ID",
+      ),
+    );
+}
+
+export async function updateD1BookingLifecycle(
+  input: D1BookingLifecycleUpdateInput,
+): Promise<D1BookingLifecycleUpdateResult> {
+  const bookingId =
+    cleanRequiredText(
+      input.bookingId,
+      "Booking ID",
+    );
+
+  const tripInventoryId =
+    cleanRequiredText(
+      input.tripInventoryId,
+      "Trip inventory ID",
+    );
+
+  const returnTripInventoryId =
+    nullableText(
+      input.returnTripInventoryId,
+    );
+
+  if (
+    !isD1AllowedBookingTransition(
+      input.currentBookingStatus,
+      input.nextBookingStatus,
+    )
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      `Booking status cannot be changed from ${input.currentBookingStatus} to ${input.nextBookingStatus}.`,
+    );
+  }
+
+  if (
+    !isD1AllowedStatusPair(
+      input.nextBookingStatus,
+      input.nextPaymentStatus,
+    )
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      "The selected booking and payment statuses are not compatible.",
+    );
+  }
+
+  const seatAction =
+    determineD1InventorySeatAction({
+      currentStatus:
+        input.currentBookingStatus,
+
+      nextStatus:
+        input.nextBookingStatus,
+    });
+
+  if (
+    seatAction !== "none"
+  ) {
+    positiveInteger(
+      input.passengerCount,
+      "Passenger count",
+    );
+
+    if (
+      input.tripType ===
+        "round-trip" &&
+      !returnTripInventoryId
+    ) {
+      throw new D1BookingDalError(
+        "BUSINESS_RULE",
+        "This round-trip booking does not contain a linked return inventory.",
+      );
+    }
+
+    if (
+      returnTripInventoryId &&
+      returnTripInventoryId ===
+        tripInventoryId
+    ) {
+      throw new D1BookingDalError(
+        "BUSINESS_RULE",
+        "Outbound and return inventory IDs cannot be identical.",
+      );
+    }
+  }
+
+  let paymentReviewResolution:
+    ReturnType<
+      typeof resolvePaymentReview
+    >;
+
+  try {
+    paymentReviewResolution =
+      resolvePaymentReview({
+        reviewRequired:
+          input.currentPaymentReviewRequired,
+
+        resolveRequested:
+          input.resolvePaymentReview,
+
+        bookingStatus:
+          input.nextBookingStatus,
+
+        paymentStatus:
+          input.nextPaymentStatus,
+      });
+  } catch (error) {
+    if (
+      error instanceof
+      PaymentReviewResolutionError
+    ) {
+      throw new D1BookingDalError(
+        "BUSINESS_RULE",
+        error.message,
+      );
+    }
+
+    throw error;
+  }
+
+  const nextPaymentReviewRequired =
+    paymentReviewResolution
+      .bookingUpdate
+      ?.paymentReviewRequired ??
+    input.currentPaymentReviewRequired;
+
+  const db =
+    getD1();
+
+  const bookingAssertionToken =
+    makeD1BookingAssertionToken(
+      "booking-lifecycle-state",
+    );
+
+  const statements:
+    D1PreparedStatement[] = [
+      buildD1BookingStateAssertion(
+        db,
+        {
+          token:
+            bookingAssertionToken,
+
+          bookingId,
+
+          bookingStatus:
+            input.currentBookingStatus,
+
+          paymentStatus:
+            input.currentPaymentStatus,
+
+          paymentReviewRequired:
+            input.currentPaymentReviewRequired,
+
+          tripType:
+            input.tripType,
+
+          passengerCount:
+            input.passengerCount,
+
+          tripInventoryId,
+
+          returnTripInventoryId,
+        },
+      ),
+    ];
+
+  let outboundAssertionToken:
+    string | null =
+    null;
+
+  let returnAssertionToken:
+    string | null =
+    null;
+
+  if (
+    seatAction !== "none"
+  ) {
+    outboundAssertionToken =
+      makeD1BookingAssertionToken(
+        "booking-lifecycle-outbound",
+      );
+
+    statements.push(
+      buildD1LifecycleInventoryAssertion(
+        db,
+        {
+          token:
+            outboundAssertionToken,
+
+          inventoryId:
+            tripInventoryId,
+
+          passengerCount:
+            input.passengerCount,
+
+          action:
+            seatAction,
+        },
+      ),
+    );
+
+    if (
+      returnTripInventoryId
+    ) {
+      returnAssertionToken =
+        makeD1BookingAssertionToken(
+          "booking-lifecycle-return",
+        );
+
+      statements.push(
+        buildD1LifecycleInventoryAssertion(
+          db,
+          {
+            token:
+              returnAssertionToken,
+
+            inventoryId:
+              returnTripInventoryId,
+
+            passengerCount:
+              input.passengerCount,
+
+            action:
+              seatAction,
+          },
+        ),
+      );
+    }
+
+    /*
+     * Every assertion is queued before
+     * the first mutation.
+     */
+    statements.push(
+      buildD1LifecycleSeatMutation(
+        db,
+        tripInventoryId,
+        input.passengerCount,
+        seatAction,
+      ),
+
+      buildD1NormalizeLifecycleSalesStatus(
+        db,
+        tripInventoryId,
+      ),
+    );
+
+    if (
+      returnTripInventoryId
+    ) {
+      statements.push(
+        buildD1LifecycleSeatMutation(
+          db,
+          returnTripInventoryId,
+          input.passengerCount,
+          seatAction,
+        ),
+
+        buildD1NormalizeLifecycleSalesStatus(
+          db,
+          returnTripInventoryId,
+        ),
+      );
+    }
+  }
+
+  statements.push(
+    buildD1BookingLifecycleUpdate(
+      db,
+      {
+        bookingId,
+
+        bookingStatus:
+          input.nextBookingStatus,
+
+        paymentStatus:
+          input.nextPaymentStatus,
+
+        paymentReviewRequired:
+          nextPaymentReviewRequired,
+      },
+    ),
+
+    buildD1DeleteAssertion(
+      db,
+      bookingAssertionToken,
+    ),
+  );
+
+  if (
+    outboundAssertionToken
+  ) {
+    statements.push(
+      buildD1DeleteAssertion(
+        db,
+        outboundAssertionToken,
+      ),
+    );
+  }
+
+  if (
+    returnAssertionToken
+  ) {
+    statements.push(
+      buildD1DeleteAssertion(
+        db,
+        returnAssertionToken,
+      ),
+    );
+  }
+
+  try {
+    await db.batch(
+      statements,
+    );
+  } catch (error) {
+    throw toD1BookingDalError(
+      error,
+    );
+  }
+
+  return {
+    seatAction,
+
+    paymentReviewResolved:
+      paymentReviewResolution
+        .resolved,
+  };
 }
