@@ -1,15 +1,22 @@
-import { randomBytes } from "node:crypto"
-import { ID } from "node-appwrite"
-
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  randomBytes,
+  randomUUID,
+} from "node:crypto"
 
 import {
   getCurrentBaliDate,
-  validateCustomerTravelDate,
+  isValidDateOnly,
 } from "@/lib/bali-date"
+
+import {
+  createD1PendingBookingWithSeatHold,
+  D1BookingDalError,
+} from "@/lib/d1-bookings"
+
+import {
+  getPublicTripDetailD1,
+  type PublicTripDetailD1,
+} from "@/lib/d1-public-trip-detail"
 
 import {
   createSeatHoldExpiresAt,
@@ -23,6 +30,8 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 type BookingRequest = {
+  verificationCode?: unknown
+
   tripInventoryId?: unknown
   outboundTripInventoryId?: unknown
   returnTripInventoryId?: unknown
@@ -38,17 +47,12 @@ type BookingRequest = {
     country?: unknown
   }
 
-  passengers?: {
+  passengers?: Array<{
     number?: unknown
     name?: unknown
-  }[]
+  }>
 
   notes?: unknown
-  verificationCode?: unknown
-}
-
-type AppwriteRow = Record<string, unknown> & {
-  $id?: string
 }
 
 type LoadedTrip = {
@@ -89,21 +93,18 @@ type LoadedTrip = {
   infantPrice: number
   currency: string
 
-  salesStatus: string
+  salesStatus: "OPEN"
+
   checkInLocation: string
 }
 
 class BookingError extends Error {
-  status: number
-
   constructor(
-    status: number,
+    public readonly status: number,
     message: string
   ) {
     super(message)
-
     this.name = "BookingError"
-    this.status = status
   }
 }
 
@@ -113,7 +114,6 @@ function noStoreJson(
 ) {
   return Response.json(body, {
     status,
-
     headers: {
       "Cache-Control":
         "no-store, max-age=0",
@@ -121,17 +121,12 @@ function noStoreJson(
   })
 }
 
-function cleanText(value: unknown): string {
-  return String(value ?? "").trim()
-}
-
-function normalizeRouteValue(
-  value: string
+function cleanText(
+  value: unknown
 ): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
+  return String(
+    value ?? ""
+  ).trim()
 }
 
 function toInteger(
@@ -145,31 +140,12 @@ function toInteger(
     return null
   }
 
-  const parsedValue = Number(value)
+  const parsed =
+    Number(value)
 
-  return Number.isInteger(parsedValue)
-    ? parsedValue
+  return Number.isInteger(parsed)
+    ? parsed
     : null
-}
-
-function getErrorCode(
-  error: unknown
-): number | null {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error
-  ) {
-    const code = Number(
-      (error as { code?: unknown }).code
-    )
-
-    return Number.isFinite(code)
-      ? code
-      : null
-  }
-
-  return null
 }
 
 function isValidEmail(
@@ -180,62 +156,31 @@ function isValidEmail(
   )
 }
 
-function isValidDateOnly(
+function normalizeRouteValue(
   value: string
-): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(
-    value
-  )
-}
-
-function timeToMinutes(
-  time: string
-): number | null {
-  if (
-    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
-      time
-    )
-  ) {
-    return null
-  }
-
-  const [hours, minutes] = time
-    .split(":")
-    .map(Number)
-
-  return hours * 60 + minutes
+): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
 }
 
 function formatDuration(
-  departureTime: string,
-  arrivalTime: string,
-  arrivalDayOffset: number
+  durationMinutes: number
 ): string {
-  const departureMinutes =
-    timeToMinutes(departureTime)
-
-  const arrivalMinutes =
-    timeToMinutes(arrivalTime)
-
   if (
-    departureMinutes === null ||
-    arrivalMinutes === null
+    !Number.isInteger(
+      durationMinutes
+    ) ||
+    durationMinutes <= 0
   ) {
     return "Duration unavailable"
   }
 
-  const durationMinutes =
-    arrivalMinutes +
-    arrivalDayOffset * 1440 -
-    departureMinutes
-
-  if (durationMinutes <= 0) {
-    return "Duration unavailable"
-  }
-
-  const hours = Math.floor(
-    durationMinutes / 60
-  )
+  const hours =
+    Math.floor(
+      durationMinutes / 60
+    )
 
   const minutes =
     durationMinutes % 60
@@ -252,398 +197,108 @@ function formatDuration(
 }
 
 function createBookingCode(): string {
-  const baliDate =
+  const compactDate =
     getCurrentBaliDate()
+      .slice(2)
+      .replaceAll("-", "")
 
-  const compactDate = baliDate
-    .slice(2)
-    .replaceAll("-", "")
-
-  const randomPart = randomBytes(4)
-    .toString("hex")
-    .toUpperCase()
+  const randomPart =
+    randomBytes(4)
+      .toString("hex")
+      .toUpperCase()
 
   return `GG-${compactDate}-${randomPart}`
 }
 
-async function rollbackTransaction(
-  transactionId: string
-) {
-  try {
-    await tablesDB.updateTransaction({
-      transactionId,
-      rollback: true,
-    })
-  } catch (rollbackError) {
-    console.error(
-      "Booking transaction rollback error:",
-      rollbackError
-    )
-  }
-}
-
-async function getTransactionRow(
-  tableId: string,
-  rowId: string,
-  transactionId: string,
-  notFoundMessage: string
-): Promise<AppwriteRow> {
-  try {
-    const row = await tablesDB.getRow({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId,
-      rowId,
-      transactionId,
-    })
-
-    return row as unknown as AppwriteRow
-  } catch (error) {
-    if (getErrorCode(error) === 404) {
-      throw new BookingError(
-        404,
-        notFoundMessage
-      )
-    }
-
-    throw error
-  }
-}
-
-async function loadTripForBooking({
-  inventoryId,
-  passengerCount,
-  transactionId,
-  journeyLabel,
-}: {
-  inventoryId: string
-  passengerCount: number
-  transactionId: string
-  journeyLabel: "outbound" | "return"
-}): Promise<LoadedTrip> {
-  const inventory =
-    await getTransactionRow(
-      appwriteConfig.tripInventoryTableId,
-      inventoryId,
-      transactionId,
-      `The selected ${journeyLabel} trip could not be found.`
-    )
-
-  const travelDate = cleanText(
-    inventory.travelDate
-  )
-
-  const travelDateValidation =
-    validateCustomerTravelDate(
-      travelDate
-    )
-
-  if (!travelDateValidation.valid) {
-    throw new BookingError(
-      410,
-
-      travelDateValidation.error ||
-        `The selected ${journeyLabel} travel date is no longer bookable.`
-    )
-  }
-
-  const salesStatus = cleanText(
-    inventory.salesStatus
-  ).toUpperCase()
-
-  if (
-    inventory.isActive !== true ||
-    salesStatus !== "OPEN"
-  ) {
-    throw new BookingError(
-      410,
-      `The selected ${journeyLabel} trip is no longer open for booking.`
-    )
-  }
-
-  const scheduleId = cleanText(
-    inventory.scheduleId
-  )
-
-  const operatorId = cleanText(
-    inventory.operatorId
-  )
-
-  const vesselId = cleanText(
-    inventory.vesselId
-  )
-
-  const routeId = cleanText(
-    inventory.routeId
-  )
-
-  if (
-    !scheduleId ||
-    !operatorId ||
-    !vesselId ||
-    !routeId
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} trip has incomplete operational data.`
-    )
-  }
-
-  const [
-    schedule,
-    operator,
-    vessel,
-    route,
-  ] = await Promise.all([
-    getTransactionRow(
-      appwriteConfig
-        .tripSchedulesTableId,
-      scheduleId,
-      transactionId,
-      `The ${journeyLabel} schedule could not be found.`
-    ),
-
-    getTransactionRow(
-      appwriteConfig.operatorsTableId,
-      operatorId,
-      transactionId,
-      `The ${journeyLabel} operator could not be found.`
-    ),
-
-    getTransactionRow(
-      appwriteConfig.vesselsTableId,
-      vesselId,
-      transactionId,
-      `The ${journeyLabel} vessel could not be found.`
-    ),
-
-    getTransactionRow(
-      appwriteConfig.routesTableId,
-      routeId,
-      transactionId,
-      `The ${journeyLabel} route could not be found.`
-    ),
-  ])
-
-  if (
-    schedule.isActive !== true ||
-    operator.isActive !== true ||
-    vessel.isActive !== true ||
-    route.isActive !== true
-  ) {
-    throw new BookingError(
-      410,
-      `The selected ${journeyLabel} trip is currently inactive.`
-    )
-  }
-
-  if (
-    cleanText(schedule.operatorId) !==
-      operatorId ||
-    cleanText(schedule.vesselId) !==
-      vesselId ||
-    cleanText(schedule.routeId) !==
-      routeId
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} schedule has inconsistent operational data.`
-    )
-  }
-
-  if (
-    cleanText(vessel.operatorId) !==
-    operatorId
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} vessel is not assigned to its operator.`
-    )
-  }
-
-  const seatCapacity = toInteger(
-    inventory.seatCapacity
-  )
-
-  const bookedSeats = toInteger(
-    inventory.bookedSeats
-  )
-
-  const heldSeats = toInteger(
-    inventory.heldSeats
-  )
-
-  if (
-    seatCapacity === null ||
-    bookedSeats === null ||
-    heldSeats === null ||
-    seatCapacity < 0 ||
-    bookedSeats < 0 ||
-    heldSeats < 0
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} trip has invalid seat data.`
-    )
-  }
-
-  const availableSeats =
-    seatCapacity -
-    bookedSeats -
-    heldSeats
-
-  if (availableSeats < passengerCount) {
-    throw new BookingError(
-      409,
-
-      availableSeats <= 0
-        ? `The selected ${journeyLabel} trip is sold out.`
-        : `Only ${availableSeats} seats remain for the selected ${journeyLabel} trip.`
-    )
-  }
-
-  const adultPrice = toInteger(
-    inventory.adultPrice
-  )
-
-  const childPrice = toInteger(
-    inventory.childPrice
-  )
-
-  const infantPrice = toInteger(
-    inventory.infantPrice
-  )
-
-  const currency = cleanText(
-    inventory.currency
-  ).toUpperCase()
-
-  if (
-    adultPrice === null ||
-    childPrice === null ||
-    infantPrice === null ||
-    adultPrice < 0 ||
-    childPrice < 0 ||
-    infantPrice < 0 ||
-    !/^[A-Z]{3}$/.test(currency)
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} trip has invalid pricing data.`
-    )
-  }
-
-  const departureTime = cleanText(
-    inventory.departureTime
-  )
-
-  const arrivalTime = cleanText(
-    inventory.arrivalTime
-  )
-
-  const arrivalDayOffset = toInteger(
-    inventory.arrivalDayOffset
-  )
-
-  if (
-    timeToMinutes(departureTime) ===
-      null ||
-    timeToMinutes(arrivalTime) ===
-      null ||
-    arrivalDayOffset === null ||
-    arrivalDayOffset < 0 ||
-    arrivalDayOffset > 2
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} trip has invalid schedule times.`
-    )
-  }
-
-  const operatorName = cleanText(
-    operator.operatorName
-  )
-
-  const vesselName = cleanText(
-    vessel.vesselName
-  )
-
-  const fromPort = cleanText(
-    route.fromPort
-  )
-
-  const toPort = cleanText(
-    route.toPort
-  )
-
-  if (
-    !operatorName ||
-    !vesselName ||
-    !fromPort ||
-    !toPort
-  ) {
-    throw new BookingError(
-      500,
-      `The selected ${journeyLabel} trip has incomplete display information.`
-    )
-  }
-
+function toLoadedTrip(
+  trip: PublicTripDetailD1
+): LoadedTrip {
   return {
-    inventoryId,
-    inventoryCode: cleanText(
-      inventory.inventoryCode
-    ),
+    inventoryId:
+      trip.tripInventoryId,
 
-    scheduleId,
-    scheduleCode: cleanText(
-      schedule.scheduleCode
-    ),
+    inventoryCode:
+      trip.inventoryCode,
 
-    operatorId,
-    operatorCode: cleanText(
-      operator.operatorCode
-    ),
-    operatorName,
+    scheduleId:
+      trip.scheduleId,
 
-    vesselId,
-    vesselCode: cleanText(
-      vessel.vesselCode
-    ),
-    vesselName,
+    scheduleCode:
+      trip.scheduleCode,
 
-    routeId,
-    routeCode: cleanText(
-      route.routeCode
-    ),
+    operatorId:
+      trip.operatorId,
 
-    fromPort,
-    toPort,
+    operatorCode:
+      trip.operatorCode,
+
+    operatorName:
+      trip.operatorName,
+
+    vesselId:
+      trip.vesselId,
+
+    vesselCode:
+      trip.vesselCode,
+
+    vesselName:
+      trip.vesselName,
+
+    routeId:
+      trip.routeId,
+
+    routeCode:
+      trip.routeCode,
+
+    fromPort:
+      trip.fromPort,
+
+    toPort:
+      trip.toPort,
 
     travelDate:
-      travelDateValidation.travelDate,
+      trip.travelDate,
 
-    departureTime,
-    arrivalTime,
-    arrivalDayOffset,
+    departureTime:
+      trip.departureTime,
 
-    duration: formatDuration(
-      departureTime,
-      arrivalTime,
-      arrivalDayOffset
-    ),
+    arrivalTime:
+      trip.arrivalTime,
 
-    seatCapacity,
-    bookedSeats,
-    heldSeats,
-    availableSeats,
+    arrivalDayOffset:
+      trip.arrivalDayOffset,
 
-    adultPrice,
-    childPrice,
-    infantPrice,
-    currency,
+    duration:
+      formatDuration(
+        trip.durationMinutes
+      ),
 
-    salesStatus,
+    seatCapacity:
+      trip.seatCapacity,
+
+    bookedSeats:
+      trip.bookedSeats,
+
+    heldSeats:
+      trip.heldSeats,
+
+    availableSeats:
+      trip.availableSeats,
+
+    adultPrice:
+      trip.adultPrice,
+
+    childPrice:
+      trip.childPrice,
+
+    infantPrice:
+      trip.infantPrice,
+
+    currency:
+      trip.currency,
+
+    salesStatus:
+      "OPEN",
 
     checkInLocation:
       "Check-in details will be provided after booking.",
@@ -654,7 +309,9 @@ function createTripConfirmation(
   trip: LoadedTrip
 ) {
   return {
-    id: trip.inventoryId,
+    id:
+      trip.inventoryId,
+
     inventoryCode:
       trip.inventoryCode,
 
@@ -696,91 +353,111 @@ function createTripConfirmation(
   }
 }
 
-async function holdTripSeats({
-  trip,
+async function loadTripForBooking({
+  inventoryId,
   passengerCount,
-  transactionId,
   journeyLabel,
 }: {
-  trip: LoadedTrip
+  inventoryId: string
   passengerCount: number
-  transactionId: string
-  journeyLabel: "outbound" | "return"
-}) {
-  try {
-    await tablesDB.incrementRowColumn({
-      databaseId:
-        appwriteConfig.databaseId,
+  journeyLabel:
+    | "outbound"
+    | "return"
+}): Promise<LoadedTrip> {
+  const result =
+    await getPublicTripDetailD1({
+      tripInventoryId:
+        inventoryId,
 
-      tableId:
-        appwriteConfig
-          .tripInventoryTableId,
-
-      rowId:
-        trip.inventoryId,
-
-      column: "heldSeats",
-      value: passengerCount,
-
-      max:
-        trip.seatCapacity -
-        trip.bookedSeats,
-
-      transactionId,
+      passengers:
+        passengerCount,
     })
-  } catch (error) {
-    console.error(
-      `${journeyLabel} inventory held-seat increment error:`,
-      error
-    )
+
+  if (result.status !== 200) {
+    const errorBody =
+      result.body as {
+        error?: string
+        availableSeats?: number
+      }
+
+    const availableSeats =
+      Number(
+        errorBody.availableSeats
+      )
+
+    if (result.status === 404) {
+      throw new BookingError(
+        404,
+        `The selected ${journeyLabel} trip could not be found.`
+      )
+    }
+
+    if (
+      result.status === 409 &&
+      Number.isInteger(
+        availableSeats
+      )
+    ) {
+      throw new BookingError(
+        409,
+
+        availableSeats <= 0
+          ? `The selected ${journeyLabel} trip is sold out.`
+          : `Only ${availableSeats} seats remain for the selected ${journeyLabel} trip.`
+      )
+    }
+
+    if (result.status === 410) {
+      const message =
+        cleanText(
+          errorBody.error
+        )
+
+      if (
+        message &&
+        message !==
+          "The selected trip is no longer available for booking."
+      ) {
+        throw new BookingError(
+          410,
+          message
+        )
+      }
+
+      throw new BookingError(
+        410,
+        `The selected ${journeyLabel} trip is no longer open for booking.`
+      )
+    }
 
     throw new BookingError(
-      409,
-      `The remaining seats for the ${journeyLabel} trip changed while the booking was being processed. Please search again.`
+      500,
+      `The selected ${journeyLabel} trip could not be loaded.`
     )
   }
 
-  const remainingSeats =
-    trip.availableSeats -
-    passengerCount
+  const successBody =
+    result.body as {
+      trip:
+        PublicTripDetailD1
+    }
 
-  if (
-    remainingSeats <= 0 &&
-    trip.salesStatus === "OPEN"
-  ) {
-    await tablesDB.updateRow({
-      databaseId:
-        appwriteConfig.databaseId,
-
-      tableId:
-        appwriteConfig
-          .tripInventoryTableId,
-
-      rowId:
-        trip.inventoryId,
-
-      data: {
-        salesStatus: "SOLD_OUT",
-      },
-
-      transactionId,
-    })
-  }
+  return toLoadedTrip(
+    successBody.trip
+  )
 }
 
 export async function POST(
   request: Request
 ) {
-  let transactionId:
-    | string
-    | null = null
-
   try {
-    let body: BookingRequest
+    let body:
+      BookingRequest
 
     try {
       body =
-        (await request.json()) as BookingRequest
+        (await request.json()) as
+          BookingRequest
     } catch {
       throw new BookingError(
         400,
@@ -788,9 +465,10 @@ export async function POST(
       )
     }
 
-    const tripType = cleanText(
-      body.tripType
-    ).toLowerCase()
+    const tripType =
+      cleanText(
+        body.tripType
+      ).toLowerCase()
 
     if (
       tripType !== "one-way" &&
@@ -802,10 +480,6 @@ export async function POST(
       )
     }
 
-    /*
-     * tripInventoryId dipertahankan
-     * untuk payload one-way lama.
-     */
     const outboundTripInventoryId =
       cleanText(
         body.outboundTripInventoryId
@@ -890,21 +564,25 @@ export async function POST(
       )
     }
 
-    const fullName = cleanText(
-      body.customer?.fullName
-    )
+    const fullName =
+      cleanText(
+        body.customer?.fullName
+      )
 
-    const email = cleanText(
-      body.customer?.email
-    ).toLowerCase()
+    const email =
+      cleanText(
+        body.customer?.email
+      ).toLowerCase()
 
-    const whatsapp = cleanText(
-      body.customer?.whatsapp
-    )
+    const whatsapp =
+      cleanText(
+        body.customer?.whatsapp
+      )
 
-    const country = cleanText(
-      body.customer?.country
-    )
+    const country =
+      cleanText(
+        body.customer?.country
+      )
 
     if (
       !fullName ||
@@ -918,7 +596,9 @@ export async function POST(
       )
     }
 
-    if (fullName.length > 150) {
+    if (
+      fullName.length > 150
+    ) {
       throw new BookingError(
         400,
         "Customer name is too long."
@@ -935,14 +615,18 @@ export async function POST(
       )
     }
 
-    if (whatsapp.length > 50) {
+    if (
+      whatsapp.length > 50
+    ) {
       throw new BookingError(
         400,
         "WhatsApp number is too long."
       )
     }
 
-    if (country.length > 100) {
+    if (
+      country.length > 100
+    ) {
       throw new BookingError(
         400,
         "Country name is too long."
@@ -950,7 +634,9 @@ export async function POST(
     }
 
     const rawPassengers =
-      Array.isArray(body.passengers)
+      Array.isArray(
+        body.passengers
+      )
         ? body.passengers
         : []
 
@@ -966,12 +652,17 @@ export async function POST(
 
     const passengers =
       rawPassengers.map(
-        (passenger, index) => ({
-          number: index + 1,
+        (
+          passenger,
+          index
+        ) => ({
+          number:
+            index + 1,
 
-          name: cleanText(
-            passenger?.name
-          ),
+          name:
+            cleanText(
+              passenger?.name
+            ),
         })
       )
 
@@ -988,11 +679,14 @@ export async function POST(
       )
     }
 
-    const notes = cleanText(
-      body.notes
-    )
+    const notes =
+      cleanText(
+        body.notes
+      )
 
-    if (notes.length > 2000) {
+    if (
+      notes.length > 2000
+    ) {
       throw new BookingError(
         400,
         "Notes are too long."
@@ -1004,29 +698,12 @@ export async function POST(
         body.verificationCode
       )
 
-    const transaction =
-      await tablesDB.createTransaction({
-        ttl: 60,
-      })
-
-    transactionId = cleanText(
-      transaction.$id
-    )
-
-    if (!transactionId) {
-      throw new BookingError(
-        500,
-        "The booking transaction could not be created."
-      )
-    }
-
     const outboundTrip =
       await loadTripForBooking({
         inventoryId:
           outboundTripInventoryId,
 
         passengerCount,
-        transactionId,
 
         journeyLabel:
           "outbound",
@@ -1039,7 +716,6 @@ export async function POST(
               returnTripInventoryId,
 
             passengerCount,
-            transactionId,
 
             journeyLabel:
               "return",
@@ -1134,24 +810,41 @@ export async function POST(
       createBookingCode()
 
     const bookingRowId =
-      ID.unique()
+      randomUUID()
 
     const bookingStatus =
-      "Pending"
+      "Pending" as const
 
     const paymentStatus =
-      "Pending"
+      "Pending" as const
 
     const seatHoldExpiresAt =
       createSeatHoldExpiresAt()
 
-    const rowData: Record<
-      string,
-      unknown
-    > = {
+    const returnTripJson =
+      returnTrip
+        ? JSON.stringify(
+            createTripConfirmation(
+              returnTrip
+            )
+          )
+        : null
+
+    if (
+      returnTripJson &&
+      returnTripJson.length > 5000
+    ) {
+      throw new BookingError(
+        500,
+        "The return trip snapshot is too large to store."
+      )
+    }
+
+    await createD1PendingBookingWithSeatHold({
+      id:
+        bookingRowId,
+
       bookingCode,
-      bookingStatus,
-      paymentStatus,
       seatHoldExpiresAt,
       paymentVerificationAllowed,
 
@@ -1159,6 +852,11 @@ export async function POST(
 
       departureDate:
         outboundTrip.travelDate,
+
+      returnDate:
+        returnTrip
+          ?.travelDate ??
+        null,
 
       passengerCount,
       totalPrice,
@@ -1180,15 +878,16 @@ export async function POST(
           passengers
         ),
 
-      /*
-       * Kolom lama dipertahankan
-       * sebagai snapshot outbound.
-       */
       tripId:
         outboundTrip.inventoryId,
 
       tripInventoryId:
         outboundTrip.inventoryId,
+
+      returnTripInventoryId:
+        returnTrip
+          ?.inventoryId ??
+        null,
 
       inventoryCode:
         outboundTrip.inventoryCode,
@@ -1240,99 +939,23 @@ export async function POST(
 
       checkInLocation:
         outboundTrip.checkInLocation,
-    }
 
-    if (notes) {
-      rowData.notes = notes
-    }
+      returnTripJson,
 
-    if (returnTrip) {
-      const returnTripSnapshot =
-        JSON.stringify(
-          createTripConfirmation(
-            returnTrip
-          )
-        )
-
-      if (
-        returnTripSnapshot.length >
-        5000
-      ) {
-        throw new BookingError(
-          500,
-          "The return trip snapshot is too large to store."
-        )
-      }
-
-      rowData.returnDate =
-        returnTrip.travelDate
-
-      rowData.returnTripInventoryId =
-        returnTrip.inventoryId
-
-      rowData.returnTripJson =
-        returnTripSnapshot
-    }
-
-    const bookingRow =
-      await tablesDB.createRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig
-            .bookingsTableId,
-
-        rowId:
-          bookingRowId,
-
-        data:
-          rowData,
-
-        transactionId,
-      })
-
-    await holdTripSeats({
-      trip:
-        outboundTrip,
-
-      passengerCount,
-      transactionId,
-
-      journeyLabel:
-        "outbound",
+      notes:
+        notes || null,
     })
-
-    if (returnTrip) {
-      await holdTripSeats({
-        trip:
-          returnTrip,
-
-        passengerCount,
-        transactionId,
-
-        journeyLabel:
-          "return",
-      })
-    }
-
-    await tablesDB.updateTransaction({
-      transactionId,
-      commit: true,
-    })
-
-    transactionId = null
 
     const createdAt =
-      new Date().toISOString()
+      new Date()
+        .toISOString()
 
     return noStoreJson(
       {
         success: true,
 
-        rowId: cleanText(
-          bookingRow.$id
-        ),
+        rowId:
+          bookingRowId,
 
         bookingCode,
 
@@ -1348,10 +971,12 @@ export async function POST(
           tripType,
 
           departureDate:
-            outboundTrip.travelDate,
+            outboundTrip
+              .travelDate,
 
           returnDate:
-            returnTrip?.travelDate ??
+            returnTrip
+              ?.travelDate ??
             "",
 
           passengerCount,
@@ -1386,52 +1011,79 @@ export async function POST(
       201
     )
   } catch (error) {
-    if (transactionId) {
-      await rollbackTransaction(
-        transactionId
-      )
-    }
-
     if (
-      error instanceof BookingError
+      error instanceof
+      BookingError
     ) {
       return noStoreJson(
         {
           success: false,
-          error: error.message,
+          error:
+            error.message,
         },
         error.status
       )
     }
 
-    const errorCode =
-      getErrorCode(error)
+    if (
+      error instanceof
+      D1BookingDalError
+    ) {
+      if (
+        error.kind ===
+          "BUSINESS_ASSERTION" ||
+        error.kind ===
+          "SEAT_CONSTRAINT"
+      ) {
+        return noStoreJson(
+          {
+            success: false,
+            error:
+              "The remaining seats changed while the booking was being processed. Please search again.",
+          },
+          409
+        )
+      }
+
+      if (
+        error.kind ===
+          "BUSINESS_RULE"
+      ) {
+        return noStoreJson(
+          {
+            success: false,
+            error:
+              error.message,
+          },
+          409
+        )
+      }
+
+      if (
+        error.kind ===
+          "UNIQUE_CONSTRAINT"
+      ) {
+        return noStoreJson(
+          {
+            success: false,
+            error:
+              "The booking reference could not be reserved. Please try again.",
+          },
+          409
+        )
+      }
+    }
 
     console.error(
-      "Secure booking creation error:",
+      "Secure D1 booking creation error:",
       error
     )
-
-    if (errorCode === 409) {
-      return noStoreJson(
-        {
-          success: false,
-
-          error:
-            "The trip inventory changed while the booking was processed. Please search again.",
-        },
-        409
-      )
-    }
 
     return noStoreJson(
       {
         success: false,
-
         error:
-          error instanceof Error
-            ? error.message
-            : "The booking could not be created.",
+          "The booking could not be created.",
       },
       500
     )
