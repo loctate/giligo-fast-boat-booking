@@ -1824,7 +1824,15 @@ export function buildD1BookingLifecycleUpdate(
       SET
         bookingStatus = ?,
         paymentStatus = ?,
-        paymentReviewRequired = ?
+        paymentReviewRequired = ?,
+
+        seatHoldExpiresAt =
+          CASE
+            WHEN ? = 'Pending'
+            THEN seatHoldExpiresAt
+            ELSE NULL
+          END
+
       WHERE id = ?
     `)
     .bind(
@@ -1834,6 +1842,8 @@ export function buildD1BookingLifecycleUpdate(
       paymentReviewRequired
         ? 1
         : 0,
+
+      bookingStatus,
 
       cleanRequiredText(
         bookingId,
