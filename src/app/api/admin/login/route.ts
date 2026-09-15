@@ -1,122 +1,175 @@
-import { cookies } from "next/headers"
+import {
+  cookies,
+} from "next/headers"
 
 import {
-  createAdminAuthAccount,
-  createSessionAccount,
+  createAdminSessionToken,
   getAdminCookieName,
+  getAdminSessionExpiry,
+  verifyAdminPassword,
 } from "@/lib/admin-auth"
 
-export const runtime = "nodejs"
+export const runtime =
+  "nodejs"
 
 type LoginRequest = {
   email?: string
   password?: string
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request
+) {
   try {
-    const body = (await request.json()) as LoginRequest
+    const body =
+      (
+        await request.json()
+      ) as LoginRequest
 
-    const email = String(body.email || "")
-      .trim()
-      .toLowerCase()
-
-    const password = String(body.password || "")
-
-    if (!email || !password) {
-      return Response.json(
-        {
-          success: false,
-          error: "Email and password are required.",
-        },
-        {
-          status: 400,
-        }
+    const email =
+      String(
+        body.email || ""
       )
-    }
+        .trim()
+        .toLowerCase()
 
-    const adminEmail = String(
-      process.env.ADMIN_EMAIL || ""
-    )
-      .trim()
-      .toLowerCase()
-
-    if (!adminEmail || email !== adminEmail) {
-      return Response.json(
-        {
-          success: false,
-          error: "Invalid email or password.",
-        },
-        {
-          status: 401,
-        }
+    const password =
+      String(
+        body.password || ""
       )
-    }
-
-    const adminAccount = createAdminAuthAccount()
-
-    const session =
-      await adminAccount.createEmailPasswordSession({
-        email,
-        password,
-      })
-
-    const sessionAccount = createSessionAccount(
-      session.secret
-    )
-
-    const user = await sessionAccount.get()
 
     if (
-      user.email.trim().toLowerCase() !== adminEmail
+      !email ||
+      !password
     ) {
-      await sessionAccount.deleteSession({
-        sessionId: "current",
-      })
-
       return Response.json(
         {
-          success: false,
-          error: "Invalid email or password.",
+          success:
+            false,
+
+          error:
+            "Email and password are required.",
         },
         {
-          status: 401,
+          status:
+            400,
         }
       )
     }
 
-    const cookieStore = await cookies()
+    const adminEmail =
+      String(
+        process.env
+          .ADMIN_EMAIL ||
+          ""
+      )
+        .trim()
+        .toLowerCase()
+
+    if (
+      !adminEmail ||
+      email !==
+        adminEmail
+    ) {
+      return Response.json(
+        {
+          success:
+            false,
+
+          error:
+            "Invalid email or password.",
+        },
+        {
+          status:
+            401,
+        }
+      )
+    }
+
+    const passwordValid =
+      await verifyAdminPassword(
+        password
+      )
+
+    if (!passwordValid) {
+      return Response.json(
+        {
+          success:
+            false,
+
+          error:
+            "Invalid email or password.",
+        },
+        {
+          status:
+            401,
+        }
+      )
+    }
+
+    const expiresAt =
+      getAdminSessionExpiry()
+
+    const token =
+      await createAdminSessionToken(
+        adminEmail,
+        expiresAt
+      )
+
+    const cookieStore =
+      await cookies()
 
     cookieStore.set(
       getAdminCookieName(),
-      session.secret,
+      token,
       {
-        httpOnly: true,
+        httpOnly:
+          true,
+
         secure:
-          process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/",
-        expires: new Date(session.expire),
+          process.env.NODE_ENV ===
+          "production",
+
+        sameSite:
+          "strict",
+
+        path:
+          "/",
+
+        expires:
+          expiresAt,
       }
     )
 
     return Response.json({
-      success: true,
+      success:
+        true,
+
       user: {
-        name: user.name,
-        email: user.email,
+        name:
+          "Administrator",
+
+        email:
+          adminEmail,
       },
     })
   } catch (error) {
-    console.error("Admin login error:", error)
+    console.error(
+      "Admin login error:",
+      error
+    )
 
     return Response.json(
       {
-        success: false,
-        error: "Invalid email or password.",
+        success:
+          false,
+
+        error:
+          "Invalid email or password.",
       },
       {
-        status: 401,
+        status:
+          401,
       }
     )
   }
