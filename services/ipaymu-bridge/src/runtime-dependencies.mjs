@@ -9,6 +9,10 @@ import {
 } from "./appwrite-callback-adapter.mjs";
 
 import {
+  createHttpCallbackAdapter,
+} from "./http-callback-adapter.mjs";
+
+import {
   createAppwriteRuntimeDependency,
 } from "./appwrite-runtime-dependency.mjs";
 
@@ -46,6 +50,17 @@ export function createRuntimeDependencies({
   ClientCtor = Client,
   TablesDBCtor = TablesDB,
   QueryApi = Query,
+
+  callbackLifecycleEndpoint =
+    process.env
+      .IPAYMU_CALLBACK_LIFECYCLE_ENDPOINT
+      || "",
+
+  callbackLifecycleToken =
+    process.env
+      .IPAYMU_CALLBACK_LIFECYCLE_TOKEN
+      || "",
+
   transactionTtl = 60,
 } = {}) {
   const runtimeConfig =
@@ -58,21 +73,67 @@ export function createRuntimeDependencies({
     return {};
   }
 
-  const appwriteRuntime =
-    createAppwriteRuntimeDependency({
-      config:
-        runtimeConfig,
+  const callbackEndpoint =
+    String(
+      callbackLifecycleEndpoint
+        || "",
+    ).trim();
 
-      ClientCtor,
-      TablesDBCtor,
-      QueryApi,
-    });
+  const callbackToken =
+    String(
+      callbackLifecycleToken
+        || "",
+    ).trim();
 
-  const callbackAdapter =
-    createAppwriteCallbackAdapter({
-      ...appwriteRuntime,
-      transactionTtl,
-    });
+  const useHttpCallback =
+    Boolean(
+      callbackEndpoint
+      || callbackToken
+    );
+
+  if (
+    useHttpCallback
+    && (
+      !callbackEndpoint
+      || !callbackToken
+    )
+  ) {
+    throw new TypeError(
+      "IPAYMU callback lifecycle endpoint and token must be configured together.",
+    );
+  }
+
+  let callbackAdapter;
+
+  if (useHttpCallback) {
+    callbackAdapter =
+      createHttpCallbackAdapter({
+        endpoint:
+          callbackEndpoint,
+
+        token:
+          callbackToken,
+
+        fetchImpl,
+        timeoutMs,
+      });
+  } else {
+    const appwriteRuntime =
+      createAppwriteRuntimeDependency({
+        config:
+          runtimeConfig,
+
+        ClientCtor,
+        TablesDBCtor,
+        QueryApi,
+      });
+
+    callbackAdapter =
+      createAppwriteCallbackAdapter({
+        ...appwriteRuntime,
+        transactionTtl,
+      });
+  }
 
   return {
     createPaymentImpl:
