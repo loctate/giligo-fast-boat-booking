@@ -1,93 +1,86 @@
 import Link from "next/link"
-
-import { requireAdmin } from "@/lib/admin-auth"
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  notFound,
+} from "next/navigation"
 
 import {
-  isPaymentVerificationModeEnabled,
-} from "@/lib/payment-verification"
+  requireAdmin,
+} from "@/lib/admin-auth"
+
+import {
+  getD1BookingById,
+} from "@/lib/d1-booking-readers"
 
 import AdminShell from "../../AdminShell"
 import StatusEditor from "./StatusEditor"
 
-export const dynamic = "force-dynamic"
+export const dynamic =
+  "force-dynamic"
 
 type BookingPassenger = {
   number: number
   name: string
 }
 
-type BookingTrip = {
-  id: string
-  inventoryCode: string
-  operator: string
-  vesselName: string
-  routeCode: string
-  from: string
-  to: string
-  departureTime: string
-  arrivalTime: string
-  arrivalDayOffset: number
-  duration: string
-  price: number
-  currency: string
-  checkInLocation: string
+function parsePassengers(
+  value: string
+): BookingPassenger[] {
+  try {
+    const parsed =
+      JSON.parse(value)
+
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed
+      .map(
+        (
+          item,
+          index
+        ) => ({
+          number:
+            Number(
+              item?.number
+            ) ||
+            index + 1,
+
+          name:
+            String(
+              item?.name ?? ""
+            ).trim(),
+        })
+      )
+      .filter(
+        (item) =>
+          Boolean(item.name)
+      )
+  } catch {
+    return []
+  }
 }
 
-type BookingRow = {
-  $id: string
-  $createdAt: string
-  $updatedAt?: string
+function money(
+  amount: number,
+  currency: string
+): string {
+  try {
+    return new Intl.NumberFormat(
+      "id-ID",
+      {
+        style:
+          "currency",
 
-  bookingCode: string
-  bookingStatus: string
-  paymentStatus: string
-  paymentVerificationAllowed?: boolean
-  paymentReviewRequired?: boolean | null
-  paymentReviewReason?: string | null
-  paymentReviewAt?: string | null
-  expiresAt?: string | null
+        currency:
+          currency || "IDR",
 
-  tripType: string
-  departureDate: string
-  returnDate?: string | null
-
-  passengerCount: number
-  totalPrice: number
-  currency?: string | null
-
-  customerFullName: string
-  customerEmail: string
-  customerWhatsapp: string
-  customerCountry: string
-
-  passengersJson: string
-  notes?: string | null
-
-  tripId?: string | null
-  tripInventoryId?: string | null
-  inventoryCode?: string | null
-
-  operatorName: string
-  vesselName?: string | null
-  routeCode?: string | null
-
-  fromPort: string
-  toPort: string
-
-  departureTime: string
-  arrivalTime: string
-  arrivalDayOffset?: number | null
-  duration: string
-
-  pricePerPassenger: number
-  checkInLocation: string
-
-  returnTripInventoryId?: string | null
-  returnTripJson?: string | null
+        maximumFractionDigits:
+          0,
+      }
+    ).format(amount)
+  } catch {
+    return `${currency || "IDR"} ${amount}`
+  }
 }
 
 type BookingDetailPageProps = {
@@ -96,616 +89,23 @@ type BookingDetailPageProps = {
   }>
 }
 
-function cleanText(value: unknown): string {
-  return String(value ?? "").trim()
-}
-
-function toInteger(
-  value: unknown
-): number | null {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return null
-  }
-
-  const parsedValue = Number(value)
-
-  return Number.isInteger(parsedValue)
-    ? parsedValue
-    : null
-}
-
-function formatCurrency(
-  value: number,
-  currency = "IDR"
-) {
-  try {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value)
-  } catch {
-    return `${currency} ${value.toLocaleString(
-      "id-ID"
-    )}`
-  }
-}
-
-function formatDate(
-  value?: string | null
-) {
-  if (!value) {
-    return "-"
-  }
-
-  const dateOnlyMatch =
-    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
-      value
-    )
-
-  if (dateOnlyMatch) {
-    const date = new Date(
-      Date.UTC(
-        Number(dateOnlyMatch[1]),
-        Number(dateOnlyMatch[2]) - 1,
-        Number(dateOnlyMatch[3])
-      )
-    )
-
-    return new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        weekday: "short",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        timeZone: "UTC",
-      }
-    ).format(date)
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(
-    "en-GB",
-    {
-      weekday: "short",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    }
-  ).format(date)
-}
-
-function formatDateTimeWita(
-  value?: string | null
-): string {
-  if (!value) {
-    return "Not recorded"
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(
-    "en-GB",
-    {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "Asia/Makassar",
-      timeZoneName: "short",
-    }
-  ).format(date)
-}
-
-function getSeatPosition(
-  bookingStatus: string
-): {
-  label: string
-  description: string
-  className: string
-} {
-  const normalizedStatus =
-    bookingStatus
-      .trim()
-      .toLowerCase()
-
-  if (normalizedStatus === "pending") {
-    return {
-      label: "Held seats",
-      description:
-        "Seats are temporarily held while payment is pending.",
-      className:
-        "bg-amber-100 text-amber-800",
-    }
-  }
-
-  if (
-    normalizedStatus === "confirmed" ||
-    normalizedStatus === "completed"
-  ) {
-    return {
-      label: "Booked seats",
-      description:
-        "Seats are committed to this confirmed booking.",
-      className:
-        "bg-emerald-100 text-emerald-800",
-    }
-  }
-
-  if (
-    normalizedStatus === "cancelled" ||
-    normalizedStatus === "canceled"
-  ) {
-    return {
-      label: "Released seats",
-      description:
-        "Seats are no longer reserved by this booking.",
-      className:
-        "bg-red-100 text-red-800",
-    }
-  }
-
-  return {
-    label: "Needs review",
-    description:
-      "The seat position could not be inferred from the current booking status.",
-    className:
-      "bg-slate-100 text-slate-700",
-  }
-}
-
-function getLifecycleLabel(
-  bookingStatus: string,
-  paymentStatus: string
-): string {
-  const booking =
-    bookingStatus
-      .trim()
-      .toLowerCase()
-
-  const payment =
-    paymentStatus
-      .trim()
-      .toLowerCase()
-
-  if (
-    booking === "pending" &&
-    payment === "pending"
-  ) {
-    return "Waiting for payment"
-  }
-
-  if (
-    booking === "confirmed" &&
-    (
-      payment === "paid" ||
-      payment === "demo"
-    )
-  ) {
-    return "Payment completed and booking confirmed"
-  }
-
-  if (booking === "completed") {
-    return "Journey completed"
-  }
-
-  if (
-    booking === "cancelled" ||
-    booking === "canceled"
-  ) {
-    return payment === "paid"
-      ? "Cancelled after payment — review required"
-      : "Booking cancelled"
-  }
-
-  return "Review current status combination"
-}
-
-function parsePassengers(
-  value?: string | null
-): BookingPassenger[] {
-  if (!value) {
-    return []
-  }
-
-  try {
-    const parsedValue: unknown =
-      JSON.parse(value)
-
-    if (!Array.isArray(parsedValue)) {
-      return []
-    }
-
-    return parsedValue
-      .map((item, index) => {
-        if (
-          typeof item !== "object" ||
-          item === null
-        ) {
-          return null
-        }
-
-        const passenger =
-          item as Record<
-            string,
-            unknown
-          >
-
-        const name = cleanText(
-          passenger.name
-        )
-
-        if (!name) {
-          return null
-        }
-
-        return {
-          number:
-            toInteger(
-              passenger.number
-            ) ??
-            index + 1,
-
-          name,
-        }
-      })
-      .filter(
-        (
-          passenger
-        ): passenger is BookingPassenger =>
-          passenger !== null
-      )
-  } catch {
-    return []
-  }
-}
-
-function parseReturnTrip(
-  value?: string | null
-): BookingTrip | null {
-  if (!value?.trim()) {
-    return null
-  }
-
-  try {
-    const parsedValue: unknown =
-      JSON.parse(value)
-
-    if (
-      typeof parsedValue !== "object" ||
-      parsedValue === null ||
-      Array.isArray(parsedValue)
-    ) {
-      return null
-    }
-
-    const trip =
-      parsedValue as Record<
-        string,
-        unknown
-      >
-
-    const id = cleanText(trip.id)
-    const operator = cleanText(
-      trip.operator
-    )
-    const from = cleanText(trip.from)
-    const to = cleanText(trip.to)
-
-    const departureTime = cleanText(
-      trip.departureTime
-    )
-
-    const arrivalTime = cleanText(
-      trip.arrivalTime
-    )
-
-    const price =
-      toInteger(trip.price)
-
-    if (
-      !id ||
-      !operator ||
-      !from ||
-      !to ||
-      !departureTime ||
-      !arrivalTime ||
-      price === null ||
-      price < 0
-    ) {
-      return null
-    }
-
-    return {
-      id,
-
-      inventoryCode:
-        cleanText(
-          trip.inventoryCode
-        ),
-
-      operator,
-
-      vesselName:
-        cleanText(
-          trip.vesselName
-        ),
-
-      routeCode:
-        cleanText(
-          trip.routeCode
-        ),
-
-      from,
-      to,
-      departureTime,
-      arrivalTime,
-
-      arrivalDayOffset:
-        toInteger(
-          trip.arrivalDayOffset
-        ) ?? 0,
-
-      duration:
-        cleanText(
-          trip.duration
-        ) ||
-        "Duration unavailable",
-
-      price,
-
-      currency:
-        cleanText(
-          trip.currency
-        ).toUpperCase() ||
-        "IDR",
-
-      checkInLocation:
-        cleanText(
-          trip.checkInLocation
-        ) ||
-        "Check-in details will be provided after booking.",
-    }
-  } catch {
-    return null
-  }
-}
-
-function statusClass(status: string) {
-  const normalized =
-    status.toLowerCase()
-
-  if (
-    normalized === "confirmed" ||
-    normalized === "paid" ||
-    normalized === "completed"
-  ) {
-    return "bg-emerald-100 text-emerald-700"
-  }
-
-  if (
-    normalized === "pending" ||
-    normalized === "demo"
-  ) {
-    return "bg-amber-100 text-amber-700"
-  }
-
-  if (
-    normalized === "cancelled" ||
-    normalized === "canceled" ||
-    normalized === "refunded"
-  ) {
-    return "bg-red-100 text-red-700"
-  }
-
-  return "bg-slate-100 text-slate-700"
-}
-
-function JourneyCard({
-  label,
-  trip,
-  travelDate,
-}: {
-  label: string
-  trip: BookingTrip
-  travelDate: string
-}) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-            {label}
-          </p>
-
-          <h2 className="mt-2 text-2xl font-black">
-            {trip.from}
-
-            <span className="mx-2 text-cyan-600">
-              →
-            </span>
-
-            {trip.to}
-          </h2>
-
-          <p className="mt-2 text-sm font-bold text-slate-500">
-            {formatDate(travelDate)}
-          </p>
-        </div>
-
-        <div className="w-fit rounded-full bg-cyan-50 px-4 py-2 text-xs font-black text-cyan-700">
-          {trip.operator}
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-        <div>
-          <p className="text-3xl font-black">
-            {trip.departureTime}
-          </p>
-
-          <p className="mt-2 text-lg font-black">
-            {trip.from}
-          </p>
-
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            {trip.checkInLocation}
-          </p>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            {trip.duration}
-          </p>
-
-          <div className="my-3 text-cyan-600">
-            ─────➜
-          </div>
-
-          <p className="text-xs font-bold text-slate-500">
-            Direct trip
-          </p>
-        </div>
-
-        <div className="sm:text-right">
-          <p className="text-3xl font-black">
-            {trip.arrivalTime}
-
-            {trip.arrivalDayOffset > 0 && (
-              <span className="ml-2 text-sm text-cyan-600">
-                +{trip.arrivalDayOffset}d
-              </span>
-            )}
-          </p>
-
-          <p className="mt-2 text-lg font-black">
-            {trip.to}
-          </p>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Estimated arrival
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-7 grid gap-5 border-t border-slate-100 pt-6 sm:grid-cols-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Vessel
-          </p>
-
-          <p className="mt-2 font-black">
-            {trip.vesselName || "-"}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Inventory code
-          </p>
-
-          <p className="mt-2 break-all font-black">
-            {trip.inventoryCode || "-"}
-          </p>
-        </div>
-
-        <div className="sm:text-right">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Price per passenger
-          </p>
-
-          <p className="mt-2 font-black text-cyan-700">
-            {formatCurrency(
-              trip.price,
-              trip.currency
-            )}
-          </p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 export default async function BookingDetailPage({
   params,
 }: BookingDetailPageProps) {
-  const admin = await requireAdmin()
+  const admin =
+    await requireAdmin()
 
-  const routeParams = await params
-  const rowId = routeParams.id
+  const {
+    id,
+  } = await params
 
-  let booking: BookingRow | null = null
-  let errorMessage = ""
-
-  try {
-    const result =
-      await tablesDB.getRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.bookingsTableId,
-
-        rowId,
-      })
-
-    booking =
-      result as unknown as BookingRow
-  } catch (error) {
-    console.error(
-      "Booking detail error:",
-      error
+  const booking =
+    await getD1BookingById(
+      id
     )
-
-    errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Booking could not be loaded."
-  }
 
   if (!booking) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 px-5">
-        <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <div className="text-5xl">
-            🎫
-          </div>
-
-          <h1 className="mt-5 text-3xl font-black">
-            Booking not found
-          </h1>
-
-          <p className="mt-3 leading-7 text-slate-500">
-            {errorMessage ||
-              "The requested booking does not exist."}
-          </p>
-
-          <Link
-            href="/admin"
-            className="mt-6 inline-flex rounded-xl bg-cyan-600 px-6 py-3 font-black text-white transition hover:bg-cyan-700"
-          >
-            Return to Dashboard
-          </Link>
-        </section>
-      </main>
-    )
+    notFound()
   }
 
   const passengers =
@@ -713,488 +113,200 @@ export default async function BookingDetailPage({
       booking.passengersJson
     )
 
-  const returnTrip =
-    parseReturnTrip(
-      booking.returnTripJson
-    )
-
-  const currency =
-    cleanText(
-      booking.currency
-    ).toUpperCase() || "IDR"
-
-  const passengerCount =
-    Number(
-      booking.passengerCount || 0
-    )
-
-  const outboundPrice =
-    Number(
-      booking.pricePerPassenger || 0
-    )
-
-  const outboundTrip: BookingTrip = {
-    id:
-      cleanText(
-        booking.tripInventoryId
-      ) ||
-      cleanText(booking.tripId),
-
-    inventoryCode:
-      cleanText(
-        booking.inventoryCode
-      ),
-
-    operator:
-      cleanText(
-        booking.operatorName
-      ),
-
-    vesselName:
-      cleanText(
-        booking.vesselName
-      ),
-
-    routeCode:
-      cleanText(
-        booking.routeCode
-      ),
-
-    from:
-      cleanText(
-        booking.fromPort
-      ),
-
-    to:
-      cleanText(
-        booking.toPort
-      ),
-
-    departureTime:
-      cleanText(
-        booking.departureTime
-      ),
-
-    arrivalTime:
-      cleanText(
-        booking.arrivalTime
-      ),
-
-    arrivalDayOffset:
-      toInteger(
-        booking.arrivalDayOffset
-      ) ?? 0,
-
-    duration:
-      cleanText(
-        booking.duration
-      ) ||
-      "Duration unavailable",
-
-    price:
-      outboundPrice,
-
-    currency,
-
-    checkInLocation:
-      cleanText(
-        booking.checkInLocation
-      ) ||
-      "Check-in details will be provided after booking.",
-  }
-
-  const isRoundTrip =
-    booking.tripType
-      .toLowerCase() ===
-      "round-trip"
-
-  const outboundTotal =
-    outboundPrice *
-    passengerCount
-
-  const returnTotal =
-    returnTrip
-      ? returnTrip.price *
-        passengerCount
-      : 0
-
-  const paymentVerificationModeEnabled =
-    isPaymentVerificationModeEnabled()
-
-  const onlinePaymentAllowed =
-    !paymentVerificationModeEnabled ||
-    booking.paymentVerificationAllowed === true
-
-  const paymentChannel =
-    onlinePaymentAllowed
-      ? "iPaymu Online Payment"
-      : "Manual Assistance"
-
-  const verificationAccess =
-    onlinePaymentAllowed
-      ? "Online payment available"
-      : "Controlled payment verification required"
-
-  const seatPosition =
-    getSeatPosition(
-      booking.bookingStatus
-    )
-
-  const lifecycleLabel =
-    getLifecycleLabel(
-      booking.bookingStatus,
-      booking.paymentStatus
-    )
-
   return (
-    <AdminShell adminEmail={admin.email}>
+    <AdminShell
+      adminEmail={admin.email}
+    >
       <main className="min-h-screen bg-slate-100 text-slate-900">
-      <section className="bg-gradient-to-r from-cyan-700 to-blue-900 py-12 text-white">
-        <div className="mx-auto max-w-[1500px] px-5 lg:px-8">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-cyan-200">
-            Booking record
-          </p>
-
-          <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-            {booking.bookingCode}
-          </h1>
-
-          <p className="mt-3 text-sm text-white/70">
-            Created{" "}
-            {formatDate(
-              booking.$createdAt
-            )}
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <span
-              className={`rounded-full px-4 py-2 text-sm font-black ${statusClass(
-                booking.bookingStatus
-              )}`}
+        <section className="bg-gradient-to-r from-cyan-700 to-blue-900 py-10 text-white">
+          <div className="mx-auto max-w-[1300px] px-5 lg:px-8">
+            <Link
+              href="/admin"
+              className="text-sm font-black text-cyan-200"
             >
-              {booking.bookingStatus}
-            </span>
+              ← Dashboard
+            </Link>
 
-            <span
-              className={`rounded-full px-4 py-2 text-sm font-black ${statusClass(
-                booking.paymentStatus
-              )}`}
-            >
-              Payment:{" "}
-              {booking.paymentStatus}
-            </span>
+            <h1 className="mt-4 text-3xl font-black">
+              {booking.bookingCode}
+            </h1>
 
-            <span className="rounded-full bg-white/10 px-4 py-2 text-sm font-black">
-              {isRoundTrip
-                ? "Round Trip"
-                : "One Way"}
-            </span>
-
-            <span
-              className={`rounded-full px-4 py-2 text-sm font-black ${
-                onlinePaymentAllowed
-                  ? "bg-sky-100 text-sky-800"
-                  : "bg-amber-100 text-amber-800"
-              }`}
-            >
-              {paymentChannel}
-            </span>
+            <p className="mt-2 text-white/75">
+              D1 booking detail
+            </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 lg:grid-cols-[1fr_390px] lg:px-8">
-        <div className="space-y-7">
-          <JourneyCard
-            label="Outbound journey"
-            trip={outboundTrip}
-            travelDate={
-              booking.departureDate
-            }
-          />
+        <section className="mx-auto grid max-w-[1300px] gap-6 px-5 py-8 lg:grid-cols-[1fr_380px] lg:px-8">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black">
+                Customer
+              </h2>
 
-          {isRoundTrip &&
-            returnTrip && (
-              <JourneyCard
-                label="Return journey"
-                trip={returnTrip}
-                travelDate={
-                  booking.returnDate ||
-                  ""
-                }
-              />
-            )}
-
-          {isRoundTrip &&
-            !returnTrip && (
-              <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700">
-                <p className="font-black">
-                  Return-trip data is missing
-                </p>
-
-                <p className="mt-2 text-sm leading-6">
-                  This booking is marked as
-                  round-trip, but its return-trip
-                  snapshot could not be read.
-                  Avoid changing its status until
-                  the database record is checked.
-                </p>
-              </div>
-            )}
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-black">
-              Passenger details
-            </h2>
-
-            {passengers.length === 0 ? (
-              <p className="mt-5 text-slate-500">
-                Passenger information is
-                unavailable.
-              </p>
-            ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Name
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.customerFullName}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Email
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.customerEmail}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    WhatsApp
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.customerWhatsapp}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Country
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.customerCountry}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black">
+                Journey
+              </h2>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Route
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.fromPort}
+                    {" → "}
+                    {booking.toPort}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Departure
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.departureDate}
+                    {" · "}
+                    {booking.departureTime}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Operator
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.operatorName}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Vessel
+                  </p>
+                  <p className="mt-1 font-bold">
+                    {booking.vesselName}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black">
+                Passengers
+              </h2>
+
+              <div className="mt-5 divide-y divide-slate-100">
                 {passengers.map(
                   (passenger) => (
-                    <article
+                    <div
                       key={`${passenger.number}-${passenger.name}`}
-                      className="rounded-2xl bg-slate-50 p-5"
+                      className="flex gap-4 py-3"
                     >
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Passenger{" "}
-                        {passenger.number}
-                      </p>
-
-                      <p className="mt-2 font-black">
-                        {passenger.name}
-                      </p>
-
-                      <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">
-                        Adult
+                      <span className="font-black text-cyan-700">
+                        {passenger.number}.
                       </span>
-                    </article>
+
+                      <span className="font-bold">
+                        {passenger.name}
+                      </span>
+                    </div>
                   )
                 )}
               </div>
-            )}
-          </section>
+            </section>
+          </div>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-black">
-              Notes
-            </h2>
+          <aside className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-black uppercase text-slate-400">
+                Booking status
+              </p>
 
-            <p className="mt-4 whitespace-pre-wrap leading-7 text-slate-600">
-              {booking.notes ||
-                "No additional notes were provided."}
-            </p>
-          </section>
-        </div>
+              <p className="mt-2 text-xl font-black">
+                {booking.bookingStatus}
+              </p>
 
-        <aside className="space-y-7">
-          <section className="rounded-3xl border border-cyan-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-                  Operations
-                </p>
+              <p className="mt-5 text-xs font-black uppercase text-slate-400">
+                Payment status
+              </p>
 
-                <h2 className="mt-2 text-xl font-black">
-                  Booking operations
-                </h2>
-              </div>
+              <p className="mt-2 text-xl font-black">
+                {booking.paymentStatus}
+              </p>
 
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${seatPosition.className}`}
-              >
-                {seatPosition.label}
-              </span>
-            </div>
+              <p className="mt-5 text-xs font-black uppercase text-slate-400">
+                Total
+              </p>
 
-            <dl className="mt-6 space-y-5">
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <dt className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  Payment channel
-                </dt>
-
-                <dd className="mt-2 font-black text-slate-950">
-                  {paymentChannel}
-                </dd>
-
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  {verificationAccess}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <dt className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  Booking lifecycle
-                </dt>
-
-                <dd className="mt-2 font-black text-slate-950">
-                  {lifecycleLabel}
-                </dd>
-
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  {seatPosition.description}
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wider text-slate-400">
-                    Created
-                  </dt>
-
-                  <dd className="mt-2 text-sm font-bold leading-6 text-slate-800">
-                    {formatDateTimeWita(
-                      booking.$createdAt
-                    )}
-                  </dd>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wider text-slate-400">
-                    Payment expiry
-                  </dt>
-
-                  <dd className="mt-2 text-sm font-bold leading-6 text-slate-800">
-                    {formatDateTimeWita(
-                      booking.expiresAt
-                    )}
-                  </dd>
-                </div>
-              </div>
-            </dl>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black">
-              Customer information
-            </h2>
-
-            <dl className="mt-5 space-y-5">
-              <div>
-                <dt className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Full name
-                </dt>
-
-                <dd className="mt-1 font-black">
-                  {booking.customerFullName}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Email
-                </dt>
-
-                <dd className="mt-1 break-all text-sm font-bold">
-                  {booking.customerEmail}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  WhatsApp
-                </dt>
-
-                <dd className="mt-1 font-bold">
-                  {booking.customerWhatsapp}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Country
-                </dt>
-
-                <dd className="mt-1 font-bold">
-                  {booking.customerCountry}
-                </dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black">
-              Payment summary
-            </h2>
-
-            <div className="mt-5 space-y-4 border-b border-slate-100 pb-5">
-              <div className="flex justify-between gap-4 text-sm">
-                <span className="text-slate-500">
-                  Outbound
-                </span>
-
-                <span className="font-black">
-                  {formatCurrency(
-                    outboundTotal,
-                    currency
-                  )}
-                </span>
-              </div>
-
-              {returnTrip && (
-                <div className="flex justify-between gap-4 text-sm">
-                  <span className="text-slate-500">
-                    Return
-                  </span>
-
-                  <span className="font-black">
-                    {formatCurrency(
-                      returnTotal,
-                      returnTrip.currency
-                    )}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between gap-4 text-sm">
-                <span className="text-slate-500">
-                  Passengers
-                </span>
-
-                <span className="font-black">
-                  {booking.passengerCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-5 flex items-end justify-between gap-4">
-              <span className="font-black">
-                Stored total
-              </span>
-
-              <span className="text-xl font-black text-cyan-700">
-                {formatCurrency(
+              <p className="mt-2 text-2xl font-black text-cyan-700">
+                {money(
                   booking.totalPrice,
-                  currency
+                  booking.currency
                 )}
-              </span>
-            </div>
-          </section>
+              </p>
+            </section>
 
-          <StatusEditor
-            rowId={booking.$id}
-            initialBookingStatus={
-              booking.bookingStatus
-            }
-            initialPaymentStatus={
-              booking.paymentStatus
-            }
-            paymentReviewRequired={
-              booking.paymentReviewRequired === true
-            }
-            paymentReviewReason={
-              booking.paymentReviewReason ?? null
-            }
-            paymentReviewAt={
-              booking.paymentReviewAt ?? null
-            }
-          />
-        </aside>
-      </section>
+            <StatusEditor
+              rowId={booking.id}
+              initialBookingStatus={
+                booking.bookingStatus
+              }
+              initialPaymentStatus={
+                booking.paymentStatus
+              }
+              paymentReviewRequired={
+                booking.paymentReviewRequired
+              }
+              paymentReviewReason={
+                booking.paymentReviewReason
+              }
+              paymentReviewAt={
+                booking.paymentReviewAt
+              }
+            />
+          </aside>
+        </section>
       </main>
     </AdminShell>
   )
