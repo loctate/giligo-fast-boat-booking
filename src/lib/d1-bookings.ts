@@ -2169,3 +2169,541 @@ export async function updateD1BookingLifecycle(
         .resolved,
   };
 }
+
+export interface D1ExpireHeldBookingInput {
+  bookingId: string;
+
+  expectedSeatHoldExpiresAt:
+    string;
+
+  passengerCount:
+    number;
+
+  tripInventoryId:
+    string;
+
+  returnTripInventoryId:
+    string | null;
+
+  nowTimestamp:
+    number;
+}
+
+export interface D1ExpireHeldBookingResult {
+  bookingStatus:
+    "Cancelled";
+
+  paymentStatus:
+    "Pending";
+
+  seatHoldExpiresAt:
+    null;
+
+  releasedSeats:
+    number;
+
+  inventoryIds:
+    string[];
+}
+
+function normalizeD1ExpiryTimestamp(
+  value: string,
+  label: string,
+): {
+  text: string;
+  timestamp: number;
+} {
+  const text =
+    cleanRequiredText(
+      value,
+      label,
+    );
+
+  const timestamp =
+    Date.parse(
+      text,
+    );
+
+  if (
+    !Number.isFinite(
+      timestamp,
+    )
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      `${label} is missing or invalid.`,
+    );
+  }
+
+  return {
+    text,
+    timestamp,
+  };
+}
+
+function normalizeD1NowTimestamp(
+  value: number,
+): {
+  timestamp: number;
+  iso: string;
+} {
+  if (
+    !Number.isFinite(
+      value,
+    ) ||
+    value < 0
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      "Cleanup time is invalid.",
+    );
+  }
+
+  const timestamp =
+    Math.trunc(
+      value,
+    );
+
+  return {
+    timestamp,
+
+    iso:
+      new Date(
+        timestamp,
+      ).toISOString(),
+  };
+}
+
+export function buildD1ExpiredBookingAssertion(
+  db: D1Database,
+  {
+    token,
+    bookingId,
+    expectedSeatHoldExpiresAt,
+    cutoffIso,
+    passengerCount,
+    tripInventoryId,
+    returnTripInventoryId,
+  }: {
+    token: string;
+
+    bookingId: string;
+
+    expectedSeatHoldExpiresAt:
+      string;
+
+    cutoffIso:
+      string;
+
+    passengerCount:
+      number;
+
+    tripInventoryId:
+      string;
+
+    returnTripInventoryId:
+      string | null;
+  },
+): D1PreparedStatement {
+  const assertionToken =
+    cleanRequiredText(
+      token,
+      "Assertion token",
+    );
+
+  const id =
+    cleanRequiredText(
+      bookingId,
+      "Booking ID",
+    );
+
+  const expiry =
+    cleanRequiredText(
+      expectedSeatHoldExpiresAt,
+      "Seat hold expiry",
+    );
+
+  const cutoff =
+    cleanRequiredText(
+      cutoffIso,
+      "Expiry cutoff",
+    );
+
+  const seats =
+    positiveInteger(
+      passengerCount,
+      "Passenger count",
+    );
+
+  const outboundInventoryId =
+    cleanRequiredText(
+      tripInventoryId,
+      "Trip inventory ID",
+    );
+
+  const returnInventoryId =
+    nullableText(
+      returnTripInventoryId,
+    );
+
+  if (
+    returnInventoryId === null
+  ) {
+    return db
+      .prepare(`
+        INSERT INTO d1_transaction_assertions (
+          token,
+          ok
+        )
+        VALUES (
+          ?,
+          CASE
+            WHEN EXISTS (
+              SELECT 1
+              FROM bookings AS b
+              WHERE b.id = ?
+                AND b.bookingStatus = 'Pending'
+                AND b.paymentStatus = 'Pending'
+                AND b.seatHoldExpiresAt = ?
+                AND julianday(
+                  b.seatHoldExpiresAt
+                ) IS NOT NULL
+                AND julianday(
+                  b.seatHoldExpiresAt
+                ) <= julianday(?)
+                AND b.passengerCount = ?
+                AND b.tripInventoryId = ?
+                AND b.returnTripInventoryId IS NULL
+            )
+            THEN 1
+            ELSE 0
+          END
+        )
+      `)
+      .bind(
+        assertionToken,
+        id,
+        expiry,
+        cutoff,
+        seats,
+        outboundInventoryId,
+      );
+  }
+
+  return db
+    .prepare(`
+      INSERT INTO d1_transaction_assertions (
+        token,
+        ok
+      )
+      VALUES (
+        ?,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM bookings AS b
+            WHERE b.id = ?
+              AND b.bookingStatus = 'Pending'
+              AND b.paymentStatus = 'Pending'
+              AND b.seatHoldExpiresAt = ?
+              AND julianday(
+                b.seatHoldExpiresAt
+              ) IS NOT NULL
+              AND julianday(
+                b.seatHoldExpiresAt
+              ) <= julianday(?)
+              AND b.passengerCount = ?
+              AND b.tripInventoryId = ?
+              AND b.returnTripInventoryId = ?
+          )
+          THEN 1
+          ELSE 0
+        END
+      )
+    `)
+    .bind(
+      assertionToken,
+      id,
+      expiry,
+      cutoff,
+      seats,
+      outboundInventoryId,
+      returnInventoryId,
+    );
+}
+
+export function buildD1ExpireHeldBookingUpdate(
+  db: D1Database,
+  bookingId: string,
+): D1PreparedStatement {
+  return db
+    .prepare(`
+      UPDATE bookings
+      SET
+        bookingStatus = 'Cancelled',
+        paymentStatus = 'Pending',
+        seatHoldExpiresAt = NULL
+      WHERE id = ?
+    `)
+    .bind(
+      cleanRequiredText(
+        bookingId,
+        "Booking ID",
+      ),
+    );
+}
+
+export async function expireD1HeldBooking(
+  input: D1ExpireHeldBookingInput,
+): Promise<D1ExpireHeldBookingResult> {
+  const bookingId =
+    cleanRequiredText(
+      input.bookingId,
+      "Booking ID",
+    );
+
+  const passengerCount =
+    positiveInteger(
+      input.passengerCount,
+      "Passenger count",
+    );
+
+  const tripInventoryId =
+    cleanRequiredText(
+      input.tripInventoryId,
+      "Trip inventory ID",
+    );
+
+  const returnTripInventoryId =
+    nullableText(
+      input.returnTripInventoryId,
+    );
+
+  if (
+    returnTripInventoryId &&
+    returnTripInventoryId ===
+      tripInventoryId
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      "Outbound and return inventory IDs cannot be identical.",
+    );
+  }
+
+  const expiry =
+    normalizeD1ExpiryTimestamp(
+      input.expectedSeatHoldExpiresAt,
+      "Booking expiry",
+    );
+
+  const now =
+    normalizeD1NowTimestamp(
+      input.nowTimestamp,
+    );
+
+  /*
+   * Mirrors processCandidate:
+   * invalid/future expiry is not eligible
+   * for cleanup.
+   */
+  if (
+    expiry.timestamp >
+    now.timestamp
+  ) {
+    throw new D1BookingDalError(
+      "BUSINESS_RULE",
+      "Booking is no longer expired.",
+    );
+  }
+
+  const db =
+    getD1();
+
+  const bookingAssertionToken =
+    makeD1BookingAssertionToken(
+      "booking-expiry-state",
+    );
+
+  const outboundAssertionToken =
+    makeD1BookingAssertionToken(
+      "booking-expiry-outbound",
+    );
+
+  const returnAssertionToken =
+    returnTripInventoryId
+      ? makeD1BookingAssertionToken(
+          "booking-expiry-return",
+        )
+      : null;
+
+  const statements:
+    D1PreparedStatement[] = [
+      /*
+       * Recheck the exact booking state
+       * and expiry inside DB.batch.
+       */
+      buildD1ExpiredBookingAssertion(
+        db,
+        {
+          token:
+            bookingAssertionToken,
+
+          bookingId,
+
+          expectedSeatHoldExpiresAt:
+            expiry.text,
+
+          cutoffIso:
+            now.iso,
+
+          passengerCount,
+
+          tripInventoryId,
+
+          returnTripInventoryId,
+        },
+      ),
+
+      /*
+       * All inventory assertions are
+       * also queued before any mutation.
+       */
+      buildD1LifecycleInventoryAssertion(
+        db,
+        {
+          token:
+            outboundAssertionToken,
+
+          inventoryId:
+            tripInventoryId,
+
+          passengerCount,
+
+          action:
+            "release-held",
+        },
+      ),
+    ];
+
+  if (
+    returnTripInventoryId &&
+    returnAssertionToken
+  ) {
+    statements.push(
+      buildD1LifecycleInventoryAssertion(
+        db,
+        {
+          token:
+            returnAssertionToken,
+
+          inventoryId:
+            returnTripInventoryId,
+
+          passengerCount,
+
+          action:
+            "release-held",
+        },
+      ),
+    );
+  }
+
+  statements.push(
+    buildD1LifecycleSeatMutation(
+      db,
+      tripInventoryId,
+      passengerCount,
+      "release-held",
+    ),
+
+    buildD1NormalizeLifecycleSalesStatus(
+      db,
+      tripInventoryId,
+    ),
+  );
+
+  if (
+    returnTripInventoryId
+  ) {
+    statements.push(
+      buildD1LifecycleSeatMutation(
+        db,
+        returnTripInventoryId,
+        passengerCount,
+        "release-held",
+      ),
+
+      buildD1NormalizeLifecycleSalesStatus(
+        db,
+        returnTripInventoryId,
+      ),
+    );
+  }
+
+  statements.push(
+    buildD1ExpireHeldBookingUpdate(
+      db,
+      bookingId,
+    ),
+
+    buildD1DeleteAssertion(
+      db,
+      bookingAssertionToken,
+    ),
+
+    buildD1DeleteAssertion(
+      db,
+      outboundAssertionToken,
+    ),
+  );
+
+  if (
+    returnAssertionToken
+  ) {
+    statements.push(
+      buildD1DeleteAssertion(
+        db,
+        returnAssertionToken,
+      ),
+    );
+  }
+
+  try {
+    await db.batch(
+      statements,
+    );
+  } catch (error) {
+    throw toD1BookingDalError(
+      error,
+    );
+  }
+
+  const inventoryIds = [
+    tripInventoryId,
+  ];
+
+  if (
+    returnTripInventoryId
+  ) {
+    inventoryIds.push(
+      returnTripInventoryId,
+    );
+  }
+
+  return {
+    bookingStatus:
+      "Cancelled",
+
+    paymentStatus:
+      "Pending",
+
+    seatHoldExpiresAt:
+      null,
+
+    releasedSeats:
+      passengerCount *
+      inventoryIds.length,
+
+    inventoryIds,
+  };
+}
