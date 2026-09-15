@@ -1,15 +1,15 @@
-import { Query } from "node-appwrite"
-
 import {
   hasCurrentBookingPolicyAcceptance,
-  REFUND_POLICY_VERSION,
-  TERMS_POLICY_VERSION,
 } from "@/lib/booking-policy"
 
 import {
-  appwriteConfig,
-  tablesDB,
-} from "@/lib/appwrite-server"
+  findD1BookingByCodeAndEmail,
+  type D1BookingRecord,
+} from "@/lib/d1-booking-readers"
+
+import {
+  acceptD1CurrentBookingPolicies,
+} from "@/lib/d1-booking-payment-writes"
 
 import {
   isPaymentVerificationModeEnabled,
@@ -25,12 +25,8 @@ type PaymentRequest = {
   refundPolicyAccepted?: unknown
 }
 
-type AppwriteRow = Record<
-  string,
-  unknown
-> & {
-  $id?: string
-}
+type PaymentBooking =
+  D1BookingRecord
 
 type BridgeResponse = {
   ok?: boolean
@@ -178,7 +174,7 @@ function buildBookingUrl(
 }
 
 function buildDescription(
-  booking: AppwriteRow
+  booking: PaymentBooking
 ): string {
   const fromPort =
     cleanText(booking.fromPort)
@@ -298,45 +294,23 @@ export async function POST(
       )
     }
 
-    const result =
-      await tablesDB.listRows({
-        databaseId:
-          appwriteConfig.databaseId,
+    const booking =
+      await findD1BookingByCodeAndEmail(
+        bookingCode,
+        email
+      )
 
-        tableId:
-          appwriteConfig
-            .bookingsTableId,
-
-        queries: [
-          Query.equal(
-            "bookingCode",
-            [bookingCode]
-          ),
-
-          Query.limit(2),
-        ],
-      })
-
-    const rows =
-      result.rows as unknown as AppwriteRow[]
-
-    /*
-     * bookingCode belum memiliki unique index.
-     * Jangan membuat pembayaran jika terjadi
-     * collision atau data ganda.
-     */
-    if (rows.length !== 1) {
+    if (!booking) {
       throw new PaymentError(
         404,
         "Booking could not be verified."
       )
     }
 
-    const booking = rows[0]
-
     const policyAcceptanceCurrent =
       hasCurrentBookingPolicyAcceptance(
-        booking
+        booking as unknown as
+          Record<string, unknown>
       )
 
     const storedEmail =
@@ -435,7 +409,7 @@ export async function POST(
 
     const bookingRowId =
       cleanText(
-        booking.$id
+        booking.id
       )
 
     if (!bookingRowId) {
@@ -449,29 +423,17 @@ export async function POST(
       const policyAcceptedAt =
         new Date().toISOString()
 
-      await tablesDB.updateRow({
-        databaseId:
-          appwriteConfig.databaseId,
-
-        tableId:
-          appwriteConfig.bookingsTableId,
-
-        rowId:
+      await acceptD1CurrentBookingPolicies({
+        bookingId:
           bookingRowId,
 
-        data: {
-          termsAcceptedAt:
-            policyAcceptedAt,
+        bookingCode,
 
-          refundPolicyAcceptedAt:
-            policyAcceptedAt,
+        customerEmail:
+          storedEmail,
 
-          termsVersion:
-            TERMS_POLICY_VERSION,
-
-          refundPolicyVersion:
-            REFUND_POLICY_VERSION,
-        },
+        acceptedAt:
+          policyAcceptedAt,
       })
     }
 
