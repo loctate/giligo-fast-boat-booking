@@ -12,7 +12,7 @@ const SESSION_TTL_MS =
   24 * 60 * 60 * 1000
 
 const PASSWORD_ITERATIONS =
-  210_000
+  100_000
 
 const textEncoder =
   new TextEncoder()
