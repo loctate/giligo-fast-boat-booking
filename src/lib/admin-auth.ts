@@ -1,3 +1,5 @@
+import { env } from "cloudflare:workers"
+
 import {
   cookies,
 } from "next/headers"
@@ -28,11 +30,32 @@ type SessionPayload = {
   exp: number
 }
 
+function readRuntimeEnv(
+  name: string
+): string | undefined {
+  const value =
+    (
+      env as unknown as
+        Record<string, unknown>
+    )[name]
+
+  if (
+    typeof value !== "string"
+  ) {
+    return undefined
+  }
+
+  const normalized =
+    value.trim()
+
+  return normalized || undefined
+}
+
 function requiredEnv(
   name: string
 ): string {
   const value =
-    process.env[name]?.trim()
+    readRuntimeEnv(name)
 
   if (!value) {
     throw new Error(
@@ -43,7 +66,7 @@ function requiredEnv(
   return value
 }
 
-function configuredAdminEmail(): string {
+export function getConfiguredAdminEmail(): string {
   return requiredEnv(
     "ADMIN_EMAIL"
   ).toLowerCase()
@@ -261,8 +284,9 @@ function constantTimeEqual(
 
 export function getAdminCookieName() {
   return (
-    process.env
-      .ADMIN_SESSION_COOKIE ||
+    readRuntimeEnv(
+      "ADMIN_SESSION_COOKIE"
+    ) ||
     "giligo_admin_session"
   )
 }
@@ -318,7 +342,7 @@ export async function createAdminSessionToken(
 
   if (
     normalizedEmail !==
-    configuredAdminEmail()
+    getConfiguredAdminEmail()
   ) {
     throw new Error(
       "Admin email mismatch."
@@ -411,7 +435,7 @@ async function verifyAdminSessionToken(
     if (
       !email ||
       email !==
-        configuredAdminEmail() ||
+        getConfiguredAdminEmail() ||
       !Number.isFinite(exp) ||
       exp <= Date.now()
     ) {

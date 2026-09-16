@@ -6,6 +6,7 @@ import {
   createAdminSessionToken,
   getAdminCookieName,
   getAdminSessionExpiry,
+  getConfiguredAdminEmail,
   verifyAdminPassword,
 } from "@/lib/admin-auth"
 
@@ -58,13 +59,7 @@ export async function POST(
     }
 
     const adminEmail =
-      String(
-        process.env
-          .ADMIN_EMAIL ||
-          ""
-      )
-        .trim()
-        .toLowerCase()
+      getConfiguredAdminEmail()
 
     if (
       !adminEmail ||
