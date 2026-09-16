@@ -239,7 +239,7 @@ function bridgeErrorMessage(
  * no longer depends on the Biznet VPS.
  */
 const SURVIVAL_MANUAL_PAYMENT_ONLY =
-  true
+  false
 
 export async function POST(
   request: Request
