@@ -123,6 +123,9 @@ function createManualPaymentUrl({
   )}`
 }
 
+const SURVIVAL_MANUAL_PAYMENT_ONLY =
+  true
+
 export default function PaymentActions({
   bookingCode,
   bookingStatus,
@@ -385,7 +388,10 @@ export default function PaymentActions({
     )
   }
 
-  if (!paymentVerificationAllowed) {
+  if (
+    SURVIVAL_MANUAL_PAYMENT_ONLY ||
+    !paymentVerificationAllowed
+  ) {
     const supportWhatsapp =
       getSupportWhatsapp()
 

@@ -233,9 +233,28 @@ function bridgeErrorMessage(
   }
 }
 
+/*
+ * Emergency Cloudflare cutover mode.
+ * iPaymu remains disabled until its bridge
+ * no longer depends on the Biznet VPS.
+ */
+const SURVIVAL_MANUAL_PAYMENT_ONLY =
+  true
+
 export async function POST(
   request: Request
 ) {
+  if (SURVIVAL_MANUAL_PAYMENT_ONLY) {
+    return noStoreJson(
+      {
+        success: false,
+        error:
+          "Online payment is temporarily unavailable. Please contact payment support.",
+      },
+      503
+    )
+  }
+
   try {
     let body: PaymentRequest
 
