@@ -51,15 +51,8 @@ export function createRuntimeDependencies({
   TablesDBCtor = TablesDB,
   QueryApi = Query,
 
-  callbackLifecycleEndpoint =
-    process.env
-      .IPAYMU_CALLBACK_LIFECYCLE_ENDPOINT
-      || "",
-
-  callbackLifecycleToken =
-    process.env
-      .IPAYMU_CALLBACK_LIFECYCLE_TOKEN
-      || "",
+  callbackLifecycleEndpoint,
+  callbackLifecycleToken,
 
   transactionTtl = 60,
 } = {}) {
@@ -76,13 +69,19 @@ export function createRuntimeDependencies({
   const callbackEndpoint =
     String(
       callbackLifecycleEndpoint
-        || "",
+        ?? runtimeConfig
+          .callbackLifecycle
+          ?.endpoint
+        ?? "",
     ).trim();
 
   const callbackToken =
     String(
       callbackLifecycleToken
-        || "",
+        ?? runtimeConfig
+          .callbackLifecycle
+          ?.token
+        ?? "",
     ).trim();
 
   const useHttpCallback =

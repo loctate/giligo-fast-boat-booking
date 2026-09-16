@@ -126,6 +126,16 @@ export function loadConfig(env = process.env) {
       env.IPAYMU_BRIDGE_INTERNAL_TOKEN || "",
     ).trim(),
 
+    callbackLifecycle: {
+      endpoint: String(
+        env.IPAYMU_CALLBACK_LIFECYCLE_ENDPOINT || "",
+      ).trim(),
+
+      token: String(
+        env.IPAYMU_CALLBACK_LIFECYCLE_TOKEN || "",
+      ).trim(),
+    },
+
     appwrite: {
       endpoint: String(
         env.APPWRITE_ENDPOINT || "",
@@ -178,43 +188,75 @@ export function getReadiness(config) {
       );
     }
 
-    if (!config.appwrite?.endpoint) {
-      missing.push(
-        "APPWRITE_ENDPOINT",
-      );
-    }
+    const callbackEndpoint =
+      String(
+        config.callbackLifecycle
+          ?.endpoint || "",
+      ).trim();
 
-    if (!config.appwrite?.projectId) {
-      missing.push(
-        "APPWRITE_PROJECT_ID",
-      );
-    }
+    const callbackToken =
+      String(
+        config.callbackLifecycle
+          ?.token || "",
+      ).trim();
 
-    if (!config.appwrite?.apiKey) {
-      missing.push(
-        "APPWRITE_API_KEY",
+    const useHttpCallback =
+      Boolean(
+        callbackEndpoint
+        || callbackToken
       );
-    }
 
-    if (!config.appwrite?.databaseId) {
-      missing.push(
-        "APPWRITE_DATABASE_ID",
-      );
-    }
+    if (useHttpCallback) {
+      if (!callbackEndpoint) {
+        missing.push(
+          "IPAYMU_CALLBACK_LIFECYCLE_ENDPOINT",
+        );
+      }
 
-    if (!config.appwrite?.bookingsTableId) {
-      missing.push(
-        "APPWRITE_BOOKINGS_TABLE_ID",
-      );
-    }
+      if (!callbackToken) {
+        missing.push(
+          "IPAYMU_CALLBACK_LIFECYCLE_TOKEN",
+        );
+      }
+    } else {
+      if (!config.appwrite?.endpoint) {
+        missing.push(
+          "APPWRITE_ENDPOINT",
+        );
+      }
 
-    if (
-      !config.appwrite
-        ?.tripInventoryTableId
-    ) {
-      missing.push(
-        "APPWRITE_TRIP_INVENTORY_TABLE_ID",
-      );
+      if (!config.appwrite?.projectId) {
+        missing.push(
+          "APPWRITE_PROJECT_ID",
+        );
+      }
+
+      if (!config.appwrite?.apiKey) {
+        missing.push(
+          "APPWRITE_API_KEY",
+        );
+      }
+
+      if (!config.appwrite?.databaseId) {
+        missing.push(
+          "APPWRITE_DATABASE_ID",
+        );
+      }
+
+      if (!config.appwrite?.bookingsTableId) {
+        missing.push(
+          "APPWRITE_BOOKINGS_TABLE_ID",
+        );
+      }
+
+      if (
+        !config.appwrite
+          ?.tripInventoryTableId
+      ) {
+        missing.push(
+          "APPWRITE_TRIP_INVENTORY_TABLE_ID",
+        );
+      }
     }
   }
 
