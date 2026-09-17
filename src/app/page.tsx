@@ -1,5 +1,6 @@
 import SearchForm from "@/components/SearchForm"
 import Image from "next/image"
+import Link from "next/link"
 
 const popularRoutes = [
   {
@@ -127,12 +128,12 @@ export default function Home() {
             </a>
           </nav>
 
-          <a
-            href="#top"
+          <Link
+            href="/booking"
             className="rounded-full border border-white/40 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white hover:text-slate-900"
           >
             My Booking
-          </a>
+          </Link>
         </div>
       </header>
 
