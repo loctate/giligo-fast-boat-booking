@@ -6,31 +6,31 @@
   />
 </p>
 
-# GiliGo — Fast Boat Booking Operations Platform
+# NusaGiliBoat — Fast Boat Booking & Operations Platform
 
 > Turning fragmented trip scheduling, seat availability, customer booking, payment follow-up, departure preparation, and passenger manifest work into one practical digital workflow.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Appwrite](https://img.shields.io/badge/Appwrite-TablesDB-f02e65?logo=appwrite)](https://appwrite.io/)
-[![Status](https://img.shields.io/badge/Status-Operational_MVP-0f766e)](#current-status)
-[![Payment](https://img.shields.io/badge/Payment-Manual_%2B_iPaymu_Sandbox-0369a1)](#payment-scope)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers_%2B_D1-F38020?logo=cloudflare)](https://www.cloudflare.com/)
+[![Status](https://img.shields.io/badge/Status-Production-0f766e)](#current-status)
+[![Payment](https://img.shields.io/badge/Payment-iPaymu_Production-0369a1)](#payment-scope)
 
 | | |
 |---|---|
-| **Status** | Production-deployed operational MVP |
-| **Project type** | Independent business systems portfolio project |
-| **Public payment flow** | Manual payment assistance with admin verification |
-| **Payment engineering** | Controlled iPaymu Sandbox integration |
-| **Operational data** | Demonstration data |
-| **Maintenance** | Active |
+| **Status** | Production operational |
+| **Project type** | Independent production business systems project |
+| **Public payment flow** | Online iPaymu checkout with manual operational fallback |
+| **Payment engineering** | Dedicated production iPaymu Bridge |
+| **Infrastructure** | Cloudflare Workers, D1, KV, and payment bridge |
+| **Maintenance** | Active / production monitoring |
 
 ## Live Demo
 
 - **Public website:** https://nusagiliboat.com
 - **Admin portal:** https://nusagiliboat.com/admin
 
-> Admin access is private. The public deployment uses demonstration schedules, inventory, operators, prices, bookings, and transactions. It is not presented as a live marketplace connected to real fast boat operators.
+> Admin access is private. NusaGiliBoat is an independently operated production booking system. It is not presented as an official booking platform of any individual fast boat operator and does not rely on direct operator APIs.
 
 ---
 
@@ -76,9 +76,11 @@ GiliGo turns those manual processes into one structured operational workflow.
 
 ### Payment engineering
 
-- Public customers currently use manual payment assistance.
-- A separate iPaymu Bridge supports controlled Sandbox verification.
-- The bridge handles signatures, callbacks, idempotency, timeouts, duplicate events, seat transitions, and late-payment review.
+- Public customers can initiate online payment through iPaymu.
+- A dedicated iPaymu Bridge isolates payment-provider credentials and transport logic from the public application.
+- The bridge handles signed requests, callbacks, idempotency, timeouts, duplicate events, seat transitions, and late-payment review.
+- Production payment-session creation has been validated against the live iPaymu environment.
+- Full paid-settlement callback verification remains an operational follow-up because no paid production QA transaction was intentionally performed during cutover testing.
 
 ---
 
@@ -109,7 +111,7 @@ flowchart LR
     A[Eligible booking]
     --> B[Next.js payment adapter]
     --> C[Isolated iPaymu Bridge]
-    --> D[iPaymu Sandbox]
+    --> D[iPaymu Production]
 
     D --> E[Signed callback]
     --> F[Callback validation]
@@ -183,9 +185,9 @@ Only bookings meeting this rule appear in the final provider manifest.
 | **Master data** | Operators, vessels, routes, schedules |
 | **Departure operations** | WITA-based upcoming departures and passenger totals |
 | **Manifest** | Paid-passenger eligibility and printable provider layout |
-| **Payment** | Manual public flow plus isolated iPaymu Sandbox bridge |
+| **Payment** | Production iPaymu integration through isolated payment bridge |
 | **Languages** | English and Indonesian public information pages |
-| **Deployment** | Public domain, Vercel frontend, Appwrite backend |
+| **Deployment** | Cloudflare Workers / Vinext, Cloudflare D1, Cloudflare KV |
 
 ---
 
@@ -280,29 +282,73 @@ Only bookings meeting this rule appear in the final provider manifest.
 
 ```mermaid
 flowchart LR
-    U[Customer and Admin]
-    --> W[Next.js 16 Application]
+    U[Customer and Admin] --> CF[Cloudflare]
+    CF --> W[Next.js 16 / Vinext Worker]
 
-    W --> A[Appwrite Auth and TablesDB]
+    W --> D1[Cloudflare D1]
+    W --> KV[Cloudflare KV]
     W --> P[iPaymu Payment Adapter]
-    W --> C[Expired-hold Cleanup Endpoint]
 
     P --> B[Isolated iPaymu Bridge]
-    B --> I[iPaymu Sandbox]
-    B --> A
+    B --> I[iPaymu Production]
 
-    C --> A
+    I --> B
+    B --> C[Authenticated Callback Lifecycle API]
+    C --> D1
+
+    W --> X[Scheduled Expired-Hold Cleanup]
+    X --> D1
 ```
 
 ### Main components
 
 | Component | Responsibility |
 |---|---|
-| **Next.js application** | Public booking flow, admin operations, APIs, booking lookup |
-| **Appwrite** | Authentication, master data, trip inventory, bookings, transactions |
-| **iPaymu Bridge** | Provider requests, callback validation, payment lifecycle |
-| **Cleanup scheduler** | Releases expired held seats and cancels unpaid bookings |
-| **Vercel** | Public web deployment |
+| **Next.js / Vinext application** | Public booking flow, admin operations, APIs, booking lookup |
+| **Cloudflare D1** | Master data, dated inventory, bookings, and lifecycle state |
+| **Cloudflare KV** | Runtime and cache support |
+| **iPaymu Bridge** | Provider requests, callback validation, and payment lifecycle isolation |
+| **Scheduled cleanup** | Releases expired held seats and cancels unpaid bookings |
+| **Cloudflare Workers** | Production application runtime |
+---
+
+## Production Migration & Cutover
+
+The application was migrated from a traditional VPS-oriented deployment to a Cloudflare-first architecture while preserving the existing customer booking and operational workflows.
+
+The migration included:
+
+- upgrading the application for Vinext and Cloudflare Workers compatibility;
+- migrating operational data to Cloudflare D1;
+- adding Cloudflare KV for runtime and cache support;
+- adapting booking creation, availability, lookup, expiry, admin operations, and manifests to D1;
+- preserving the isolated iPaymu payment bridge;
+- adding an authenticated HTTP lifecycle boundary for payment callbacks;
+- creating and verifying production backups before cutover;
+- performing controlled deployment and production smoke testing;
+- validating customer, admin, inventory, payment-session, and manifest workflows;
+- retiring the legacy VPS only after Cloudflare production passed operational QA.
+
+### Production QA coverage
+
+The final cutover validation covered:
+
+```text
+Search -> Trip Selection -> Checkout -> Booking Creation
+       -> Seat Hold -> Policy Acceptance -> iPaymu Payment Session
+```
+
+Administrative production QA also covered authentication, dashboard access, trip inventory, departures, and provider manifests.
+
+Expired unpaid QA bookings were verified to release held seats automatically.
+
+Provider manifests were validated against the production rule:
+
+```text
+(Confirmed OR Completed) AND Paid
+```
+
+The legacy VPS was retired after the Cloudflare deployment became the production source of truth.
 
 ---
 
@@ -320,9 +366,9 @@ Bookings store route, operator, vessel, times, price, and check-in details so la
 
 A separate `heldSeats` value prevents customers still completing payment from being treated as confirmed sales while still protecting capacity.
 
-### Apply transactional lifecycle updates
+### Protect lifecycle state across D1 operations
 
-Booking creation, status changes, payment callbacks, and expiration cleanup update booking and inventory records through Appwrite transactions.
+Booking creation, status changes, payment callbacks, and expiration cleanup use controlled D1 lifecycle adapters and guarded state transitions so booking state and seat inventory remain consistent.
 
 ### Isolate payment-provider logic
 
@@ -342,9 +388,11 @@ Departure and dashboard calculations use `Asia/Makassar` (WITA), matching Bali o
 
 ### Public flow
 
-The public website currently provides manual payment assistance. An administrator verifies payment before confirming the booking.
+The public website can create production iPaymu payment sessions for eligible customer bookings.
 
-### Controlled iPaymu Sandbox flow
+Policy acceptance is recorded before payment-session creation, and unpaid bookings remain protected by temporary seat holds and automatic expiration.
+
+### Production iPaymu Bridge
 
 The isolated bridge supports:
 
@@ -354,39 +402,37 @@ The isolated bridge supports:
 - JSON and URL-encoded callback payloads;
 - idempotency and duplicate handling;
 - transaction timeouts;
-- atomic booking and seat transitions;
+- guarded booking and seat transitions;
 - expired-payment seat release;
 - late-success manual review;
 - sanitized diagnostics;
 - health and readiness endpoints.
 
-It is a tested Sandbox integration, not the default live public payment flow.
+Production readiness and payment-session creation were verified during the Cloudflare production cutover.
 
-Production activation remains dependent on iPaymu merchant approval, production credentials, and provider-side response times. Until those external dependencies are resolved, the public workflow remains manual.
+A paid production settlement was intentionally not executed as part of QA, so the live provider success-callback path remains the main item to observe on the first real paid transaction.
 
 See [`services/ipaymu-bridge/README.md`](services/ipaymu-bridge/README.md).
-
 ---
 
 ## Security and Reliability
 
-- Server-side Appwrite API access.
-- Appwrite Auth administrator sessions.
-- HttpOnly session cookies.
+- Protected administrator pages and mutation APIs.
+- HttpOnly administrator session cookies.
 - `Secure` cookies in production.
 - `SameSite=Strict` session policy.
 - Administrator email allow-list.
-- Protected admin pages and mutation APIs.
+- Server-side password verification.
 - No-store booking and payment lookup responses.
-- Constant-time cleanup-secret comparison.
+- Constant-time sensitive-token comparisons.
 - HTTPS validation for payment and callback URLs.
 - Internal bearer token between the application and payment bridge.
 - Callback signature verification.
+- Authenticated internal callback lifecycle endpoint.
 - Provider timeout and request-size handling.
 - Sanitized logs that avoid exposing secrets.
-- Transaction rollback paths.
+- Fail-closed payment configuration.
 - Non-root payment-service container.
-
 ---
 
 ## Technology Stack
@@ -398,89 +444,65 @@ See [`services/ipaymu-bridge/README.md`](services/ipaymu-bridge/README.md).
 | UI | React 19 |
 | Styling | Tailwind CSS 4 |
 | Backend APIs | Next.js Route Handlers |
-| Database | Appwrite TablesDB |
-| Authentication | Appwrite Auth |
+| Database | Cloudflare D1 |
+| Runtime cache | Cloudflare KV |
+| Authentication | Protected administrator session |
 | Payment service | Node.js iPaymu Bridge |
-| Payment environment | iPaymu Sandbox |
+| Payment environment | iPaymu Production |
 | Packaging | Docker |
-| Scheduled cleanup | Bash and systemd |
-| Deployment | Vercel |
+| Scheduled cleanup | Cloudflare scheduled Worker |
+| Runtime / deployment | Cloudflare Workers with Vinext |
+| Analytics | Google Tag Manager + Google Analytics 4 |
 | Timezone | Asia/Makassar (WITA) |
-
 ---
 
-## Validation
+## Production Validation
 
-Validated against commit:
+Production cutover validation was completed in September 2026.
 
-```text
-e6447210dae2ae701c432a2871599f3742c055b7
-```
+Validated areas include:
 
-| Check | Result |
-|---|---|
-| ESLint | Passed with 0 errors and 1 image-optimization warning |
-| TypeScript | Passed |
-| Next.js production build | Passed |
-| Application pages | 28 |
-| API routes | 19 |
-| Protected admin pages | 11 |
-| iPaymu Bridge tests | 106 passed |
-| Failed bridge tests | 0 |
-| Skipped bridge tests | 0 |
+- Cloudflare Workers / Vinext production deployment;
+- Cloudflare D1 production data and lifecycle operations;
+- route search and seat availability;
+- customer checkout and booking creation;
+- temporary seat holds and automatic seat release;
+- customer booking lookup;
+- Terms and Refund Policy acceptance;
+- iPaymu production payment-session creation;
+- administrator authentication and dashboard access;
+- Trip Inventory and departure operations;
+- provider-ready passenger manifests.
 
-<details>
-<summary><strong>Testing scope</strong></summary>
+The iPaymu bridge health, readiness, and production checkout-session flow were verified successfully.
 
-The bridge suite covers:
+A deliberately paid production QA transaction was not performed, so the first real successful payment remains an operational verification point for the provider success-callback and final `Confirmed / Paid` transition.
 
-- configuration and readiness;
-- request and callback signatures;
-- provider request and response handling;
-- authorization guards;
-- callback parsing;
-- runtime dependency wiring;
-- Appwrite lifecycle integration;
-- held-to-booked transitions;
-- expired-seat release;
-- duplicate callbacks;
-- transaction rollback;
-- late-success review;
-- sanitized observability.
-
-The main Next.js application does not yet have an equivalent automated test suite. It is currently validated through linting, TypeScript, production builds, and manual workflow testing.
-
-</details>
-
+The payment bridge also maintains an automated test suite covering signatures, callback handling, lifecycle safeguards, duplicate events, timeouts, and failure scenarios.
 ---
 
 ## Current Status
 
-GiliGo is a **production-deployed operational MVP**.
+NusaGiliBoat is a **production operational fast boat booking and operations platform**.
 
-It is production-deployed because the public application is available on its own domain and passes a production build.
+The public application, booking APIs, Cloudflare D1 database, customer booking lookup, seat lifecycle, admin operations, manifest workflow, scheduled expiration handling, and iPaymu payment-session creation have been validated in production.
 
-It remains an MVP because:
+The platform was migrated from its previous VPS-oriented architecture to a Cloudflare-first runtime and database architecture.
 
-- the public deployment uses demonstration operational data;
-- it is not connected to real fast boat operators;
-- public payment currently uses manual assistance;
-- iPaymu is a controlled Sandbox path;
-- several customer-facing operational features remain on the roadmap.
-
+Schedules and inventory are currently maintained through the administrator workflow rather than direct fast boat operator APIs.
 ---
 
 ## Known Limitations
 
-- No connection to real operator APIs or live provider schedules.
-- Public schedules, inventory, operators, prices, bookings, and transactions are demonstration data.
+- No direct connection to fast boat operator APIs or provider inventory feeds.
+- Schedules and dated inventory are maintained administratively.
+- Full paid iPaymu settlement and success-callback behavior has not yet been exercised through a deliberately paid production QA transaction.
 - No automated booking email notification service.
 - No downloadable PDF or PNG customer ticket.
 - No QR-based ticket verification.
 - No comprehensive automated test suite for the main Next.js application.
 - Booking-code uniqueness is not yet enforced through a database unique index.
-- One homepage image-optimization lint warning remains.
-
+- Minor non-blocking lint warnings remain.
 ---
 
 ## My Role
@@ -491,11 +513,11 @@ My work included:
 
 - translating manual booking operations into application workflows;
 - defining booking, payment, inventory, departure, and manifest rules;
-- designing the Appwrite data model;
+- designing and migrating the production booking data model to Cloudflare D1;
 - building the public booking journey;
 - building protected administrator operations;
 - implementing master-data and dated-inventory management;
-- implementing transactional seat holds and releases;
+- implementing guarded seat holds, releases, and lifecycle transitions;
 - designing WITA-based operational dashboard metrics;
 - building departure and manifest workflows;
 - isolating iPaymu into a server-side payment bridge;
@@ -521,7 +543,7 @@ Available and booked seats are not enough while customers are completing payment
 
 ### Honest positioning strengthens credibility
 
-This project is presented as a deployed operational portfolio MVP with demonstration data and Sandbox payment engineering—not as a live commercial marketplace.
+This project is presented as an independently operated production booking platform and engineering portfolio project. It demonstrates real production architecture and operations without claiming direct integration with fast boat operator systems that are not actually connected.
 
 ---
 
@@ -534,8 +556,9 @@ This project is presented as a deployed operational portfolio MVP with demonstra
 
 - Node.js 24
 - npm 11
-- Appwrite project with the required TablesDB tables
-- Appwrite administrator account
+- Cloudflare account
+- Cloudflare D1 and KV bindings
+- Wrangler
 - Optional Docker runtime for the iPaymu Bridge
 
 ### Install
