@@ -81,6 +81,7 @@ export default function Home() {
               alt="Nusa Gili Boat"
               width={64}
               height={64}
+              unoptimized
               priority
               className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/20"
             />
@@ -423,6 +424,7 @@ export default function Home() {
                 alt="Nusa Gili Boat"
                 width={96}
                 height={96}
+                unoptimized
                 className="h-24 w-24 flex-none rounded-3xl object-cover shadow-xl ring-1 ring-white/15"
               />
 

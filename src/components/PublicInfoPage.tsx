@@ -133,6 +133,7 @@ export default function PublicInfoPage({
                 alt="Nusa Gili Boat"
                 width={64}
                 height={64}
+                unoptimized
                 className="h-11 w-11 flex-none rounded-xl object-cover shadow-lg ring-1 ring-white/15 sm:h-14 sm:w-14 sm:rounded-2xl lg:h-16 lg:w-16"
               />
 
@@ -231,6 +232,7 @@ export default function PublicInfoPage({
                 alt="Nusa Gili Boat"
                 width={56}
                 height={56}
+                unoptimized
                 className="h-12 w-12 rounded-2xl object-cover shadow-lg ring-1 ring-white/15"
               />
 
