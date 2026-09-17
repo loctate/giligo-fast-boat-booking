@@ -136,7 +136,9 @@ function normalizeSalesStatus(
     : null
 }
 
-export async function GET() {
+export async function GET(
+  request: Request
+) {
   try {
     const admin = await getCurrentAdmin()
 
@@ -153,15 +155,71 @@ export async function GET() {
       )
     }
 
+    const url = new URL(request.url)
+
+    const requestedInventoryCodes =
+      Array.from(
+        new Set(
+          url.searchParams
+            .getAll("inventoryCode")
+            .map((value) =>
+              value
+                .trim()
+                .toUpperCase()
+            )
+            .filter(Boolean)
+        )
+      )
+
+    if (
+      requestedInventoryCodes.length > 90
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error:
+            "Bulk inventory preflight supports a maximum of 90 inventory codes per request.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
     const {
       inventories,
       total,
     } = await listTripInventoryD1()
 
+    const requestedCodeSet =
+      new Set(
+        requestedInventoryCodes
+      )
+
+    const responseInventory =
+      requestedInventoryCodes.length > 0
+        ? inventories.filter(
+            (inventory) =>
+              requestedCodeSet.has(
+                String(
+                  inventory.inventoryCode ??
+                    ""
+                )
+                  .trim()
+                  .toUpperCase()
+              )
+          )
+        : inventories
+
+    const responseTotal =
+      requestedInventoryCodes.length > 0
+        ? responseInventory.length
+        : total
+
     return Response.json({
       success: true,
-      inventory: inventories,
-      total,
+      inventory: responseInventory,
+      total: responseTotal,
     })
   } catch (error) {
     console.error(
