@@ -3,7 +3,7 @@ import {
 } from "@/lib/d1-server";
 
 const D1_AVAILABILITY_LOOKUP_LIMIT =
-  500;
+  2000;
 
 const D1_AVAILABILITY_FETCH_LIMIT =
   D1_AVAILABILITY_LOOKUP_LIMIT +
@@ -291,29 +291,20 @@ export async function getD1Availability({
     getD1();
 
   /*
-   * Keep the Appwrite public lookup
-   * contract exactly:
+   * Public availability is scoped to
+   * OPEN + active inventory on or after
+   * the minimum bookable date.
    *
-   * 1. Inventory scope is OPEN +
-   *    active inventory only.
-   * 2. More than 500 such inventory
-   *    rows is an error BEFORE
-   *    travel-date/passenger filtering.
-   * 3. Relationships and public seat
-   *    eligibility are evaluated after
-   *    that bounded inventory scope.
-   *
-   * COUNT(*) OVER() preserves the
-   * pre-filter inventory total while
-   * LIMIT 501 gives us one overflow row.
+   * COUNT(*) OVER() preserves the scoped
+   * inventory total while the fetch limit
+   * keeps the public lookup bounded.
    *
    * LEFT JOIN is intentional:
-   * broken/missing relationships must
-   * not remove inventory from the
-   * 500-row lookup accounting, but such
-   * rows are excluded from the final
-   * public route/date response.
+   * broken or missing relationships remain
+   * visible to validation but are excluded
+   * from the final public route/date response.
    */
+
   let rows:
     D1AvailabilityJoinedRow[];
 
@@ -341,6 +332,7 @@ export async function getD1Availability({
             WHERE
               i.salesStatus = 'OPEN'
               AND i.isActive = 1
+              AND i.travelDate >= ?1
 
             LIMIT ${D1_AVAILABILITY_FETCH_LIMIT}
           )
@@ -409,7 +401,8 @@ export async function getD1Availability({
           LEFT JOIN routes AS r
             ON r.id = i.routeId
         `)
-        .all<D1AvailabilityJoinedRow>();
+          .bind(normalizedMinimumDate)
+          .all<D1AvailabilityJoinedRow>();
 
     rows =
       result.results;
