@@ -4,22 +4,16 @@ import Link from "next/link"
 
 const popularRoutes = [
   {
-    from: "Padang Bai",
-    to: "Gili Trawangan",
-    duration: "1 hour 30 minutes",
-    price: "IDR 350,000",
-  },
-  {
     from: "Sanur",
     to: "Nusa Penida",
     duration: "45 minutes",
-    price: "IDR 175,000",
+    price: "IDR 170,000",
   },
   {
-    from: "Serangan",
-    to: "Gili Air",
-    duration: "2 hours 30 minutes",
-    price: "IDR 425,000",
+    from: "Nusa Penida",
+    to: "Sanur",
+    duration: "45 minutes",
+    price: "IDR 170,000",
   },
 ]
 
@@ -229,7 +223,7 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 lg:grid-cols-2">
             {popularRoutes.map((route) => (
               <article
                 key={`${route.from}-${route.to}`}
